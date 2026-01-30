@@ -2,78 +2,182 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Telecom - Com GPS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Sistema Telecom - Assinatura Digital</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    
+    <script src="https://unpkg.com/imask"></script>
 
     <style>
-        :root { --primary: #0284c7; --bg: #f3f4f6; }
-        body { font-family: sans-serif; margin: 0; background: var(--bg); display: flex; height: 100vh; }
-        .container { display: flex; width: 100%; }
-        .admin-panel, .tech-panel { padding: 20px; overflow-y: auto; }
-        .admin-panel { flex: 2; border-right: 2px solid #ddd; }
-        .tech-panel { flex: 1; background: #222; display: flex; justify-content: center; }
-        .mobile-screen { width: 340px; height: 680px; background: #fff; border-radius: 20px; overflow-y: auto; display: flex; flex-direction: column; }
-        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; margin-top: 5px; font-weight: bold;}
+        :root { --primary: #2563eb; --secondary: #1e293b; --bg: #f8fafc; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* LOGIN E LAYOUT */
+        #login-screen { position: fixed; inset: 0; background: var(--secondary); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .login-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 320px; text-align: center; }
+        
+        .main-content { display: flex; height: 100%; width: 100%; }
+        .navbar { background: var(--secondary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
+
+        /* PAINEL ADMIN */
+        .sidebar { width: 240px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        @media(max-width: 768px) { .sidebar { display: none; } } /* Esconde sidebar no celular se for admin */
+        .sidebar button { background: none; border: none; padding: 15px; text-align: left; cursor: pointer; border-bottom: 1px solid #f1f5f9; color: #475569; font-weight: 500; }
+        .sidebar button.active { background: #eff6ff; color: var(--primary); border-left: 4px solid var(--primary); }
+        .admin-view { flex: 1; padding: 20px; overflow-y: auto; display: none; background: #f1f5f9; }
+        .admin-view.active { display: block; }
+
+        /* PAINEL TÉCNICO */
+        .tech-container { width: 100%; max-width: 500px; margin: 0 auto; background: white; display: flex; flex-direction: column; height: 100%; }
+        .tech-header { background: var(--primary); padding: 15px; color: white; }
+        .tech-body { flex: 1; overflow-y: auto; padding: 15px; background: #f8fafc; }
+
+        /* COMPONENTES */
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px; font-size: 16px; }
+        label { font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px; display: block; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; font-size: 15px; }
         .btn-blue { background: var(--primary); }
         .btn-green { background: #10b981; }
-        input { width: 100%; padding: 8px; margin-bottom: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .status { font-size: 0.8em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
-        .gps-alert { font-size: 0.8em; color: green; display: none; margin-top: 5px;}
+        .btn-red { background: #ef4444; }
+
+        /* ASSINATURA (CANVAS) */
+        canvas.signature-pad {
+            border: 2px dashed #94a3b8;
+            border-radius: 8px;
+            background: #fff;
+            width: 100%;
+            height: 180px;
+            touch-action: none; /* Importante para não rolar a tela ao assinar */
+            cursor: crosshair;
+        }
+        .clear-sig { color: #ef4444; font-size: 0.8em; cursor: pointer; float: right; margin-top: 5px; font-weight: bold; }
+
+        /* STATUS TAGS */
+        .tag { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; }
+        .tag-pendente { background: #fff7ed; color: #c2410c; }
+        .tag-concluido { background: #f0fdf4; color: #15803d; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="admin-panel">
-        <h2>📡 Central (Admin)</h2>
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="color:var(--secondary); margin-top:0;">📡 Sistema Telecom</h2>
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="senha" placeholder="Senha">
+            <button class="btn btn-blue" onclick="login()">ENTRAR</button>
+            <p id="msg-erro" style="color:red; font-size:0.8em; margin-top:10px;"></p>
+        </div>
+    </div>
+
+    <div class="navbar" id="navbar" style="display:none;">
+        <div id="user-info">Carregando...</div>
+        <button onclick="logout()" style="background:none; border:1px solid #ffffff50; color:white; padding:5px 10px; border-radius:4px;">Sair</button>
+    </div>
+
+    <div class="main-content" id="main-content" style="display:none;">
         
-        <div class="card" style="border-left: 5px solid #0284c7;">
-            <h3>📍 Monitoramento da Frota</h3>
-            <div id="status-frota">Carregando GPS...</div>
-        </div>
-
-        <div class="card">
-            <h3>Nova Ordem de Serviço</h3>
-            <input type="text" id="os-cliente" placeholder="Nome do Cliente">
-            <input type="text" id="os-servico" placeholder="Serviço">
-            <input type="text" id="os-endereco" placeholder="Endereço">
-            <button class="btn btn-green" onclick="criarOS()">Abrir OS</button>
-        </div>
-
-        <h3>Lista de OS</h3>
-        <div id="lista-admin">Carregando...</div>
-    </div>
-
-    <div class="tech-panel">
-        <div class="mobile-screen">
-            <div style="background: var(--primary); color: white; padding: 15px;">
-                <b>App Técnico</b>
-                <div id="gps-status" style="font-size:0.7em; background:rgba(0,0,0,0.2); padding:2px; border-radius:4px;">📡 GPS: Aguardando...</div>
+        <div id="admin-panel" style="display:none; width:100%; display:flex;">
+            <div class="sidebar">
+                <button onclick="showTab('tab-os')" class="active">📋 Ordens de Serviço</button>
+                <button onclick="showTab('tab-estoque')">🏭 Estoque Central</button>
+                <button onclick="showTab('tab-equipe')">🚛 Transferências</button>
             </div>
-            <div style="padding: 10px;">
-                <button class="btn btn-green" onclick="ativarGPS()" style="margin-bottom: 15px;">🔴 ATIVAR RASTREAMENTO</button>
-                
-                <div class="card" style="background: #eff6ff;">
-                    <b>🎒 Meu Estoque:</b>
-                    <div id="tech-estoque">...</div>
+
+            <div id="tab-os" class="admin-view active">
+                <div class="card">
+                    <h3>Nova O.S.</h3>
+                    <div class="row">
+                        <div class="col"><label>CPF/CNPJ</label><input type="text" id="os-doc"></div>
+                        <div class="col"><label>Nome</label><input type="text" id="os-nome"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col" style="flex:0 0 100px"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div>
+                        <div class="col"><label>Endereço</label><input type="text" id="os-end" readonly></div>
+                        <div class="col" style="flex:0 0 70px"><label>Nº</label><input type="text" id="os-num"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label>Serviço</label><input type="text" id="os-servico"></div>
+                        <div class="col"><label>Técnico</label><select id="os-tecnico-select"></select></div>
+                    </div>
+                    <button class="btn btn-green" onclick="criarOS()">✅ Abrir OS</button>
                 </div>
-                <h4>Minhas Tarefas</h4>
-                <div id="lista-tech">Carregando...</div>
+                <h3>Monitoramento</h3>
+                <div id="lista-os-admin"></div>
+            </div>
+
+            <div id="tab-estoque" class="admin-view">
+                <div class="card">
+                    <h3>Estoque Central</h3>
+                    <div class="row" style="background:#e0f2fe; padding:15px; border-radius:8px; margin-bottom:15px;">
+                        <div class="col"><b>Cabo:</b> <span id="central-cabo">0</span>m</div>
+                        <div class="col"><b>Conect:</b> <span id="central-conec">0</span></div>
+                        <div class="col"><b>Roteador:</b> <span id="central-rot">0</span></div>
+                    </div>
+                    <label>Dar Entrada (Compra)</label>
+                    <div class="row">
+                        <input type="number" id="ent-cabo" placeholder="Cabo">
+                        <input type="number" id="ent-conec" placeholder="Conect">
+                        <input type="number" id="ent-rot" placeholder="Roteador">
+                    </div>
+                    <button class="btn btn-blue" onclick="abastecerCentral()">Salvar Entrada</button>
+                </div>
+            </div>
+
+            <div id="tab-equipe" class="admin-view">
+                <div class="card">
+                    <h3>Abastecer Carro (Volante)</h3>
+                    <label>Técnico</label>
+                    <select id="transf-tecnico-select" style="margin-bottom:15px"></select>
+                    <div class="row">
+                        <input type="number" id="transf-cabo" placeholder="Cabo">
+                        <input type="number" id="transf-conec" placeholder="Conect">
+                        <input type="number" id="transf-rot" placeholder="Rot">
+                    </div>
+                    <button class="btn btn-blue" onclick="transferirEstoque()">Transferir</button>
+                </div>
+                <div class="card">
+                    <h3>Cadastrar Novo Técnico</h3>
+                    <input type="email" id="novo-tech-email" placeholder="Email (Login)">
+                    <input type="text" id="novo-tech-nome" placeholder="Nome">
+                    <button class="btn btn-green" onclick="cadastrarTecnicoFirestore()">Cadastrar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tech-panel" class="tech-container" style="display:none;">
+            <div class="tech-header">
+                <h3 style="margin:0">📱 App Técnico</h3>
+                <div id="tech-estoque-display" style="font-size:0.85em; margin-top:5px; opacity:0.9;">Carregando...</div>
+            </div>
+            
+            <div class="tech-body">
+                <div class="card" style="background:#fffbeb; border-color:#fcd34d">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b>📍 Modo Viagem</b>
+                        <button id="btn-viagem" onclick="toggleModoViagem()" style="width:auto; padding:8px 15px; font-size:0.8em;" class="btn-blue">ATIVAR</button>
+                    </div>
+                    <small id="status-viagem" style="display:block; margin-top:5px; color:#666;">Desativado</small>
+                </div>
+
+                <h4>Minhas Ordens de Serviço</h4>
+                <div id="lista-os-tech"></div>
             </div>
         </div>
     </div>
-</div>
 
 <script>
-    // -----------------------------------------------------------
-    // COLE SUAS CHAVES DO FIREBASE AQUI NOVAMENTE
-    // -----------------------------------------------------------
+    // --- 1. COLE SUAS CHAVES AQUI ---
     const firebaseConfig = {
-        apiKey: "SUA_API_KEY",
+        apiKey: "SUA_API_KEY_AQUI",
         authDomain: "SEU_PROJETO.firebaseapp.com",
         projectId: "SEU_PROJETO",
         storageBucket: "SEU_PROJETO.appspot.com",
@@ -83,150 +187,365 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+    let currentUser = null;
 
-    // --- 1. FUNÇÃO DE RASTREAMENTO (GPS) ---
-    
-    function ativarGPS() {
-        if (!navigator.geolocation) {
-            alert("Seu celular não suporta GPS ou está bloqueado.");
-            return;
-        }
+    // --- 2. CONFIGURAÇÕES INICIAIS ---
+    document.addEventListener('DOMContentLoaded', () => {
+        IMask(document.getElementById('os-cep'), {mask: '00000-000'});
+        IMask(document.getElementById('os-doc'), {mask: [{mask: '000.000.000-00'}, {mask: '00.000.000/0000-00'}]});
+    });
 
-        document.getElementById('gps-status').innerText = "📡 GPS: Buscando satélite...";
+    // --- 3. AUTENTICAÇÃO ---
+    function login() {
+        auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value)
+            .catch(err => alert("Erro: " + err.message));
+    }
+    function logout() { auth.signOut(); location.reload(); }
 
-        // watchPosition: Fica vigiando. Se o técnico andar, ele dispara.
-        navigator.geolocation.watchPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const acuracia = position.coords.accuracy; // Precisão em metros
+    auth.onAuthStateChanged(async (user) => {
+        if(user){
+            currentUser = user;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('navbar').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'flex';
+            
+            const doc = await db.collection('usuarios').doc(user.email).get();
+            const perfil = doc.exists ? doc.data() : {role:'tecnico', nome:'Técnico'};
+            
+            document.getElementById('user-info').innerText = `${perfil.nome}`;
 
-                document.getElementById('gps-status').innerText = `📡 GPS: OK (Precisão: ${Math.round(acuracia)}m)`;
-
-                // Envia para o Firebase na hora
-                db.collection("estoques").doc("joao").update({
-                    localizacao: {
-                        lat: lat,
-                        lng: lng,
-                        ultima_atualizacao: firebase.firestore.FieldValue.serverTimestamp()
-                    }
-                });
-            },
-            (error) => {
-                document.getElementById('gps-status').innerText = "❌ Erro no GPS: " + error.message;
-            },
-            {
-                enableHighAccuracy: true, // Pede GPS preciso
-                timeout: 10000,
-                maximumAge: 0
+            if(perfil.role === 'admin') {
+                document.getElementById('admin-panel').style.display = 'flex';
+                iniciarAdmin();
+            } else {
+                document.getElementById('tech-panel').style.display = 'flex';
+                iniciarTecnico(user.email);
             }
-        );
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+    });
+
+    // --- 4. FUNÇÕES ADMIN ---
+    function iniciarAdmin() {
+        db.collection('usuarios').where('role','==','tecnico').onSnapshot(snap => {
+            const sels = [document.getElementById('os-tecnico-select'), document.getElementById('transf-tecnico-select')];
+            sels.forEach(s => s.innerHTML = '<option value="">Selecione...</option>');
+            snap.forEach(d => sels.forEach(s => s.innerHTML += `<option value="${d.id}">${d.data().nome}</option>`));
+        });
+
+        db.collection('estoque_central').doc('main').onSnapshot(d => {
+            const qt = d.data() || {cabo:0, conec:0, rot:0};
+            document.getElementById('central-cabo').innerText = qt.cabo;
+            document.getElementById('central-conec').innerText = qt.conec;
+            document.getElementById('central-rot').innerText = qt.rot;
+        });
+
+        db.collection('os').orderBy('data_criacao','desc').onSnapshot(snap => {
+            const div = document.getElementById('lista-os-admin');
+            div.innerHTML = '';
+            snap.forEach(doc => {
+                const os = doc.data();
+                const cor = os.status === 'concluido' ? 'tag-concluido' : 'tag-pendente';
+                
+                // Se tiver assinatura, mostra link
+                let assinaturaHTML = '';
+                if(os.assinatura_img) {
+                    assinaturaHTML = `<br><a href="#" onclick="verAssinatura('${os.assinatura_img}')" style="font-size:0.8em; color:blue;">Ver Assinatura do Cliente</a>`;
+                }
+
+                div.innerHTML += `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between">
+                            <strong>${os.cliente_nome}</strong>
+                            <span class="tag ${cor}">${os.status}</span>
+                        </div>
+                        <small>${os.endereco}</small><br>
+                        <small>Técnico: ${os.tecnico_email}</small>
+                        ${os.status === 'concluido' ? `<div style="margin-top:5px; color:green; font-size:0.85em;"><b>Baixa:</b> ${os.gasto.cabo}m cabo, ${os.gasto.rot} rot.</div>` : ''}
+                        ${assinaturaHTML}
+                    </div>`;
+            });
+        });
     }
 
-    // --- 2. ADMIN VENDO O MAPA ---
-
-    // Monitora o documento do técnico "joao" para ver onde ele está
-    db.collection("estoques").doc("joao").onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            
-            // Atualiza estoque na tela do tecnico
-            const estoqueDiv = document.getElementById("tech-estoque");
-            if(estoqueDiv) estoqueDiv.innerHTML = `Cabo: ${data.cabo}m | Conectores: ${data.conectores}`;
-
-            // Atualiza MAPA na tela do Admin
-            const frotaDiv = document.getElementById("status-frota");
-            
-            if (data.localizacao) {
-                // Cria link do Google Maps
-                const linkMapa = `https://www.google.com/maps/search/?api=1&query=${data.localizacao.lat},${data.localizacao.lng}`;
-                
-                frotaDiv.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <b>Técnico: João</b><br>
-                            <small>Último sinal: Agora mesmo</small>
-                        </div>
-                        <a href="${linkMapa}" target="_blank" class="btn btn-blue" style="width:auto; text-decoration:none;">📍 Ver no Mapa</a>
-                    </div>
-                `;
-            } else {
-                frotaDiv.innerHTML = "Técnico ainda não ativou o GPS.";
-            }
-        }
-    });
-
-    // --- 3. RESTO DO SISTEMA (OS, ETC) ---
-    
-    // Lista de OS (Admin e Tech)
-    db.collection("os").orderBy("data_criacao", "desc").onSnapshot((snapshot) => {
-        const listaAdmin = document.getElementById("lista-admin");
-        const listaTech = document.getElementById("lista-tech");
-        listaAdmin.innerHTML = ""; listaTech.innerHTML = "";
-
-        snapshot.forEach((doc) => {
-            const os = doc.data();
-            const id = doc.id;
-            
-            listaAdmin.innerHTML += `
-                <div class="card" style="border-left: 5px solid ${os.status == 'concluido' ? 'green' : 'orange'}">
-                    <b>${os.cliente}</b> <span class="status status-${os.status}">${os.status}</span>
-                    <div>${os.servico}</div>
-                </div>`;
-
-            if(os.status !== 'concluido') {
-                listaTech.innerHTML += `
-                    <div class="card">
-                        <b>${os.cliente}</b><br><small>${os.endereco}</small>
-                        <hr style="border:0; border-top:1px solid #eee;">
-                        ${os.status === 'pendente' ? 
-                            `<button class="btn btn-blue" onclick="iniciarAtendimento('${id}')">Cheguei / Iniciar</button>` : 
-                            `<div style="background:#f9f9f9; padding:5px;">
-                                <small>Baixar Material:</small>
-                                <input type="number" id="gasto-cabo-${id}" placeholder="Cabo usado">
-                                <input type="number" id="gasto-conec-${id}" placeholder="Conectores">
-                                <button class="btn btn-green" onclick="finalizarOS('${id}')">Finalizar</button>
-                            </div>`
-                        }
-                    </div>`;
-            }
-        });
-    });
+    function verAssinatura(img64) {
+        const w = window.open("");
+        w.document.write(`<img src="${img64}" style="border:1px solid #ccc;"/>`);
+    }
 
     function criarOS() {
-        const cliente = document.getElementById("os-cliente").value;
-        const servico = document.getElementById("os-servico").value;
-        const endereco = document.getElementById("os-endereco").value;
-        if(!cliente) return;
-        db.collection("os").add({
-            cliente: cliente, servico: servico, endereco: endereco, status: "pendente",
-            tecnico: "joao", data_criacao: firebase.firestore.FieldValue.serverTimestamp(), gasto: {}
+        const dados = {
+            doc: document.getElementById('os-doc').value,
+            cliente_nome: document.getElementById('os-nome').value,
+            cep: document.getElementById('os-cep').value,
+            endereco: document.getElementById('os-end').value,
+            numero: document.getElementById('os-num').value,
+            servico: document.getElementById('os-servico').value,
+            tecnico_email: document.getElementById('os-tecnico-select').value,
+            status: 'pendente',
+            data_criacao: firebase.firestore.FieldValue.serverTimestamp(),
+            gasto: {}
+        };
+        if(!dados.tecnico_email || !dados.cliente_nome) return alert("Preencha campos obrigatórios");
+        db.collection('os').add(dados).then(() => {
+            alert("OS Criada!");
+            document.querySelectorAll('#tab-os input').forEach(i => i.value='');
         });
-        document.getElementById("os-cliente").value = "";
     }
 
-    function iniciarAtendimento(id) {
-        db.collection("os").doc(id).update({ status: "andamento" });
-        // Força atualização do GPS ao iniciar atendimento
-        ativarGPS();
+    function abastecerCentral() {
+        db.collection('estoque_central').doc('main').set({
+            cabo: firebase.firestore.FieldValue.increment(Number(document.getElementById('ent-cabo').value)),
+            conec: firebase.firestore.FieldValue.increment(Number(document.getElementById('ent-conec').value)),
+            rot: firebase.firestore.FieldValue.increment(Number(document.getElementById('ent-rot').value))
+        }, {merge:true}).then(() => {alert("Abastecido!"); document.querySelectorAll('#tab-estoque input').forEach(i=>i.value='');});
     }
 
-    function finalizarOS(id) {
-        // ... (Lógica igual a anterior para baixa de estoque)
-        const gastoCabo = Number(document.getElementById(`gasto-cabo-${id}`).value) || 0;
-        const gastoConec = Number(document.getElementById(`gasto-conec-${id}`).value) || 0;
-        const estoqueRef = db.collection("estoques").doc("joao");
-        db.runTransaction((transaction) => {
-            return transaction.get(estoqueRef).then((doc) => {
-                const estoqueAtual = doc.data();
-                if (estoqueAtual.cabo < gastoCabo || estoqueAtual.conectores < gastoConec) throw "Saldo insuficiente!";
-                transaction.update(estoqueRef, { cabo: estoqueAtual.cabo - gastoCabo, conectores: estoqueAtual.conectores - gastoConec });
-                const osRef = db.collection("os").doc(id);
-                transaction.update(osRef, { status: "concluido", gasto: { cabo: gastoCabo, conectores: gastoConec } });
+    async function transferirEstoque() {
+        const email = document.getElementById('transf-tecnico-select').value;
+        const qtds = {
+            cabo: Number(document.getElementById('transf-cabo').value),
+            conec: Number(document.getElementById('transf-conec').value),
+            rot: Number(document.getElementById('transf-rot').value)
+        };
+        if(!email) return alert("Selecione técnico");
+
+        const centralRef = db.collection('estoque_central').doc('main');
+        const techRef = db.collection('estoque_volante').doc(email);
+
+        try {
+            await db.runTransaction(async (t) => {
+                const cDoc = await t.get(centralRef);
+                const cData = cDoc.data() || {cabo:0, conec:0, rot:0};
+                if(cData.cabo < qtds.cabo || cData.rot < qtds.rot) throw "Falta material na Central!";
+                
+                t.update(centralRef, {cabo: cData.cabo - qtds.cabo, conec: cData.conec - qtds.conec, rot: cData.rot - qtds.rot});
+                t.set(techRef, {
+                    cabo: firebase.firestore.FieldValue.increment(qtds.cabo),
+                    conec: firebase.firestore.FieldValue.increment(qtds.conec),
+                    rot: firebase.firestore.FieldValue.increment(qtds.rot)
+                }, {merge:true});
             });
-        }).then(() => alert("OS Finalizada!")).catch((error) => alert("ERRO: " + error));
+            alert("Transferido!");
+            document.querySelectorAll('#tab-equipe input[type=number]').forEach(i=>i.value='');
+        } catch(e) { alert(e); }
+    }
+
+    // --- 5. FUNÇÕES TÉCNICO & ASSINATURA ---
+    
+    // Objeto para guardar as instâncias dos Canvas (assinaturas)
+    const signaturePads = {};
+
+    function iniciarTecnico(email) {
+        // Monitora Estoque
+        db.collection('estoque_volante').doc(email).onSnapshot(d => {
+            const q = d.data() || {cabo:0, conec:0, rot:0};
+            document.getElementById('tech-estoque-display').innerHTML = `<b>${q.cabo}m</b> Cabo | <b>${q.conec}</b> Conec | <b>${q.rot}</b> Rot`;
+        });
+
+        // Monitora OS
+        db.collection('os').where('tecnico_email','==',email).orderBy('data_criacao','desc').onSnapshot(snap => {
+            const div = document.getElementById('lista-os-tech');
+            div.innerHTML = '';
+            
+            snap.forEach(doc => {
+                const os = doc.data();
+                if(os.status === 'concluido') return;
+
+                // Renderiza OS
+                const cardId = doc.id;
+                div.innerHTML += `
+                    <div class="card">
+                        <h3>${os.cliente_nome}</h3>
+                        <p style="color:#64748b; font-size:0.9em;">${os.endereco}, ${os.numero}</p>
+                        <div style="background:#f1f5f9; padding:10px; border-radius:6px; margin:10px 0;">
+                            <label>O que você gastou?</label>
+                            <div class="row">
+                                <input type="number" id="gasto-cabo-${cardId}" placeholder="Cabo (m)">
+                                <input type="number" id="gasto-conec-${cardId}" placeholder="Conectores">
+                            </div>
+                            <div class="row">
+                                <input type="number" id="gasto-rot-${cardId}" placeholder="Roteadores">
+                            </div>
+                        </div>
+
+                        <label>Assinatura do Cliente (Obrigatório)</label>
+                        <div style="position:relative;">
+                            <canvas id="sig-${cardId}" class="signature-pad"></canvas>
+                            <span class="clear-sig" onclick="limparAssinatura('${cardId}')">Limpar / Refazer</span>
+                        </div>
+
+                        <button class="btn btn-green" onclick="finalizarComValidacao('${cardId}')">✅ Finalizar e Enviar</button>
+                    </div>
+                `;
+
+                // Inicializa o Canvas APÓS renderizar o HTML (pequeno delay para o DOM montar)
+                setTimeout(() => { iniciarCanvas(cardId); }, 500);
+            });
+        });
+    }
+
+    // --- LÓGICA DO CANVAS (ASSINATURA) ---
+    function iniciarCanvas(id) {
+        const canvas = document.getElementById(`sig-${id}`);
+        if(!canvas) return;
+        
+        // Ajusta tamanho real do canvas para evitar pixelado
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+
+        const ctx = canvas.getContext('2d');
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#000";
+        
+        let painting = false;
+
+        // Funções de desenho
+        function startPosition(e) {
+            painting = true;
+            draw(e);
+        }
+        function finishedPosition() {
+            painting = false;
+            ctx.beginPath();
+            // Marca no elemento que ele foi assinado (usaremos para validação)
+            canvas.dataset.assinado = "true"; 
+        }
+        function draw(e) {
+            if (!painting) return;
+            e.preventDefault(); // Impede rolar a tela no celular
+            
+            // Pega posição do toque ou mouse
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            ctx.lineTo(clientX - rect.left, clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(clientX - rect.left, clientY - rect.top);
+        }
+
+        // Event Listeners (Mouse e Touch)
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', finishedPosition);
+        canvas.addEventListener('mousemove', draw);
+        
+        canvas.addEventListener('touchstart', startPosition, {passive: false});
+        canvas.addEventListener('touchend', finishedPosition);
+        canvas.addEventListener('touchmove', draw, {passive: false});
+    }
+
+    function limparAssinatura(id) {
+        const canvas = document.getElementById(`sig-${id}`);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.dataset.assinado = "false"; // Reseta validação
+    }
+
+    // --- FINALIZAR COM VALIDAÇÃO ---
+    async function finalizarComValidacao(id) {
+        // 1. Pegar inputs
+        const cabo = Number(document.getElementById(`gasto-cabo-${id}`).value) || 0;
+        const conec = Number(document.getElementById(`gasto-conec-${id}`).value) || 0;
+        const rot = Number(document.getElementById(`gasto-rot-${id}`).value) || 0;
+        
+        // 2. Validação da Assinatura
+        const canvas = document.getElementById(`sig-${id}`);
+        if (canvas.dataset.assinado !== "true") {
+            return alert("ERRO: O cliente precisa assinar na tela antes de finalizar!");
+        }
+
+        // 3. Validação de Material (Opcional: força perguntar se tudo for zero)
+        if (cabo === 0 && conec === 0 && rot === 0) {
+            if(!confirm("Atenção: Você não informou nenhum material gasto. Deseja finalizar mesmo assim?")) return;
+        } else {
+            // Confirmação normal
+            if(!confirm(`Confirma o gasto de:\n${cabo}m de Cabo\n${conec} Conectores\n${rot} Roteadores\n\nIsso será descontado do seu estoque.`)) return;
+        }
+
+        // 4. Capturar Imagem da Assinatura
+        const imagemAssinatura = canvas.toDataURL(); // Gera texto Base64 da imagem
+
+        // 5. Enviar para Firebase
+        const email = currentUser.email;
+        const stockRef = db.collection('estoque_volante').doc(email);
+        const osRef = db.collection('os').doc(id);
+
+        try {
+            await db.runTransaction(async (t) => {
+                const stockDoc = await t.get(stockRef);
+                const stock = stockDoc.data() || {cabo:0, conec:0, rot:0};
+
+                if(stock.cabo < cabo || stock.rot < rot) throw "Saldo insuficiente no seu estoque!";
+
+                // Desconta estoque
+                t.update(stockRef, {
+                    cabo: stock.cabo - cabo,
+                    conec: stock.conec - conec,
+                    rot: stock.rot - rot
+                });
+
+                // Baixa OS com Imagem
+                t.update(osRef, {
+                    status: 'concluido',
+                    gasto: {cabo, conec, rot},
+                    assinatura_img: imagemAssinatura, // Salva imagem aqui
+                    data_fim: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            alert("OS Finalizada com Sucesso!");
+        } catch (e) {
+            alert("Erro: " + e);
+        }
+    }
+
+    // --- MODO VIAGEM E CEP (Funções auxiliares) ---
+    let wakeLock = null;
+    let gpsInterval = null;
+    let isViagemAtiva = false;
+    async function toggleModoViagem() {
+        const btn = document.getElementById('btn-viagem');
+        const status = document.getElementById('status-viagem');
+        if (!isViagemAtiva) {
+            if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
+            if (navigator.geolocation) {
+                gpsInterval = setInterval(() => {
+                    navigator.geolocation.getCurrentPosition(pos => {
+                        db.collection('usuarios').doc(currentUser.email).set({
+                            localizacao: { lat: pos.coords.latitude, lng: pos.coords.longitude, time: firebase.firestore.FieldValue.serverTimestamp(), viajando: true }
+                        }, {merge:true});
+                    });
+                }, 10000);
+            }
+            btn.innerText = "PARAR"; btn.className = "btn-red"; status.innerText = "GPS Ativo - Tela Ligada"; isViagemAtiva = true;
+        } else {
+            if(wakeLock) wakeLock.release(); clearInterval(gpsInterval);
+            btn.innerText = "ATIVAR"; btn.className = "btn-blue"; status.innerText = "Desativado"; isViagemAtiva = false;
+            db.collection('usuarios').doc(currentUser.email).set({localizacao:{viajando:false}}, {merge:true});
+        }
+    }
+    function buscarCep() {
+        const c = document.getElementById('os-cep').value.replace(/\D/g,'');
+        if(c.length===8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json()).then(d=>{
+            if(!d.erro) { document.getElementById('os-end').value = `${d.logradouro}, ${d.bairro}`; document.getElementById('os-num').focus(); }
+        });
+    }
+    function showTab(id) {
+        document.querySelectorAll('.admin-view').forEach(e=>e.classList.remove('active'));
+        document.querySelectorAll('.sidebar button').forEach(e=>e.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
+    function cadastrarTecnicoFirestore() {
+        db.collection('usuarios').doc(document.getElementById('novo-tech-email').value).set({
+            nome: document.getElementById('novo-tech-nome').value, role: 'tecnico'
+        }).then(()=>alert("Técnico cadastrado!"));
     }
 </script>
-
 </body>
 </html>
