@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Telecom - Com GPS</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { --primary: #0284c7; --bg: #f3f4f6; }
+        body { font-family: sans-serif; margin: 0; background: var(--bg); display: flex; height: 100vh; }
+        .container { display: flex; width: 100%; }
+        .admin-panel, .tech-panel { padding: 20px; overflow-y: auto; }
+        .admin-panel { flex: 2; border-right: 2px solid #ddd; }
+        .tech-panel { flex: 1; background: #222; display: flex; justify-content: center; }
+        .mobile-screen { width: 340px; height: 680px; background: #fff; border-radius: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; margin-top: 5px; font-weight: bold;}
+        .btn-blue { background: var(--primary); }
+        .btn-green { background: #10b981; }
+        input { width: 100%; padding: 8px; margin-bottom: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .status { font-size: 0.8em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+        .gps-alert { font-size: 0.8em; color: green; display: none; margin-top: 5px;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="admin-panel">
+        <h2>📡 Central (Admin)</h2>
+        
+        <div class="card" style="border-left: 5px solid #0284c7;">
+            <h3>📍 Monitoramento da Frota</h3>
+            <div id="status-frota">Carregando GPS...</div>
+        </div>
+
+        <div class="card">
+            <h3>Nova Ordem de Serviço</h3>
+            <input type="text" id="os-cliente" placeholder="Nome do Cliente">
+            <input type="text" id="os-servico" placeholder="Serviço">
+            <input type="text" id="os-endereco" placeholder="Endereço">
+            <button class="btn btn-green" onclick="criarOS()">Abrir OS</button>
+        </div>
+
+        <h3>Lista de OS</h3>
+        <div id="lista-admin">Carregando...</div>
+    </div>
+
+    <div class="tech-panel">
+        <div class="mobile-screen">
+            <div style="background: var(--primary); color: white; padding: 15px;">
+                <b>App Técnico</b>
+                <div id="gps-status" style="font-size:0.7em; background:rgba(0,0,0,0.2); padding:2px; border-radius:4px;">📡 GPS: Aguardando...</div>
+            </div>
+            <div style="padding: 10px;">
+                <button class="btn btn-green" onclick="ativarGPS()" style="margin-bottom: 15px;">🔴 ATIVAR RASTREAMENTO</button>
+                
+                <div class="card" style="background: #eff6ff;">
+                    <b>🎒 Meu Estoque:</b>
+                    <div id="tech-estoque">...</div>
+                </div>
+                <h4>Minhas Tarefas</h4>
+                <div id="lista-tech">Carregando...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -----------------------------------------------------------
+    // COLE SUAS CHAVES DO FIREBASE AQUI NOVAMENTE
+    // -----------------------------------------------------------
+    const firebaseConfig = {
+        apiKey: "SUA_API_KEY",
+        authDomain: "SEU_PROJETO.firebaseapp.com",
+        projectId: "SEU_PROJETO",
+        storageBucket: "SEU_PROJETO.appspot.com",
+        messagingSenderId: "NUMEROS",
+        appId: "SEU_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- 1. FUNÇÃO DE RASTREAMENTO (GPS) ---
+    
+    function ativarGPS() {
+        if (!navigator.geolocation) {
+            alert("Seu celular não suporta GPS ou está bloqueado.");
+            return;
+        }
+
+        document.getElementById('gps-status').innerText = "📡 GPS: Buscando satélite...";
+
+        // watchPosition: Fica vigiando. Se o técnico andar, ele dispara.
+        navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const acuracia = position.coords.accuracy; // Precisão em metros
+
+                document.getElementById('gps-status').innerText = `📡 GPS: OK (Precisão: ${Math.round(acuracia)}m)`;
+
+                // Envia para o Firebase na hora
+                db.collection("estoques").doc("joao").update({
+                    localizacao: {
+                        lat: lat,
+                        lng: lng,
+                        ultima_atualizacao: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                });
+            },
+            (error) => {
+                document.getElementById('gps-status').innerText = "❌ Erro no GPS: " + error.message;
+            },
+            {
+                enableHighAccuracy: true, // Pede GPS preciso
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    // --- 2. ADMIN VENDO O MAPA ---
+
+    // Monitora o documento do técnico "joao" para ver onde ele está
+    db.collection("estoques").doc("joao").onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            
+            // Atualiza estoque na tela do tecnico
+            const estoqueDiv = document.getElementById("tech-estoque");
+            if(estoqueDiv) estoqueDiv.innerHTML = `Cabo: ${data.cabo}m | Conectores: ${data.conectores}`;
+
+            // Atualiza MAPA na tela do Admin
+            const frotaDiv = document.getElementById("status-frota");
+            
+            if (data.localizacao) {
+                // Cria link do Google Maps
+                const linkMapa = `https://www.google.com/maps/search/?api=1&query=${data.localizacao.lat},${data.localizacao.lng}`;
+                
+                frotaDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <b>Técnico: João</b><br>
+                            <small>Último sinal: Agora mesmo</small>
+                        </div>
+                        <a href="${linkMapa}" target="_blank" class="btn btn-blue" style="width:auto; text-decoration:none;">📍 Ver no Mapa</a>
+                    </div>
+                `;
+            } else {
+                frotaDiv.innerHTML = "Técnico ainda não ativou o GPS.";
+            }
+        }
+    });
+
+    // --- 3. RESTO DO SISTEMA (OS, ETC) ---
+    
+    // Lista de OS (Admin e Tech)
+    db.collection("os").orderBy("data_criacao", "desc").onSnapshot((snapshot) => {
+        const listaAdmin = document.getElementById("lista-admin");
+        const listaTech = document.getElementById("lista-tech");
+        listaAdmin.innerHTML = ""; listaTech.innerHTML = "";
+
+        snapshot.forEach((doc) => {
+            const os = doc.data();
+            const id = doc.id;
+            
+            listaAdmin.innerHTML += `
+                <div class="card" style="border-left: 5px solid ${os.status == 'concluido' ? 'green' : 'orange'}">
+                    <b>${os.cliente}</b> <span class="status status-${os.status}">${os.status}</span>
+                    <div>${os.servico}</div>
+                </div>`;
+
+            if(os.status !== 'concluido') {
+                listaTech.innerHTML += `
+                    <div class="card">
+                        <b>${os.cliente}</b><br><small>${os.endereco}</small>
+                        <hr style="border:0; border-top:1px solid #eee;">
+                        ${os.status === 'pendente' ? 
+                            `<button class="btn btn-blue" onclick="iniciarAtendimento('${id}')">Cheguei / Iniciar</button>` : 
+                            `<div style="background:#f9f9f9; padding:5px;">
+                                <small>Baixar Material:</small>
+                                <input type="number" id="gasto-cabo-${id}" placeholder="Cabo usado">
+                                <input type="number" id="gasto-conec-${id}" placeholder="Conectores">
+                                <button class="btn btn-green" onclick="finalizarOS('${id}')">Finalizar</button>
+                            </div>`
+                        }
+                    </div>`;
+            }
+        });
+    });
+
+    function criarOS() {
+        const cliente = document.getElementById("os-cliente").value;
+        const servico = document.getElementById("os-servico").value;
+        const endereco = document.getElementById("os-endereco").value;
+        if(!cliente) return;
+        db.collection("os").add({
+            cliente: cliente, servico: servico, endereco: endereco, status: "pendente",
+            tecnico: "joao", data_criacao: firebase.firestore.FieldValue.serverTimestamp(), gasto: {}
+        });
+        document.getElementById("os-cliente").value = "";
+    }
+
+    function iniciarAtendimento(id) {
+        db.collection("os").doc(id).update({ status: "andamento" });
+        // Força atualização do GPS ao iniciar atendimento
+        ativarGPS();
+    }
+
+    function finalizarOS(id) {
+        // ... (Lógica igual a anterior para baixa de estoque)
+        const gastoCabo = Number(document.getElementById(`gasto-cabo-${id}`).value) || 0;
+        const gastoConec = Number(document.getElementById(`gasto-conec-${id}`).value) || 0;
+        const estoqueRef = db.collection("estoques").doc("joao");
+        db.runTransaction((transaction) => {
+            return transaction.get(estoqueRef).then((doc) => {
+                const estoqueAtual = doc.data();
+                if (estoqueAtual.cabo < gastoCabo || estoqueAtual.conectores < gastoConec) throw "Saldo insuficiente!";
+                transaction.update(estoqueRef, { cabo: estoqueAtual.cabo - gastoCabo, conectores: estoqueAtual.conectores - gastoConec });
+                const osRef = db.collection("os").doc(id);
+                transaction.update(osRef, { status: "concluido", gasto: { cabo: gastoCabo, conectores: gastoConec } });
+            });
+        }).then(() => alert("OS Finalizada!")).catch((error) => alert("ERRO: " + error));
+    }
+</script>
+
+</body>
+</html>
