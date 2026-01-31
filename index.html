@@ -193,7 +193,6 @@
 
                     <label>Nome do Cliente</label>
                     <input type="text" id="os-cliente" placeholder="Nome do Cliente">
-                    
                     <label>Telefone do Cliente</label>
                     <input type="tel" id="os-telefone" placeholder="(00) 00000-0000">
 
@@ -209,6 +208,15 @@
                     <button class="btn btn-blue" id="btn-salvar-os" onclick="criarOS()">CRIAR O.S.</button>
                     <button class="btn" id="btn-cancelar-edit" onclick="cancelarEdicaoOS()" style="display:none; background:#ccc;">CANCELAR</button>
                 </div>
+
+                <div class="card" style="border-bottom: 4px solid var(--accent);">
+                    <h3>🔍 Filtrar Histórico</h3>
+                    <label>Filtrar por Técnico</label>
+                    <select id="filtro-tecnico-os" onchange="renderizarListaOS()">
+                        <option value="">Todos os Técnicos</option>
+                    </select>
+                </div>
+
                 <div id="lista-os"></div>
             </div>
 
@@ -266,6 +274,20 @@
         </div>
     </div>
 
+    <div id="modal-senha" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="card" style="width: 90%; max-width: 320px; text-align: center; border-top: 5px solid var(--accent);">
+            <img src="logo.jpg" alt="WV" style="width: 60px; margin-bottom: 15px; border-radius: 8px;">
+            <h3 style="justify-content: center; font-size: 18px;">WV SERVIÇOS</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Senha de Autorização Requerida</p>
+            <input type="password" id="input-senha-modal" placeholder="****" style="text-align: center; letter-spacing: 5px; font-size: 18px; margin-bottom: 10px;">
+            <div id="erro-senha" style="color: var(--danger); font-size: 11px; display: none; margin-bottom: 10px;">Senha incorreta!</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="fecharModalSenha()" style="background: #f1f5f9; color: var(--text-main);">CANCELAR</button>
+                <button class="btn btn-blue" onclick="verificarSenhaModal()">CONFIRMAR</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyBS8t51QON29MIYDkkcZETchdevHFVMzCk",
@@ -282,7 +304,8 @@
     const auth = firebase.auth();
     const SENHA_PADRAO = "1503";
 
-    let scanner, mapaBarcodes = {}, itensCadastrados = {}, osParaBaixar = null;
+    let scanner, mapaBarcodes = {}, itensCadastrados = {}, osParaBaixar = null, callbackAcesso = null;
+    let cacheDadosOS = {}; // Armazenar O.S. para renderização rápida do filtro
 
     function fazerLogin() {
         auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro no Login"));
@@ -293,6 +316,29 @@
             auth.signOut().then(() => {
                 location.reload();
             });
+        }
+    }
+
+    function validarSenhaAcesso(callback) {
+        callbackAcesso = callback;
+        document.getElementById('modal-senha').style.display = 'flex';
+        document.getElementById('input-senha-modal').value = '';
+        document.getElementById('erro-senha').style.display = 'none';
+        document.getElementById('input-senha-modal').focus();
+    }
+
+    function fecharModalSenha() {
+        document.getElementById('modal-senha').style.display = 'none';
+        callbackAcesso = null;
+    }
+
+    function verificarSenhaModal() {
+        if (document.getElementById('input-senha-modal').value === SENHA_PADRAO) {
+            fecharModalSenha();
+            if (callbackAcesso) callbackAcesso();
+        } else {
+            document.getElementById('erro-senha').style.display = 'block';
+            document.getElementById('input-senha-modal').value = '';
         }
     }
 
@@ -313,11 +359,6 @@
         document.getElementById('view-'+id).classList.add('active');
         if(event) event.currentTarget.classList.add('active');
         fecharCamera();
-    }
-
-    function validarSenhaAcesso(callback) {
-        if(prompt("Senha de autorização:") === SENHA_PADRAO) callback();
-        else alert("Senha incorreta!");
     }
 
     function carregarTudo() {
@@ -343,6 +384,8 @@
             document.getElementById('os-tecnico').innerHTML = o;
             document.getElementById('filtro-tecnico-estoque').innerHTML = '<option value="">Selecionar...</option>'+o;
             document.getElementById('fin-filtro-tecnico').innerHTML = '<option value="">Técnico...</option>'+o;
+            // Popula filtro do histórico
+            document.getElementById('filtro-tecnico-os').innerHTML = '<option value="">Todos os Técnicos</option>'+o;
         });
 
         db.ref('tipos_servico').on('value', s => {
@@ -362,87 +405,81 @@
             document.getElementById('lista-servicos-admin').innerHTML = h;
         });
 
+        // O.S. listener (Carrega e envia para a função de renderizar com filtro)
         db.ref('os').on('value', s => {
-            const dados = s.val() || {};
-            const lista = document.getElementById('lista-os');
-            let tPendente = 0, tPago = 0;
-            lista.innerHTML = '<h3>Histórico de O.S.</h3>';
-            Object.keys(dados).reverse().forEach(id => {
-                const o = dados[id]; 
-                const concl = o.status === 'concluido';
-                const val = parseFloat(o.valor_pagar || 0);
-                if(concl && !o.pago) tPendente += val;
-                if(concl && o.pago) tPago += val;
-
-                // AJUSTE: Adicionado Telefone no Histórico e Botão PDF
-                lista.innerHTML += `<div class="card os-item ${o.status}">
-                    <div style="position:absolute; right:15px; top:15px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
-                    <b>${o.cliente}</b><br>
-                    <small>
-                        ${o.os_numero ? 'Nº ' + o.os_numero + ' | ' : ''}
-                        ${o.data_manual ? '📅 ' + o.data_manual + ' | ' : ''}
-                        ${o.telefone ? '📞 ' + o.telefone + ' | ' : ''}
-                        ${o.bairro ? o.bairro + ' | ' : ''}
-                        ${o.servico_tipo} | ${o.tecnico_nome}
-                    </small><br>
-                    <b style="color:var(--success)">R$ ${val.toFixed(2)}</b>
-                    ${!concl ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : `<button class="btn btn-blue" style="margin-top:10px; padding:8px; font-size:11px;" onclick="gerarPDF('${id}')">📥 GERAR PDF</button>`}
-                </div>`;
-            });
-            document.getElementById('total-pendente').innerText = `R$ ${tPendente.toFixed(2)}`;
-            document.getElementById('total-pago').innerText = `R$ ${tPago.toFixed(2)}`;
+            cacheDadosOS = s.val() || {};
+            renderizarListaOS();
         });
     }
 
-    // GERAÇÃO DE PDF COMPLETA
+    // FUNÇÃO PARA RENDERIZAR A LISTA DE O.S. (Com filtro por técnico)
+    function renderizarListaOS() {
+        const filtroTecnico = document.getElementById('filtro-tecnico-os').value;
+        const lista = document.getElementById('lista-os');
+        let tPendente = 0, tPago = 0;
+        lista.innerHTML = '<h3>Histórico de O.S.</h3>';
+
+        Object.keys(cacheDadosOS).reverse().forEach(id => {
+            const o = cacheDadosOS[id];
+            
+            // Lógica do filtro
+            if (filtroTecnico !== "" && o.tecnico_id !== filtroTecnico) return;
+
+            const concl = o.status === 'concluido';
+            const val = parseFloat(o.valor_pagar || 0);
+            if(concl && !o.pago) tPendente += val;
+            if(concl && o.pago) tPago += val;
+
+            lista.innerHTML += `<div class="card os-item ${o.status}">
+                <div style="position:absolute; right:15px; top:15px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
+                <b>${o.cliente}</b><br>
+                <small>
+                    ${o.os_numero ? 'Nº ' + o.os_numero + ' | ' : ''}
+                    ${o.data_manual ? '📅 ' + o.data_manual + ' | ' : ''}
+                    ${o.telefone ? '📞 ' + o.telefone + ' | ' : ''}
+                    ${o.bairro ? o.bairro + ' | ' : ''}
+                    ${o.servico_tipo} | ${o.tecnico_nome}
+                </small><br>
+                <b style="color:var(--success)">R$ ${val.toFixed(2)}</b>
+                ${!concl ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : `<button class="btn btn-blue" style="margin-top:10px; padding:8px; font-size:11px;" onclick="gerarPDF('${id}')">📥 GERAR PDF</button>`}
+            </div>`;
+        });
+        
+        // Atualiza financeiros na tela
+        document.getElementById('total-pendente').innerText = `R$ ${tPendente.toFixed(2)}`;
+        document.getElementById('total-pago').innerText = `R$ ${tPago.toFixed(2)}`;
+    }
+
     function gerarPDF(id) {
         db.ref('os/'+id).once('value', s => {
             const o = s.val();
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
-            // CABEÇALHO DA EMPRESA
             doc.setFontSize(16); doc.setTextColor(15, 23, 42); doc.text("WV SERVIÇOS E MANUTENCOES LTDA", 10, 20);
             doc.setFontSize(10); doc.setTextColor(100);
             doc.text(`CNPJ: 61.108.911/0001-21 | IE: 399.132.110.114`, 10, 26);
             doc.text(`Endereço: Rua Sl05, 43 - Jardim Sao Lucas III - CEP 14684-544`, 10, 31);
             doc.text(`Jardinópolis - São Paulo`, 10, 36);
-            
             doc.setDrawColor(99, 102, 241); doc.setLineWidth(1); doc.line(10, 42, 200, 42);
-
-            // DADOS DA O.S.
             doc.setFontSize(14); doc.setTextColor(15, 23, 42); doc.text(`ORDEM DE SERVIÇO Nº ${o.os_numero || 'S/N'}`, 10, 52);
             doc.setFontSize(11); doc.text(`Status: ${o.status.toUpperCase()}`, 160, 52);
-
-            // DADOS DO CLIENTE
             doc.setFontSize(12); doc.text("DADOS DO CLIENTE:", 10, 65);
             doc.setFontSize(10); doc.text(`Nome/Razão: ${o.cliente}`, 10, 72);
             doc.text(`Telefone: ${o.telefone || 'Não informado'}`, 10, 78);
             doc.text(`Endereço: ${o.endereco} - ${o.bairro || ''}`, 10, 84);
             doc.text(`Data do Serviço: ${o.data_manual || 'Não informada'}`, 10, 90);
-
-            // DETALHES DO SERVIÇO
             doc.setFontSize(12); doc.text("DETALHES DO SERVIÇO E MATERIAIS:", 10, 105);
             doc.setFontSize(10); doc.text(`Serviço Realizado: ${o.servico_tipo}`, 10, 112);
             doc.text(`Técnico Responsável: ${o.tecnico_nome}`, 10, 118);
-            
-            // Caixa de Materiais Usados
             doc.setDrawColor(200); doc.rect(10, 123, 190, 30);
             doc.text("Materiais Consumidos:", 12, 128);
             doc.setFontSize(9);
             const materiais = o.gasto ? o.gasto.split(',') : ['Nenhum material registrado.'];
             materiais.forEach((m, i) => { if(i < 5) doc.text(`- ${m.trim()}`, 15, 134 + (i * 4)); });
-
-            // VALORES
             doc.setFontSize(12); doc.text(`VALOR TOTAL: R$ ${parseFloat(o.valor_pagar).toFixed(2)}`, 10, 165);
-
-            // ASSINATURAS
             doc.line(20, 220, 90, 220); doc.text("Assinatura do Técnico", 35, 225);
             doc.line(120, 220, 190, 220); doc.text("Assinatura do Cliente / Empresa", 130, 225);
-
-            // RODAPÉ
             doc.setFontSize(8); doc.text("Gerado automaticamente pelo Sistema WV Serviços ERP", 75, 285);
-
             doc.save(`OS_${o.os_numero || o.cliente}.pdf`);
         });
     }
@@ -480,7 +517,7 @@
                 document.getElementById('os-numero').value = o.os_numero || '';
                 document.getElementById('os-data-manual').value = o.data_manual || ''; 
                 document.getElementById('os-cliente').value = o.cliente;
-                document.getElementById('os-telefone').value = o.telefone || ''; // Carregar telefone
+                document.getElementById('os-telefone').value = o.telefone || '';
                 document.getElementById('os-bairro').value = o.bairro || '';
                 document.getElementById('os-endereco').value = o.endereco;
                 document.getElementById('os-tecnico').value = o.tecnico_id;
@@ -508,7 +545,7 @@
             os_numero: document.getElementById('os-numero').value,
             data_manual: document.getElementById('os-data-manual').value, 
             cliente: document.getElementById('os-cliente').value,
-            telefone: document.getElementById('os-telefone').value, // Salvar telefone
+            telefone: document.getElementById('os-telefone').value,
             bairro: document.getElementById('os-bairro').value,
             endereco: document.getElementById('os-endereco').value,
             tecnico_id: document.getElementById('os-tecnico').value,
