@@ -117,12 +117,9 @@
                 <div class="card">
                     <h3>📜 Detalhamento por Técnico</h3>
                     <select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select>
-                    
                     <h4 style="font-size:12px; margin-top:15px; color:#b45309;">⚠️ PENDENTES DE PAGAMENTO</h4>
                     <div id="detalhes-financeiro"></div>
-                    
                     <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
-                    
                     <h4 style="font-size:12px; color:#15803d;">✅ PAGAMENTOS REALIZADOS (HISTÓRICO)</h4>
                     <div id="historico-financeiro"></div>
                 </div>
@@ -139,6 +136,8 @@
                         <select id="os-tecnico" style="flex:1"></select>
                     </div>
                     <input type="text" id="os-endereco" placeholder="Endereço">
+                    <label>Tipo de Serviço</label>
+                    <select id="os-servico-select"></select>
                     <input type="number" id="os-valor-pagar" placeholder="Valor Mão de Obra (R$)">
                     <button class="btn btn-blue" onclick="criarOS()">CRIAR O.S.</button>
                 </div>
@@ -151,6 +150,12 @@
                     <input type="text" id="cad-tec-nome" placeholder="Nome">
                     <input type="text" id="cad-tec-id" placeholder="ID (ex: tec_01)">
                     <button class="btn btn-blue" onclick="cadastrarTecnico()">SALVAR TÉCNICO</button>
+                </div>
+                <div class="card">
+                    <h3>🛠️ Novo Tipo de Serviço</h3>
+                    <input type="text" id="cad-servico-nome" placeholder="Ex: Instalação, Troca de Endereço">
+                    <button class="btn btn-blue" onclick="cadastrarTipoServico()">SALVAR TIPO DE SERVIÇO</button>
+                    <ul id="lista-servicos-admin" style="font-size: 11px; margin-top: 10px; color: #64748b;"></ul>
                 </div>
                 <div class="card">
                     <h3>📦 Novo Produto</h3>
@@ -249,6 +254,19 @@
             calcularFinanceiroGlobal(tecs);
         });
 
+        // Carregar Tipos de Serviço
+        db.ref('tipos_servico').on('value', s => {
+            const servicos = s.val() || {};
+            const opt = Object.keys(servicos).map(k => `<option value="${servicos[k].nome}">${servicos[k].nome}</option>`).join('');
+            document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha um serviço...</option>' + opt;
+            
+            const listaAdmin = document.getElementById('lista-servicos-admin');
+            listaAdmin.innerHTML = '';
+            Object.keys(servicos).forEach(k => {
+                listaAdmin.innerHTML += `<li>${servicos[k].nome}</li>`;
+            });
+        });
+
         db.ref('os').on('value', s => {
             const dados = s.val() || {};
             const lista = document.getElementById('lista-os');
@@ -264,6 +282,7 @@
                         </div>
                         <small>${os.endereco} | Téc: ${os.tecnico_nome}</small>
                         <div id="detalhe-${id}" class="detalhe-gasto">
+                            <b>Serviço:</b> ${os.servico_tipo || '---'}<br>
                             <b>Material:</b> ${os.gasto || 'Nenhum'}<br>
                             <b>Mão de Obra:</b> R$ ${os.valor_pagar || 0}
                         </div>
@@ -273,6 +292,16 @@
             const tecAtual = document.getElementById('fin-filtro-tecnico').value;
             if(tecAtual) listarFinanceiroTecnico(tecAtual);
         });
+    }
+
+    function cadastrarTipoServico() {
+        const nome = document.getElementById('cad-servico-nome').value;
+        if(nome) {
+            db.ref('tipos_servico').push({ nome: nome }).then(() => {
+                alert("Serviço cadastrado!");
+                document.getElementById('cad-servico-nome').value = '';
+            });
+        }
     }
 
     function toggleDetalhe(id) {
@@ -336,7 +365,6 @@
         }
     }
 
-    // --- CÂMERA ---
     function abrirCamera(modo) {
         document.getElementById('reader').style.display = 'block';
         scanner = new Html5Qrcode("reader");
@@ -355,7 +383,6 @@
         });
     }
 
-    // --- AÇÕES ESTOQUE ---
     function processarEntrada() {
         const key = document.getElementById('in-produto').value;
         const qtd = parseFloat(document.getElementById('in-qtd').value);
@@ -373,7 +400,6 @@
         alert("Transferência OK");
     }
 
-    // --- O.S. ---
     function criarOS() {
         const dados = {
             os_numero: document.getElementById('os-numero').value,
@@ -381,6 +407,7 @@
             endereco: document.getElementById('os-endereco').value,
             tecnico_id: document.getElementById('os-tecnico').value,
             tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text,
+            servico_tipo: document.getElementById('os-servico-select').value,
             valor_pagar: document.getElementById('os-valor-pagar').value || 0,
             status: 'pendente',
             pago: false,
