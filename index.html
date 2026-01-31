@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SISTEMA TELECOM - GESTÃO CENTRALIZADA</title>
+    <title>TELECOM ADMIN - CENTRALIZADO</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://unpkg.com/imask"></script>
 
     <style>
-        :root { --primary: #0f172a; --accent: #2563eb; --success: #10b981; --bg: #f8fafc; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --primary: #0f172a; --accent: #2563eb; --bg: #f8fafc; }
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* LOGIN */
+        /* TELA DE LOGIN */
         #login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .login-box { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; }
 
-        /* NAVBAR MOBILE */
+        /* NAVBAR */
         .navbar { background: var(--primary); padding: 10px; display: flex; overflow-x: auto; gap: 8px; border-bottom: 2px solid var(--accent); }
-        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px 18px; border-radius: 8px; font-weight: bold; white-space: nowrap; cursor: pointer; }
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
         .nav-btn.active { background: var(--accent); }
 
         .content { flex: 1; padding: 15px; overflow-y: auto; }
@@ -31,102 +31,67 @@
         .view-section.active { display: block; }
 
         /* CARDS */
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .col { flex: 1; }
-        
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; margin-bottom: 5px; }
-        label { font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase; }
-        
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; transition: 0.2s; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; }
         .btn-blue { background: var(--accent); }
-        .btn-green { background: var(--success); }
+        .btn-green { background: #10b981; }
         .btn-cam { background: #f59e0b; margin-bottom: 10px; }
 
         /* CAMERA */
         #reader { width: 100%; border-radius: 10px; margin-bottom: 10px; overflow: hidden; display: none; border: 3px solid var(--accent); }
-        .scan-feedback { text-align: center; padding: 10px; background: #dcfce7; color: #166534; font-weight: bold; border-radius: 5px; margin-bottom: 10px; display: none; }
-
-        /* ESTOQUE BADGE */
-        .stock-val { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
-        
-        .os-card { border-left: 5px solid orange; transition: 0.3s; }
-        .os-card.concluido { border-left-color: var(--success); opacity: 0.8; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-box">
-            <h2 style="margin-top:0; color:var(--primary)">ADMIN TELECOM</h2>
+            <h2 style="margin-top:0;">Admin Telecom</h2>
             <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="senha" placeholder="Senha">
-            <button class="btn btn-blue" onclick="fazerLogin()">ACESSAR</button>
-            <p id="msg-erro" style="color:red; font-size:0.8em; margin-top:10px;"></p>
+            <button class="btn btn-blue" onclick="fazerLogin()">ACESSAR SISTEMA</button>
         </div>
     </div>
 
     <div id="app-container" style="display:none; flex-direction:column; height:100%;">
-        
         <div class="navbar">
-            <button class="nav-btn active" onclick="nav('entrada')">📥 ENTRADA</button>
-            <button class="nav-btn" onclick="nav('saida')">📤 SAÍDA TÉC.</button>
+            <button class="nav-btn active" onclick="nav('entrada')">📥 Entrada</button>
+            <button class="nav-btn" onclick="nav('saida')">📤 Saída Técnico</button>
             <button class="nav-btn" onclick="nav('os')">📋 O.S.</button>
-            <button class="nav-btn" onclick="nav('config')">⚙️ CÓDIGOS</button>
-            <button class="nav-btn" onclick="logout()" style="color:#fca5a5;">SAIR</button>
+            <button class="nav-btn" onclick="nav('config')">⚙️ Config Códigos</button>
+            <button class="nav-btn" onclick="logout()" style="color:#fca5a5;">Sair</button>
         </div>
 
         <div class="content">
-            
-            <div id="camera-area" style="display:none;">
-                <div id="reader"></div>
-                <button class="btn" style="background:#ef4444; margin-bottom:15px;" onclick="pararCamera()">FECHAR CÂMERA</button>
-            </div>
-            <div id="scan-feedback" class="scan-feedback">BIPADO COM SUCESSO!</div>
+            <div id="reader"></div>
 
             <div id="view-entrada" class="view-section active">
-                <div class="card" style="background:#eff6ff;">
-                    <b>Estoque Central:</b> 
-                    <span id="central-resumo">Cabo: 0 | Conec: 0 | Rot: 0</span>
-                </div>
                 <div class="card">
-                    <h3>📥 Entrada (Nota Fiscal)</h3>
-                    <button class="btn btn-cam" onclick="abrirCamera('in')">📷 BIPAR PRODUTOS</button>
-                    <div class="row">
-                        <div class="col"><label>Cabo (m)</label><input type="number" id="in-cabo" value="0"></div>
-                        <div class="col"><label>Conec</label><input type="number" id="in-conec" value="0"></div>
-                        <div class="col"><label>Rot</label><input type="number" id="in-rot" value="0"></div>
-                    </div>
-                    <label>Observação / Nota Fiscal</label>
-                    <input type="text" id="in-obs">
+                    <h3>Receber Material (Entrada)</h3>
+                    <button class="btn btn-cam" onclick="abrirCamera('in')">📷 LER CÓDIGO DE BARRAS</button>
+                    <label>Cabo (Metros)</label><input type="number" id="in-cabo" value="0">
+                    <label>Roteadores</label><input type="number" id="in-rot" value="0">
                     <button class="btn btn-green" onclick="salvarEntrada()">SALVAR E GERAR PDF</button>
                 </div>
             </div>
 
             <div id="view-saida" class="view-section">
                 <div class="card">
-                    <h3>📤 Saída para Técnico</h3>
-                    <label>Escolha o Instalador</label>
+                    <h3>Saída para Técnico</h3>
+                    <label>Selecione o Instalador</label>
                     <select id="sel-tecnico"></select>
-                    <button class="btn btn-cam" onclick="abrirCamera('out')">📷 BIPAR PARA O TÉCNICO</button>
-                    <div class="row">
-                        <div class="col"><label>Cabo (m)</label><input type="number" id="out-cabo" value="0"></div>
-                        <div class="col"><label>Conec</label><input type="number" id="out-conec" value="0"></div>
-                        <div class="col"><label>Rot</label><input type="number" id="out-rot" value="0"></div>
-                    </div>
-                    <button class="btn btn-blue" onclick="salvarSaida()">TRANSFERIR E GERAR TERMO</button>
+                    <button class="btn btn-cam" onclick="abrirCamera('out')">📷 BIPAR PARA CARRO</button>
+                    <label>Cabo (m)</label><input type="number" id="out-cabo" value="0">
+                    <label>Roteadores</label><input type="number" id="out-rot" value="0">
+                    <button class="btn btn-blue" onclick="salvarSaida()">TRANSFERIR MATERIAL</button>
                 </div>
             </div>
 
             <div id="view-os" class="view-section">
                 <div class="card">
-                    <h3>📋 Nova O.S. / Baixa</h3>
+                    <h3>Gestão de O.S.</h3>
                     <input type="text" id="os-cliente" placeholder="Nome do Cliente">
-                    <div class="row">
-                        <div class="col"><input type="text" id="os-cep" placeholder="CEP" onblur="buscarCep()"></div>
-                        <div class="col"><input type="text" id="os-servico" placeholder="Serviço"></div>
-                    </div>
-                    <input type="text" id="os-end" placeholder="Endereço Automático" readonly>
+                    <input type="text" id="os-servico" placeholder="Serviço">
                     <select id="os-sel-tecnico"></select>
                     <button class="btn btn-blue" onclick="criarOS()">CRIAR O.S.</button>
                 </div>
@@ -135,42 +100,40 @@
 
             <div id="view-config" class="view-section">
                 <div class="card">
-                    <h3>⚙️ Cadastrar Códigos</h3>
-                    <button class="btn btn-cam" onclick="abrirCamera('cfg')">📷 LER CÓDIGO NOVO</button>
-                    <input type="text" id="cfg-codigo" placeholder="Código Bipado">
+                    <h3>Cadastrar Códigos de Barras</h3>
+                    <button class="btn btn-cam" onclick="abrirCamera('cfg')">📷 LER PRODUTO NOVO</button>
+                    <input type="text" id="cfg-codigo" placeholder="Código Lido">
                     <select id="cfg-tipo">
-                        <option value="rot">Roteador (unidade)</option>
-                        <option value="conec">Conector (unidade)</option>
-                        <option value="cabo">Cabo (Rolo 300m)</option>
+                        <option value="rot">Roteador</option>
+                        <option value="cabo">Cabo (300m)</option>
                     </select>
-                    <button class="btn btn-blue" onclick="salvarCodigo()">SALVAR ASSOCIAÇÃO</button>
-                    <ul id="lista-codigos" style="margin-top:15px; font-size:0.9em;"></ul>
+                    <button class="btn btn-blue" onclick="salvarCodigo()">SALVAR MAPA</button>
                 </div>
             </div>
-
         </div>
     </div>
 
 <script>
-    // 1. CONFIGURAÇÃO FIREBASE
+    // --- SUAS CHAVES JÁ CONFIGURADAS ---
     const firebaseConfig = {
-        apiKey: "COLE_SUA_CONFIG_AQUI",
-        authDomain: "SEU_PROJETO.firebaseapp.com",
-        projectId: "SEU_PROJETO",
-        storageBucket: "SEU_PROJETO.appspot.com",
-        messagingSenderId: "NUMEROS",
-        appId: "SEU_APP_ID"
+        apiKey: "AIzaSyBS8t51QON29MIYDkkcZETchdevHFVMzCk",
+        authDomain: "internet-f2434.firebaseapp.com",
+        databaseURL: "https://internet-f2434-default-rtdb.firebaseio.com",
+        projectId: "internet-f2434",
+        storageBucket: "internet-f2434.firebasestorage.app",
+        messagingSenderId: "506788174813",
+        appId: "1:506788174813:web:50e05b1a194d70f412b434"
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const db = firebase.database();
     const auth = firebase.auth();
-    const { jsPDF } = window.jspdf;
 
-    // 2. CONTROLE DE LOGIN
+    // LOGIN
     function fazerLogin() {
-        auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value)
-        .catch(e => document.getElementById('msg-erro').innerText = "Erro ao acessar.");
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+        auth.signInWithEmailAndPassword(email, senha).catch(e => alert("Erro ao entrar: " + e.message));
     }
     function logout() { auth.signOut(); location.reload(); }
     
@@ -178,7 +141,7 @@
         if(user) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-container').style.display = 'flex';
-            iniciarSistema();
+            iniciarApp();
         }
     });
 
@@ -187,172 +150,101 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('view-'+id).classList.add('active');
         event.target.classList.add('active');
-        pararCamera();
+        if(scanner) scanner.stop();
     }
 
-    // 3. LEITOR DE CÂMERA
+    // CÂMERA
     let scanner;
-    let modoGlobal = ''; 
+    let modoGlobal = '';
+    let mapaCodigos = {};
 
     function abrirCamera(modo) {
         modoGlobal = modo;
-        document.getElementById('camera-area').style.display = 'block';
         document.getElementById('reader').style.display = 'block';
         scanner = new Html5Qrcode("reader");
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
-    }
-
-    function pararCamera() {
-        if(scanner) scanner.stop().then(() => { document.getElementById('camera-area').style.display = 'none'; });
-    }
-
-    function onScanSuccess(decodedText) {
-        tocarBip();
-        document.getElementById('scan-feedback').style.display = 'block';
-        setTimeout(() => document.getElementById('scan-feedback').style.display = 'none', 1000);
-
-        if(modoGlobal === 'cfg') {
-            document.getElementById('cfg-codigo').value = decodedText;
-            pararCamera();
-        } else {
-            const tipo = mapaCodigos[decodedText];
-            if(tipo) {
-                const campo = document.getElementById(`${modoGlobal}-${tipo}`);
-                campo.value = parseInt(campo.value) + (tipo === 'cabo' ? 300 : 1);
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            if(modoGlobal === 'cfg') {
+                document.getElementById('cfg-codigo').value = text;
+                scanner.stop();
             } else {
-                alert("Código não cadastrado!");
-                pararCamera();
+                const tipo = mapaCodigos[text];
+                if(tipo) {
+                    const campo = document.getElementById(`${modoGlobal}-${tipo}`);
+                    campo.value = parseInt(campo.value) + (tipo === 'cabo' ? 300 : 1);
+                    tocarBip();
+                }
             }
-        }
+        });
     }
 
-    // 4. LÓGICA DO SISTEMA
-    let mapaCodigos = {};
-
-    function iniciarSistema() {
-        // Carrega Códigos
-        db.collection('config_codigos').onSnapshot(snap => {
-            mapaCodigos = {};
-            const lista = document.getElementById('lista-codigos');
-            lista.innerHTML = '';
-            snap.forEach(doc => {
-                mapaCodigos[doc.data().codigo] = doc.data().tipo;
-                lista.innerHTML += `<li>${doc.data().codigo} = <b>${doc.data().tipo}</b></li>`;
-            });
-        });
-
-        // Estoque Central
-        db.collection('estoque_central').doc('main').onSnapshot(d => {
-            const da = d.data() || {cabo:0, conec:0, rot:0};
-            document.getElementById('central-resumo').innerText = `Cabo: ${da.cabo}m | Conec: ${da.conec} | Rot: ${da.rot}`;
-        });
-
-        // Técnicos nos Selects
-        db.collection('usuarios').where('role','==','tecnico').onSnapshot(s => {
+    // SISTEMA
+    function iniciarApp() {
+        db.ref('codigos').on('value', s => mapaCodigos = s.val() || {});
+        
+        db.ref('tecnicos').on('value', s => {
+            const t = s.val() || {};
             const sels = [document.getElementById('sel-tecnico'), document.getElementById('os-sel-tecnico')];
-            sels.forEach(sel => sel.innerHTML = '<option value="">Selecione...</option>');
-            s.forEach(d => sels.forEach(sel => sel.innerHTML += `<option value="${d.id}">${d.data().nome}</option>`));
+            sels.forEach(sel => {
+                sel.innerHTML = '<option value="">Escolha o Técnico...</option>';
+                Object.keys(t).forEach(k => sel.innerHTML += `<option value="${k}">${t[k].nome}</option>`);
+            });
         });
 
-        // OS Listagem
-        db.collection('os').orderBy('data','desc').onSnapshot(snap => {
-            const div = document.getElementById('lista-os');
-            div.innerHTML = '';
-            snap.forEach(doc => {
-                const os = doc.data();
-                const concluido = os.status === 'concluido';
-                let acao = concluido ? `<small style="color:green">Gasto: ${os.gasto.cabo}m, ${os.gasto.rot} rot.</small>` : 
-                    `<div class="row" style="margin-top:10px">
-                        <input type="number" id="bx-cabo-${doc.id}" placeholder="Cabo" style="width:60px; padding:5px;">
-                        <input type="number" id="bx-rot-${doc.id}" placeholder="Rot" style="width:60px; padding:5px;">
-                        <button class="btn-green" style="padding:5px 10px; border-radius:5px; border:none; cursor:pointer;" onclick="baixarOS('${doc.id}', '${os.tecnico_email}')">BAIXAR</button>
-                    </div>`;
-
-                div.innerHTML += `
-                    <div class="card os-card ${concluido?'concluido':''}">
-                        <b>${os.cliente}</b> (${os.status})<br><small>${os.servico} - ${os.tecnico_email}</small>
-                        ${acao}
-                    </div>`;
+        db.ref('os').on('value', s => {
+            const lista = document.getElementById('lista-os');
+            lista.innerHTML = '';
+            const dados = s.val() || {};
+            Object.keys(dados).forEach(id => {
+                lista.innerHTML += `<div class="card"><b>${dados[id].cliente}</b><br>${dados[id].servico}</div>`;
             });
         });
     }
 
-    // 5. TRANSAÇÕES
-    async function salvarEntrada() {
-        const d = { cabo: +document.getElementById('in-cabo').value, conec: +document.getElementById('in-conec').value, rot: +document.getElementById('in-rot').value };
-        await db.collection('estoque_central').doc('main').set({
-            cabo: firebase.firestore.FieldValue.increment(d.cabo),
-            conec: firebase.firestore.FieldValue.increment(d.conec),
-            rot: firebase.firestore.FieldValue.increment(d.rot)
-        }, {merge:true});
-        gerarPDF("ENTRADA DE ESTOQUE", d);
-        alert("Salvo!");
-    }
-
-    async function salvarSaida() {
-        const email = document.getElementById('sel-tecnico').value;
-        const d = { cabo: +document.getElementById('out-cabo').value, conec: +document.getElementById('out-conec').value, rot: +document.getElementById('out-rot').value };
-        if(!email) return alert("Selecione o técnico!");
-
-        try {
-            await db.runTransaction(async t => {
-                const cRef = db.collection('estoque_central').doc('main');
-                const central = (await t.get(cRef)).data();
-                if(central.cabo < d.cabo) throw "Cabo insuficiente na Central!";
-                t.update(cRef, { cabo: central.cabo - d.cabo, conec: central.conec - d.conec, rot: central.rot - d.rot });
-                t.set(db.collection('estoque_volante').doc(email), {
-                    cabo: firebase.firestore.FieldValue.increment(d.cabo),
-                    conec: firebase.firestore.FieldValue.increment(d.conec),
-                    rot: firebase.firestore.FieldValue.increment(d.rot)
-                }, {merge:true});
-            });
-            gerarPDF("TERMO DE RESPONSABILIDADE", d, email);
-            alert("Transferido!");
-        } catch(e) { alert(e); }
-    }
-
-    async function baixarOS(id, email) {
-        const gasto = { cabo: +document.getElementById(`bx-cabo-${id}`).value, rot: +document.getElementById(`bx-rot-${id}`).value, conec: 0 };
-        const techRef = db.collection('estoque_volante').doc(email);
-        await db.runTransaction(async t => {
-            const tech = (await t.get(techRef)).data() || {cabo:0, conec:0, rot:0};
-            t.update(techRef, { cabo: tech.cabo - gasto.cabo, rot: tech.rot - gasto.rot });
-            t.update(db.collection('os').doc(id), { status: 'concluido', gasto });
+    function salvarEntrada() {
+        const c = +document.getElementById('in-cabo').value;
+        const r = +document.getElementById('in-rot').value;
+        db.ref('estoque_central').transaction(d => {
+            if(!d) d = {cabo:0, rot:0};
+            d.cabo += c; d.rot += r;
+            return d;
         });
-        alert("OS Baixada!");
+        alert("Salvo com sucesso!");
     }
 
-    // 6. AUXILIARES
-    function buscarCep() {
-        const cep = document.getElementById('os-cep').value.replace(/\D/g,'');
-        if(cep.length===8) fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r=>r.json()).then(d=> {
-            if(!d.erro) document.getElementById('os-end').value = `${d.logradouro}, ${d.bairro}`;
+    function salvarSaida() {
+        const tec = document.getElementById('sel-tecnico').value;
+        if(!tec) return alert("Selecione um técnico");
+        const c = +document.getElementById('out-cabo').value;
+        const r = +document.getElementById('out-rot').value;
+        
+        db.ref('estoque_volante/'+tec).transaction(d => {
+            if(!d) d = {cabo:0, rot:0};
+            d.cabo += c; d.rot += r;
+            return d;
         });
+        alert("Material transferido para o técnico!");
     }
+
     function criarOS() {
-        db.collection('os').add({
+        db.ref('os').push({
             cliente: document.getElementById('os-cliente').value,
             servico: document.getElementById('os-servico').value,
-            endereco: document.getElementById('os-end').value,
-            tecnico_email: document.getElementById('os-sel-tecnico').value,
-            status: 'pendente', data: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(()=>alert("OS Criada!"));
+            tec: document.getElementById('os-sel-tecnico').value,
+            status: 'pendente'
+        });
+        alert("O.S. Criada!");
     }
+
     function salvarCodigo() {
-        db.collection('config_codigos').add({ codigo: document.getElementById('cfg-codigo').value, tipo: document.getElementById('cfg-tipo').value });
-        alert("Configurado!");
+        const cod = document.getElementById('cfg-codigo').value;
+        const tipo = document.getElementById('cfg-tipo').value;
+        db.ref('codigos/'+cod).set(tipo);
+        alert("Produto Mapeado!");
     }
+
     function tocarBip() {
         const a = new AudioContext(); const o = a.createOscillator(); const g = a.createGain();
         o.connect(g); g.connect(a.destination); o.frequency.value = 1200; g.gain.value = 0.1; o.start(); setTimeout(()=>o.stop(), 100);
-    }
-    function gerarPDF(t, d, tec="") {
-        const doc = new jsPDF();
-        doc.text(t, 20, 20); doc.text(`Data: ${new Date().toLocaleString()}`, 20, 30);
-        if(tec) doc.text(`Técnico: ${tec}`, 20, 40);
-        doc.text(`Cabo: ${d.cabo}m | Conec: ${d.conec} | Rot: ${d.rot}`, 20, 60);
-        doc.text("__________________________", 20, 100); doc.text("Assinatura", 20, 105);
-        doc.save("relatorio.pdf");
     }
 </script>
 </body>
