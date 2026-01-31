@@ -2,182 +2,159 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Sistema Telecom - Assinatura Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA TELECOM - GESTÃO CENTRALIZADA</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://unpkg.com/imask"></script>
 
     <style>
-        :root { --primary: #2563eb; --secondary: #1e293b; --bg: #f8fafc; }
+        :root { --primary: #0f172a; --accent: #2563eb; --success: #10b981; --bg: #f8fafc; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* LOGIN E LAYOUT */
-        #login-screen { position: fixed; inset: 0; background: var(--secondary); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .login-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 320px; text-align: center; }
-        
-        .main-content { display: flex; height: 100%; width: 100%; }
-        .navbar { background: var(--secondary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
+        /* LOGIN */
+        #login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
 
-        /* PAINEL ADMIN */
-        .sidebar { width: 240px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-        @media(max-width: 768px) { .sidebar { display: none; } } /* Esconde sidebar no celular se for admin */
-        .sidebar button { background: none; border: none; padding: 15px; text-align: left; cursor: pointer; border-bottom: 1px solid #f1f5f9; color: #475569; font-weight: 500; }
-        .sidebar button.active { background: #eff6ff; color: var(--primary); border-left: 4px solid var(--primary); }
-        .admin-view { flex: 1; padding: 20px; overflow-y: auto; display: none; background: #f1f5f9; }
-        .admin-view.active { display: block; }
+        /* NAVBAR MOBILE */
+        .navbar { background: var(--primary); padding: 10px; display: flex; overflow-x: auto; gap: 8px; border-bottom: 2px solid var(--accent); }
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px 18px; border-radius: 8px; font-weight: bold; white-space: nowrap; cursor: pointer; }
+        .nav-btn.active { background: var(--accent); }
 
-        /* PAINEL TÉCNICO */
-        .tech-container { width: 100%; max-width: 500px; margin: 0 auto; background: white; display: flex; flex-direction: column; height: 100%; }
-        .tech-header { background: var(--primary); padding: 15px; color: white; }
-        .tech-body { flex: 1; overflow-y: auto; padding: 15px; background: #f8fafc; }
+        .content { flex: 1; padding: 15px; overflow-y: auto; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
 
-        /* COMPONENTES */
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .row { display: flex; gap: 10px; }
+        /* CARDS */
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
         .col { flex: 1; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px; font-size: 16px; }
-        label { font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px; display: block; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; font-size: 15px; }
-        .btn-blue { background: var(--primary); }
-        .btn-green { background: #10b981; }
-        .btn-red { background: #ef4444; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; margin-bottom: 5px; }
+        label { font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; transition: 0.2s; }
+        .btn-blue { background: var(--accent); }
+        .btn-green { background: var(--success); }
+        .btn-cam { background: #f59e0b; margin-bottom: 10px; }
 
-        /* ASSINATURA (CANVAS) */
-        canvas.signature-pad {
-            border: 2px dashed #94a3b8;
-            border-radius: 8px;
-            background: #fff;
-            width: 100%;
-            height: 180px;
-            touch-action: none; /* Importante para não rolar a tela ao assinar */
-            cursor: crosshair;
-        }
-        .clear-sig { color: #ef4444; font-size: 0.8em; cursor: pointer; float: right; margin-top: 5px; font-weight: bold; }
+        /* CAMERA */
+        #reader { width: 100%; border-radius: 10px; margin-bottom: 10px; overflow: hidden; display: none; border: 3px solid var(--accent); }
+        .scan-feedback { text-align: center; padding: 10px; background: #dcfce7; color: #166534; font-weight: bold; border-radius: 5px; margin-bottom: 10px; display: none; }
 
-        /* STATUS TAGS */
-        .tag { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; }
-        .tag-pendente { background: #fff7ed; color: #c2410c; }
-        .tag-concluido { background: #f0fdf4; color: #15803d; }
+        /* ESTOQUE BADGE */
+        .stock-val { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
+        
+        .os-card { border-left: 5px solid orange; transition: 0.3s; }
+        .os-card.concluido { border-left-color: var(--success); opacity: 0.8; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-box">
-            <h2 style="color:var(--secondary); margin-top:0;">📡 Sistema Telecom</h2>
+            <h2 style="margin-top:0; color:var(--primary)">ADMIN TELECOM</h2>
             <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="senha" placeholder="Senha">
-            <button class="btn btn-blue" onclick="login()">ENTRAR</button>
+            <button class="btn btn-blue" onclick="fazerLogin()">ACESSAR</button>
             <p id="msg-erro" style="color:red; font-size:0.8em; margin-top:10px;"></p>
         </div>
     </div>
 
-    <div class="navbar" id="navbar" style="display:none;">
-        <div id="user-info">Carregando...</div>
-        <button onclick="logout()" style="background:none; border:1px solid #ffffff50; color:white; padding:5px 10px; border-radius:4px;">Sair</button>
-    </div>
-
-    <div class="main-content" id="main-content" style="display:none;">
+    <div id="app-container" style="display:none; flex-direction:column; height:100%;">
         
-        <div id="admin-panel" style="display:none; width:100%; display:flex;">
-            <div class="sidebar">
-                <button onclick="showTab('tab-os')" class="active">📋 Ordens de Serviço</button>
-                <button onclick="showTab('tab-estoque')">🏭 Estoque Central</button>
-                <button onclick="showTab('tab-equipe')">🚛 Transferências</button>
-            </div>
-
-            <div id="tab-os" class="admin-view active">
-                <div class="card">
-                    <h3>Nova O.S.</h3>
-                    <div class="row">
-                        <div class="col"><label>CPF/CNPJ</label><input type="text" id="os-doc"></div>
-                        <div class="col"><label>Nome</label><input type="text" id="os-nome"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col" style="flex:0 0 100px"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div>
-                        <div class="col"><label>Endereço</label><input type="text" id="os-end" readonly></div>
-                        <div class="col" style="flex:0 0 70px"><label>Nº</label><input type="text" id="os-num"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col"><label>Serviço</label><input type="text" id="os-servico"></div>
-                        <div class="col"><label>Técnico</label><select id="os-tecnico-select"></select></div>
-                    </div>
-                    <button class="btn btn-green" onclick="criarOS()">✅ Abrir OS</button>
-                </div>
-                <h3>Monitoramento</h3>
-                <div id="lista-os-admin"></div>
-            </div>
-
-            <div id="tab-estoque" class="admin-view">
-                <div class="card">
-                    <h3>Estoque Central</h3>
-                    <div class="row" style="background:#e0f2fe; padding:15px; border-radius:8px; margin-bottom:15px;">
-                        <div class="col"><b>Cabo:</b> <span id="central-cabo">0</span>m</div>
-                        <div class="col"><b>Conect:</b> <span id="central-conec">0</span></div>
-                        <div class="col"><b>Roteador:</b> <span id="central-rot">0</span></div>
-                    </div>
-                    <label>Dar Entrada (Compra)</label>
-                    <div class="row">
-                        <input type="number" id="ent-cabo" placeholder="Cabo">
-                        <input type="number" id="ent-conec" placeholder="Conect">
-                        <input type="number" id="ent-rot" placeholder="Roteador">
-                    </div>
-                    <button class="btn btn-blue" onclick="abastecerCentral()">Salvar Entrada</button>
-                </div>
-            </div>
-
-            <div id="tab-equipe" class="admin-view">
-                <div class="card">
-                    <h3>Abastecer Carro (Volante)</h3>
-                    <label>Técnico</label>
-                    <select id="transf-tecnico-select" style="margin-bottom:15px"></select>
-                    <div class="row">
-                        <input type="number" id="transf-cabo" placeholder="Cabo">
-                        <input type="number" id="transf-conec" placeholder="Conect">
-                        <input type="number" id="transf-rot" placeholder="Rot">
-                    </div>
-                    <button class="btn btn-blue" onclick="transferirEstoque()">Transferir</button>
-                </div>
-                <div class="card">
-                    <h3>Cadastrar Novo Técnico</h3>
-                    <input type="email" id="novo-tech-email" placeholder="Email (Login)">
-                    <input type="text" id="novo-tech-nome" placeholder="Nome">
-                    <button class="btn btn-green" onclick="cadastrarTecnicoFirestore()">Cadastrar</button>
-                </div>
-            </div>
+        <div class="navbar">
+            <button class="nav-btn active" onclick="nav('entrada')">📥 ENTRADA</button>
+            <button class="nav-btn" onclick="nav('saida')">📤 SAÍDA TÉC.</button>
+            <button class="nav-btn" onclick="nav('os')">📋 O.S.</button>
+            <button class="nav-btn" onclick="nav('config')">⚙️ CÓDIGOS</button>
+            <button class="nav-btn" onclick="logout()" style="color:#fca5a5;">SAIR</button>
         </div>
 
-        <div id="tech-panel" class="tech-container" style="display:none;">
-            <div class="tech-header">
-                <h3 style="margin:0">📱 App Técnico</h3>
-                <div id="tech-estoque-display" style="font-size:0.85em; margin-top:5px; opacity:0.9;">Carregando...</div>
-            </div>
+        <div class="content">
             
-            <div class="tech-body">
-                <div class="card" style="background:#fffbeb; border-color:#fcd34d">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>📍 Modo Viagem</b>
-                        <button id="btn-viagem" onclick="toggleModoViagem()" style="width:auto; padding:8px 15px; font-size:0.8em;" class="btn-blue">ATIVAR</button>
-                    </div>
-                    <small id="status-viagem" style="display:block; margin-top:5px; color:#666;">Desativado</small>
-                </div>
-
-                <h4>Minhas Ordens de Serviço</h4>
-                <div id="lista-os-tech"></div>
+            <div id="camera-area" style="display:none;">
+                <div id="reader"></div>
+                <button class="btn" style="background:#ef4444; margin-bottom:15px;" onclick="pararCamera()">FECHAR CÂMERA</button>
             </div>
+            <div id="scan-feedback" class="scan-feedback">BIPADO COM SUCESSO!</div>
+
+            <div id="view-entrada" class="view-section active">
+                <div class="card" style="background:#eff6ff;">
+                    <b>Estoque Central:</b> 
+                    <span id="central-resumo">Cabo: 0 | Conec: 0 | Rot: 0</span>
+                </div>
+                <div class="card">
+                    <h3>📥 Entrada (Nota Fiscal)</h3>
+                    <button class="btn btn-cam" onclick="abrirCamera('in')">📷 BIPAR PRODUTOS</button>
+                    <div class="row">
+                        <div class="col"><label>Cabo (m)</label><input type="number" id="in-cabo" value="0"></div>
+                        <div class="col"><label>Conec</label><input type="number" id="in-conec" value="0"></div>
+                        <div class="col"><label>Rot</label><input type="number" id="in-rot" value="0"></div>
+                    </div>
+                    <label>Observação / Nota Fiscal</label>
+                    <input type="text" id="in-obs">
+                    <button class="btn btn-green" onclick="salvarEntrada()">SALVAR E GERAR PDF</button>
+                </div>
+            </div>
+
+            <div id="view-saida" class="view-section">
+                <div class="card">
+                    <h3>📤 Saída para Técnico</h3>
+                    <label>Escolha o Instalador</label>
+                    <select id="sel-tecnico"></select>
+                    <button class="btn btn-cam" onclick="abrirCamera('out')">📷 BIPAR PARA O TÉCNICO</button>
+                    <div class="row">
+                        <div class="col"><label>Cabo (m)</label><input type="number" id="out-cabo" value="0"></div>
+                        <div class="col"><label>Conec</label><input type="number" id="out-conec" value="0"></div>
+                        <div class="col"><label>Rot</label><input type="number" id="out-rot" value="0"></div>
+                    </div>
+                    <button class="btn btn-blue" onclick="salvarSaida()">TRANSFERIR E GERAR TERMO</button>
+                </div>
+            </div>
+
+            <div id="view-os" class="view-section">
+                <div class="card">
+                    <h3>📋 Nova O.S. / Baixa</h3>
+                    <input type="text" id="os-cliente" placeholder="Nome do Cliente">
+                    <div class="row">
+                        <div class="col"><input type="text" id="os-cep" placeholder="CEP" onblur="buscarCep()"></div>
+                        <div class="col"><input type="text" id="os-servico" placeholder="Serviço"></div>
+                    </div>
+                    <input type="text" id="os-end" placeholder="Endereço Automático" readonly>
+                    <select id="os-sel-tecnico"></select>
+                    <button class="btn btn-blue" onclick="criarOS()">CRIAR O.S.</button>
+                </div>
+                <div id="lista-os"></div>
+            </div>
+
+            <div id="view-config" class="view-section">
+                <div class="card">
+                    <h3>⚙️ Cadastrar Códigos</h3>
+                    <button class="btn btn-cam" onclick="abrirCamera('cfg')">📷 LER CÓDIGO NOVO</button>
+                    <input type="text" id="cfg-codigo" placeholder="Código Bipado">
+                    <select id="cfg-tipo">
+                        <option value="rot">Roteador (unidade)</option>
+                        <option value="conec">Conector (unidade)</option>
+                        <option value="cabo">Cabo (Rolo 300m)</option>
+                    </select>
+                    <button class="btn btn-blue" onclick="salvarCodigo()">SALVAR ASSOCIAÇÃO</button>
+                    <ul id="lista-codigos" style="margin-top:15px; font-size:0.9em;"></ul>
+                </div>
+            </div>
+
         </div>
     </div>
 
 <script>
-    // --- 1. COLE SUAS CHAVES AQUI ---
+    // 1. CONFIGURAÇÃO FIREBASE
     const firebaseConfig = {
-        apiKey: "SUA_API_KEY_AQUI",
+        apiKey: "COLE_SUA_CONFIG_AQUI",
         authDomain: "SEU_PROJETO.firebaseapp.com",
         projectId: "SEU_PROJETO",
         storageBucket: "SEU_PROJETO.appspot.com",
@@ -188,363 +165,194 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
-    let currentUser = null;
+    const { jsPDF } = window.jspdf;
 
-    // --- 2. CONFIGURAÇÕES INICIAIS ---
-    document.addEventListener('DOMContentLoaded', () => {
-        IMask(document.getElementById('os-cep'), {mask: '00000-000'});
-        IMask(document.getElementById('os-doc'), {mask: [{mask: '000.000.000-00'}, {mask: '00.000.000/0000-00'}]});
-    });
-
-    // --- 3. AUTENTICAÇÃO ---
-    function login() {
+    // 2. CONTROLE DE LOGIN
+    function fazerLogin() {
         auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value)
-            .catch(err => alert("Erro: " + err.message));
+        .catch(e => document.getElementById('msg-erro').innerText = "Erro ao acessar.");
     }
     function logout() { auth.signOut(); location.reload(); }
-
-    auth.onAuthStateChanged(async (user) => {
-        if(user){
-            currentUser = user;
+    
+    auth.onAuthStateChanged(user => {
+        if(user) {
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('navbar').style.display = 'flex';
-            document.getElementById('main-content').style.display = 'flex';
-            
-            const doc = await db.collection('usuarios').doc(user.email).get();
-            const perfil = doc.exists ? doc.data() : {role:'tecnico', nome:'Técnico'};
-            
-            document.getElementById('user-info').innerText = `${perfil.nome}`;
-
-            if(perfil.role === 'admin') {
-                document.getElementById('admin-panel').style.display = 'flex';
-                iniciarAdmin();
-            } else {
-                document.getElementById('tech-panel').style.display = 'flex';
-                iniciarTecnico(user.email);
-            }
-        } else {
-            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'flex';
+            iniciarSistema();
         }
     });
 
-    // --- 4. FUNÇÕES ADMIN ---
-    function iniciarAdmin() {
-        db.collection('usuarios').where('role','==','tecnico').onSnapshot(snap => {
-            const sels = [document.getElementById('os-tecnico-select'), document.getElementById('transf-tecnico-select')];
-            sels.forEach(s => s.innerHTML = '<option value="">Selecione...</option>');
-            snap.forEach(d => sels.forEach(s => s.innerHTML += `<option value="${d.id}">${d.data().nome}</option>`));
+    function nav(id) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('view-'+id).classList.add('active');
+        event.target.classList.add('active');
+        pararCamera();
+    }
+
+    // 3. LEITOR DE CÂMERA
+    let scanner;
+    let modoGlobal = ''; 
+
+    function abrirCamera(modo) {
+        modoGlobal = modo;
+        document.getElementById('camera-area').style.display = 'block';
+        document.getElementById('reader').style.display = 'block';
+        scanner = new Html5Qrcode("reader");
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+    }
+
+    function pararCamera() {
+        if(scanner) scanner.stop().then(() => { document.getElementById('camera-area').style.display = 'none'; });
+    }
+
+    function onScanSuccess(decodedText) {
+        tocarBip();
+        document.getElementById('scan-feedback').style.display = 'block';
+        setTimeout(() => document.getElementById('scan-feedback').style.display = 'none', 1000);
+
+        if(modoGlobal === 'cfg') {
+            document.getElementById('cfg-codigo').value = decodedText;
+            pararCamera();
+        } else {
+            const tipo = mapaCodigos[decodedText];
+            if(tipo) {
+                const campo = document.getElementById(`${modoGlobal}-${tipo}`);
+                campo.value = parseInt(campo.value) + (tipo === 'cabo' ? 300 : 1);
+            } else {
+                alert("Código não cadastrado!");
+                pararCamera();
+            }
+        }
+    }
+
+    // 4. LÓGICA DO SISTEMA
+    let mapaCodigos = {};
+
+    function iniciarSistema() {
+        // Carrega Códigos
+        db.collection('config_codigos').onSnapshot(snap => {
+            mapaCodigos = {};
+            const lista = document.getElementById('lista-codigos');
+            lista.innerHTML = '';
+            snap.forEach(doc => {
+                mapaCodigos[doc.data().codigo] = doc.data().tipo;
+                lista.innerHTML += `<li>${doc.data().codigo} = <b>${doc.data().tipo}</b></li>`;
+            });
         });
 
+        // Estoque Central
         db.collection('estoque_central').doc('main').onSnapshot(d => {
-            const qt = d.data() || {cabo:0, conec:0, rot:0};
-            document.getElementById('central-cabo').innerText = qt.cabo;
-            document.getElementById('central-conec').innerText = qt.conec;
-            document.getElementById('central-rot').innerText = qt.rot;
+            const da = d.data() || {cabo:0, conec:0, rot:0};
+            document.getElementById('central-resumo').innerText = `Cabo: ${da.cabo}m | Conec: ${da.conec} | Rot: ${da.rot}`;
         });
 
-        db.collection('os').orderBy('data_criacao','desc').onSnapshot(snap => {
-            const div = document.getElementById('lista-os-admin');
+        // Técnicos nos Selects
+        db.collection('usuarios').where('role','==','tecnico').onSnapshot(s => {
+            const sels = [document.getElementById('sel-tecnico'), document.getElementById('os-sel-tecnico')];
+            sels.forEach(sel => sel.innerHTML = '<option value="">Selecione...</option>');
+            s.forEach(d => sels.forEach(sel => sel.innerHTML += `<option value="${d.id}">${d.data().nome}</option>`));
+        });
+
+        // OS Listagem
+        db.collection('os').orderBy('data','desc').onSnapshot(snap => {
+            const div = document.getElementById('lista-os');
             div.innerHTML = '';
             snap.forEach(doc => {
                 const os = doc.data();
-                const cor = os.status === 'concluido' ? 'tag-concluido' : 'tag-pendente';
-                
-                // Se tiver assinatura, mostra link
-                let assinaturaHTML = '';
-                if(os.assinatura_img) {
-                    assinaturaHTML = `<br><a href="#" onclick="verAssinatura('${os.assinatura_img}')" style="font-size:0.8em; color:blue;">Ver Assinatura do Cliente</a>`;
-                }
+                const concluido = os.status === 'concluido';
+                let acao = concluido ? `<small style="color:green">Gasto: ${os.gasto.cabo}m, ${os.gasto.rot} rot.</small>` : 
+                    `<div class="row" style="margin-top:10px">
+                        <input type="number" id="bx-cabo-${doc.id}" placeholder="Cabo" style="width:60px; padding:5px;">
+                        <input type="number" id="bx-rot-${doc.id}" placeholder="Rot" style="width:60px; padding:5px;">
+                        <button class="btn-green" style="padding:5px 10px; border-radius:5px; border:none; cursor:pointer;" onclick="baixarOS('${doc.id}', '${os.tecnico_email}')">BAIXAR</button>
+                    </div>`;
 
                 div.innerHTML += `
-                    <div class="card">
-                        <div style="display:flex; justify-content:space-between">
-                            <strong>${os.cliente_nome}</strong>
-                            <span class="tag ${cor}">${os.status}</span>
-                        </div>
-                        <small>${os.endereco}</small><br>
-                        <small>Técnico: ${os.tecnico_email}</small>
-                        ${os.status === 'concluido' ? `<div style="margin-top:5px; color:green; font-size:0.85em;"><b>Baixa:</b> ${os.gasto.cabo}m cabo, ${os.gasto.rot} rot.</div>` : ''}
-                        ${assinaturaHTML}
+                    <div class="card os-card ${concluido?'concluido':''}">
+                        <b>${os.cliente}</b> (${os.status})<br><small>${os.servico} - ${os.tecnico_email}</small>
+                        ${acao}
                     </div>`;
             });
         });
     }
 
-    function verAssinatura(img64) {
-        const w = window.open("");
-        w.document.write(`<img src="${img64}" style="border:1px solid #ccc;"/>`);
+    // 5. TRANSAÇÕES
+    async function salvarEntrada() {
+        const d = { cabo: +document.getElementById('in-cabo').value, conec: +document.getElementById('in-conec').value, rot: +document.getElementById('in-rot').value };
+        await db.collection('estoque_central').doc('main').set({
+            cabo: firebase.firestore.FieldValue.increment(d.cabo),
+            conec: firebase.firestore.FieldValue.increment(d.conec),
+            rot: firebase.firestore.FieldValue.increment(d.rot)
+        }, {merge:true});
+        gerarPDF("ENTRADA DE ESTOQUE", d);
+        alert("Salvo!");
     }
 
-    function criarOS() {
-        const dados = {
-            doc: document.getElementById('os-doc').value,
-            cliente_nome: document.getElementById('os-nome').value,
-            cep: document.getElementById('os-cep').value,
-            endereco: document.getElementById('os-end').value,
-            numero: document.getElementById('os-num').value,
-            servico: document.getElementById('os-servico').value,
-            tecnico_email: document.getElementById('os-tecnico-select').value,
-            status: 'pendente',
-            data_criacao: firebase.firestore.FieldValue.serverTimestamp(),
-            gasto: {}
-        };
-        if(!dados.tecnico_email || !dados.cliente_nome) return alert("Preencha campos obrigatórios");
-        db.collection('os').add(dados).then(() => {
-            alert("OS Criada!");
-            document.querySelectorAll('#tab-os input').forEach(i => i.value='');
-        });
-    }
-
-    function abastecerCentral() {
-        db.collection('estoque_central').doc('main').set({
-            cabo: firebase.firestore.FieldValue.increment(Number(document.getElementById('ent-cabo').value)),
-            conec: firebase.firestore.FieldValue.increment(Number(document.getElementById('ent-conec').value)),
-            rot: firebase.firestore.FieldValue.increment(Number(document.getElementById('ent-rot').value))
-        }, {merge:true}).then(() => {alert("Abastecido!"); document.querySelectorAll('#tab-estoque input').forEach(i=>i.value='');});
-    }
-
-    async function transferirEstoque() {
-        const email = document.getElementById('transf-tecnico-select').value;
-        const qtds = {
-            cabo: Number(document.getElementById('transf-cabo').value),
-            conec: Number(document.getElementById('transf-conec').value),
-            rot: Number(document.getElementById('transf-rot').value)
-        };
-        if(!email) return alert("Selecione técnico");
-
-        const centralRef = db.collection('estoque_central').doc('main');
-        const techRef = db.collection('estoque_volante').doc(email);
+    async function salvarSaida() {
+        const email = document.getElementById('sel-tecnico').value;
+        const d = { cabo: +document.getElementById('out-cabo').value, conec: +document.getElementById('out-conec').value, rot: +document.getElementById('out-rot').value };
+        if(!email) return alert("Selecione o técnico!");
 
         try {
-            await db.runTransaction(async (t) => {
-                const cDoc = await t.get(centralRef);
-                const cData = cDoc.data() || {cabo:0, conec:0, rot:0};
-                if(cData.cabo < qtds.cabo || cData.rot < qtds.rot) throw "Falta material na Central!";
-                
-                t.update(centralRef, {cabo: cData.cabo - qtds.cabo, conec: cData.conec - qtds.conec, rot: cData.rot - qtds.rot});
-                t.set(techRef, {
-                    cabo: firebase.firestore.FieldValue.increment(qtds.cabo),
-                    conec: firebase.firestore.FieldValue.increment(qtds.conec),
-                    rot: firebase.firestore.FieldValue.increment(qtds.rot)
+            await db.runTransaction(async t => {
+                const cRef = db.collection('estoque_central').doc('main');
+                const central = (await t.get(cRef)).data();
+                if(central.cabo < d.cabo) throw "Cabo insuficiente na Central!";
+                t.update(cRef, { cabo: central.cabo - d.cabo, conec: central.conec - d.conec, rot: central.rot - d.rot });
+                t.set(db.collection('estoque_volante').doc(email), {
+                    cabo: firebase.firestore.FieldValue.increment(d.cabo),
+                    conec: firebase.firestore.FieldValue.increment(d.conec),
+                    rot: firebase.firestore.FieldValue.increment(d.rot)
                 }, {merge:true});
             });
+            gerarPDF("TERMO DE RESPONSABILIDADE", d, email);
             alert("Transferido!");
-            document.querySelectorAll('#tab-equipe input[type=number]').forEach(i=>i.value='');
         } catch(e) { alert(e); }
     }
 
-    // --- 5. FUNÇÕES TÉCNICO & ASSINATURA ---
-    
-    // Objeto para guardar as instâncias dos Canvas (assinaturas)
-    const signaturePads = {};
-
-    function iniciarTecnico(email) {
-        // Monitora Estoque
-        db.collection('estoque_volante').doc(email).onSnapshot(d => {
-            const q = d.data() || {cabo:0, conec:0, rot:0};
-            document.getElementById('tech-estoque-display').innerHTML = `<b>${q.cabo}m</b> Cabo | <b>${q.conec}</b> Conec | <b>${q.rot}</b> Rot`;
+    async function baixarOS(id, email) {
+        const gasto = { cabo: +document.getElementById(`bx-cabo-${id}`).value, rot: +document.getElementById(`bx-rot-${id}`).value, conec: 0 };
+        const techRef = db.collection('estoque_volante').doc(email);
+        await db.runTransaction(async t => {
+            const tech = (await t.get(techRef)).data() || {cabo:0, conec:0, rot:0};
+            t.update(techRef, { cabo: tech.cabo - gasto.cabo, rot: tech.rot - gasto.rot });
+            t.update(db.collection('os').doc(id), { status: 'concluido', gasto });
         });
-
-        // Monitora OS
-        db.collection('os').where('tecnico_email','==',email).orderBy('data_criacao','desc').onSnapshot(snap => {
-            const div = document.getElementById('lista-os-tech');
-            div.innerHTML = '';
-            
-            snap.forEach(doc => {
-                const os = doc.data();
-                if(os.status === 'concluido') return;
-
-                // Renderiza OS
-                const cardId = doc.id;
-                div.innerHTML += `
-                    <div class="card">
-                        <h3>${os.cliente_nome}</h3>
-                        <p style="color:#64748b; font-size:0.9em;">${os.endereco}, ${os.numero}</p>
-                        <div style="background:#f1f5f9; padding:10px; border-radius:6px; margin:10px 0;">
-                            <label>O que você gastou?</label>
-                            <div class="row">
-                                <input type="number" id="gasto-cabo-${cardId}" placeholder="Cabo (m)">
-                                <input type="number" id="gasto-conec-${cardId}" placeholder="Conectores">
-                            </div>
-                            <div class="row">
-                                <input type="number" id="gasto-rot-${cardId}" placeholder="Roteadores">
-                            </div>
-                        </div>
-
-                        <label>Assinatura do Cliente (Obrigatório)</label>
-                        <div style="position:relative;">
-                            <canvas id="sig-${cardId}" class="signature-pad"></canvas>
-                            <span class="clear-sig" onclick="limparAssinatura('${cardId}')">Limpar / Refazer</span>
-                        </div>
-
-                        <button class="btn btn-green" onclick="finalizarComValidacao('${cardId}')">✅ Finalizar e Enviar</button>
-                    </div>
-                `;
-
-                // Inicializa o Canvas APÓS renderizar o HTML (pequeno delay para o DOM montar)
-                setTimeout(() => { iniciarCanvas(cardId); }, 500);
-            });
-        });
+        alert("OS Baixada!");
     }
 
-    // --- LÓGICA DO CANVAS (ASSINATURA) ---
-    function iniciarCanvas(id) {
-        const canvas = document.getElementById(`sig-${id}`);
-        if(!canvas) return;
-        
-        // Ajusta tamanho real do canvas para evitar pixelado
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        canvas.getContext("2d").scale(ratio, ratio);
-
-        const ctx = canvas.getContext('2d');
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#000";
-        
-        let painting = false;
-
-        // Funções de desenho
-        function startPosition(e) {
-            painting = true;
-            draw(e);
-        }
-        function finishedPosition() {
-            painting = false;
-            ctx.beginPath();
-            // Marca no elemento que ele foi assinado (usaremos para validação)
-            canvas.dataset.assinado = "true"; 
-        }
-        function draw(e) {
-            if (!painting) return;
-            e.preventDefault(); // Impede rolar a tela no celular
-            
-            // Pega posição do toque ou mouse
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            ctx.lineTo(clientX - rect.left, clientY - rect.top);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(clientX - rect.left, clientY - rect.top);
-        }
-
-        // Event Listeners (Mouse e Touch)
-        canvas.addEventListener('mousedown', startPosition);
-        canvas.addEventListener('mouseup', finishedPosition);
-        canvas.addEventListener('mousemove', draw);
-        
-        canvas.addEventListener('touchstart', startPosition, {passive: false});
-        canvas.addEventListener('touchend', finishedPosition);
-        canvas.addEventListener('touchmove', draw, {passive: false});
-    }
-
-    function limparAssinatura(id) {
-        const canvas = document.getElementById(`sig-${id}`);
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.dataset.assinado = "false"; // Reseta validação
-    }
-
-    // --- FINALIZAR COM VALIDAÇÃO ---
-    async function finalizarComValidacao(id) {
-        // 1. Pegar inputs
-        const cabo = Number(document.getElementById(`gasto-cabo-${id}`).value) || 0;
-        const conec = Number(document.getElementById(`gasto-conec-${id}`).value) || 0;
-        const rot = Number(document.getElementById(`gasto-rot-${id}`).value) || 0;
-        
-        // 2. Validação da Assinatura
-        const canvas = document.getElementById(`sig-${id}`);
-        if (canvas.dataset.assinado !== "true") {
-            return alert("ERRO: O cliente precisa assinar na tela antes de finalizar!");
-        }
-
-        // 3. Validação de Material (Opcional: força perguntar se tudo for zero)
-        if (cabo === 0 && conec === 0 && rot === 0) {
-            if(!confirm("Atenção: Você não informou nenhum material gasto. Deseja finalizar mesmo assim?")) return;
-        } else {
-            // Confirmação normal
-            if(!confirm(`Confirma o gasto de:\n${cabo}m de Cabo\n${conec} Conectores\n${rot} Roteadores\n\nIsso será descontado do seu estoque.`)) return;
-        }
-
-        // 4. Capturar Imagem da Assinatura
-        const imagemAssinatura = canvas.toDataURL(); // Gera texto Base64 da imagem
-
-        // 5. Enviar para Firebase
-        const email = currentUser.email;
-        const stockRef = db.collection('estoque_volante').doc(email);
-        const osRef = db.collection('os').doc(id);
-
-        try {
-            await db.runTransaction(async (t) => {
-                const stockDoc = await t.get(stockRef);
-                const stock = stockDoc.data() || {cabo:0, conec:0, rot:0};
-
-                if(stock.cabo < cabo || stock.rot < rot) throw "Saldo insuficiente no seu estoque!";
-
-                // Desconta estoque
-                t.update(stockRef, {
-                    cabo: stock.cabo - cabo,
-                    conec: stock.conec - conec,
-                    rot: stock.rot - rot
-                });
-
-                // Baixa OS com Imagem
-                t.update(osRef, {
-                    status: 'concluido',
-                    gasto: {cabo, conec, rot},
-                    assinatura_img: imagemAssinatura, // Salva imagem aqui
-                    data_fim: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
-            alert("OS Finalizada com Sucesso!");
-        } catch (e) {
-            alert("Erro: " + e);
-        }
-    }
-
-    // --- MODO VIAGEM E CEP (Funções auxiliares) ---
-    let wakeLock = null;
-    let gpsInterval = null;
-    let isViagemAtiva = false;
-    async function toggleModoViagem() {
-        const btn = document.getElementById('btn-viagem');
-        const status = document.getElementById('status-viagem');
-        if (!isViagemAtiva) {
-            if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
-            if (navigator.geolocation) {
-                gpsInterval = setInterval(() => {
-                    navigator.geolocation.getCurrentPosition(pos => {
-                        db.collection('usuarios').doc(currentUser.email).set({
-                            localizacao: { lat: pos.coords.latitude, lng: pos.coords.longitude, time: firebase.firestore.FieldValue.serverTimestamp(), viajando: true }
-                        }, {merge:true});
-                    });
-                }, 10000);
-            }
-            btn.innerText = "PARAR"; btn.className = "btn-red"; status.innerText = "GPS Ativo - Tela Ligada"; isViagemAtiva = true;
-        } else {
-            if(wakeLock) wakeLock.release(); clearInterval(gpsInterval);
-            btn.innerText = "ATIVAR"; btn.className = "btn-blue"; status.innerText = "Desativado"; isViagemAtiva = false;
-            db.collection('usuarios').doc(currentUser.email).set({localizacao:{viajando:false}}, {merge:true});
-        }
-    }
+    // 6. AUXILIARES
     function buscarCep() {
-        const c = document.getElementById('os-cep').value.replace(/\D/g,'');
-        if(c.length===8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r=>r.json()).then(d=>{
-            if(!d.erro) { document.getElementById('os-end').value = `${d.logradouro}, ${d.bairro}`; document.getElementById('os-num').focus(); }
+        const cep = document.getElementById('os-cep').value.replace(/\D/g,'');
+        if(cep.length===8) fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r=>r.json()).then(d=> {
+            if(!d.erro) document.getElementById('os-end').value = `${d.logradouro}, ${d.bairro}`;
         });
     }
-    function showTab(id) {
-        document.querySelectorAll('.admin-view').forEach(e=>e.classList.remove('active'));
-        document.querySelectorAll('.sidebar button').forEach(e=>e.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.target.classList.add('active');
+    function criarOS() {
+        db.collection('os').add({
+            cliente: document.getElementById('os-cliente').value,
+            servico: document.getElementById('os-servico').value,
+            endereco: document.getElementById('os-end').value,
+            tecnico_email: document.getElementById('os-sel-tecnico').value,
+            status: 'pendente', data: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(()=>alert("OS Criada!"));
     }
-    function cadastrarTecnicoFirestore() {
-        db.collection('usuarios').doc(document.getElementById('novo-tech-email').value).set({
-            nome: document.getElementById('novo-tech-nome').value, role: 'tecnico'
-        }).then(()=>alert("Técnico cadastrado!"));
+    function salvarCodigo() {
+        db.collection('config_codigos').add({ codigo: document.getElementById('cfg-codigo').value, tipo: document.getElementById('cfg-tipo').value });
+        alert("Configurado!");
+    }
+    function tocarBip() {
+        const a = new AudioContext(); const o = a.createOscillator(); const g = a.createGain();
+        o.connect(g); g.connect(a.destination); o.frequency.value = 1200; g.gain.value = 0.1; o.start(); setTimeout(()=>o.stop(), 100);
+    }
+    function gerarPDF(t, d, tec="") {
+        const doc = new jsPDF();
+        doc.text(t, 20, 20); doc.text(`Data: ${new Date().toLocaleString()}`, 20, 30);
+        if(tec) doc.text(`Técnico: ${tec}`, 20, 40);
+        doc.text(`Cabo: ${d.cabo}m | Conec: ${d.conec} | Rot: ${d.rot}`, 20, 60);
+        doc.text("__________________________", 20, 100); doc.text("Assinatura", 20, 105);
+        doc.save("relatorio.pdf");
     }
 </script>
 </body>
