@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TELECOM ERP - FINANCEIRO E GESTÃO</title>
+    <title>TELECOM ERP - GESTÃO TOTAL</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -50,6 +50,9 @@
         
         .fin-card { background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .pago-card { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 8px; margin-bottom: 10px; opacity: 0.8; }
+        
+        #reader { width: 100%; height: 250px; display: none; border-radius: 10px; overflow: hidden; margin-bottom: 15px; border: 3px solid #f59e0b; }
+        .display-codigo { background: #f1f5f9; padding: 10px; border-radius: 6px; font-family: monospace; font-weight: bold; color: var(--accent); margin-bottom: 10px; text-align: center; border: 1px dashed var(--accent); }
     </style>
 </head>
 <body>
@@ -74,7 +77,7 @@
         </nav>
 
         <div class="content">
-            <div id="reader" style="width:100%; height:250px; display:none; border-radius: 10px; overflow: hidden; margin-bottom: 10px; border: 3px solid #f59e0b;"></div>
+            <div id="reader"></div>
 
             <div id="view-estoque" class="view-section active">
                 <div class="card">
@@ -92,7 +95,8 @@
                 <div class="card">
                     <h3>📥 Entrada de Material</h3>
                     <button class="btn btn-orange" onclick="abrirCamera('in')">📷 LER CÓDIGO</button>
-                    <label>Produto</label><select id="in-produto"></select>
+                    <div id="display-in" class="display-codigo" style="display:none;">Aguardando leitura...</div>
+                    <label>Produto Selecionado</label><select id="in-produto"></select>
                     <label>Quantidade</label><input type="number" id="in-qtd" step="0.01" value="1">
                     <button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR ENTRADA</button>
                 </div>
@@ -103,7 +107,8 @@
                     <h3>📤 Transferência p/ Técnico</h3>
                     <label>Técnico</label><select id="out-tecnico"></select>
                     <button class="btn btn-orange" onclick="abrirCamera('out')">📷 BIPAR PRODUTO</button>
-                    <label>Produto</label><select id="out-produto"></select>
+                    <div id="display-out" class="display-codigo" style="display:none;">Aguardando leitura...</div>
+                    <label>Produto Selecionado</label><select id="out-produto"></select>
                     <label>Quantidade</label><input type="number" id="out-qtd" step="0.01" value="1">
                     <button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button>
                 </div>
@@ -120,7 +125,7 @@
                     <h4 style="font-size:12px; margin-top:15px; color:#b45309;">⚠️ PENDENTES DE PAGAMENTO</h4>
                     <div id="detalhes-financeiro"></div>
                     <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
-                    <h4 style="font-size:12px; color:#15803d;">✅ PAGAMENTOS REALIZADOS (HISTÓRICO)</h4>
+                    <h4 style="font-size:12px; color:#15803d;">✅ PAGAMENTOS REALIZADOS</h4>
                     <div id="historico-financeiro"></div>
                 </div>
             </div>
@@ -145,6 +150,8 @@
             </div>
 
             <div id="view-admin" class="view-section">
+                <button class="btn btn-orange" onclick="abrirCamera('cad')" style="margin-bottom: 10px;">📷 ABRIR CÂMERA PARA CADASTRAR</button>
+
                 <div class="card">
                     <h3>👤 Novo Técnico</h3>
                     <input type="text" id="cad-tec-nome" placeholder="Nome">
@@ -152,17 +159,16 @@
                     <button class="btn btn-blue" onclick="cadastrarTecnico()">SALVAR TÉCNICO</button>
                 </div>
                 <div class="card">
+                    <h3>📦 Novo Produto</h3>
+                    <input type="text" id="cad-item-nome" placeholder="Nome do Produto">
+                    <input type="text" id="cad-item-barcode" placeholder="Código Lido (Bipe acima)">
+                    <button class="btn btn-green" onclick="cadastrarItem()">SALVAR PRODUTO NO ESTOQUE</button>
+                </div>
+                <div class="card">
                     <h3>🛠️ Novo Tipo de Serviço</h3>
                     <input type="text" id="cad-servico-nome" placeholder="Ex: Instalação, Troca de Endereço">
                     <button class="btn btn-blue" onclick="cadastrarTipoServico()">SALVAR TIPO DE SERVIÇO</button>
                     <ul id="lista-servicos-admin" style="font-size: 11px; margin-top: 10px; color: #64748b;"></ul>
-                </div>
-                <div class="card">
-                    <h3>📦 Novo Produto</h3>
-                    <input type="text" id="cad-item-nome" placeholder="Nome do Produto">
-                    <input type="text" id="cad-item-barcode" placeholder="Barcode (Ou use a câmera abaixo)">
-                    <button class="btn btn-orange" onclick="abrirCamera('cad')">📷 LER CÓDIGO DO PRODUTO</button>
-                    <button class="btn btn-green" onclick="cadastrarItem()">SALVAR ITEM</button>
                 </div>
             </div>
         </div>
@@ -254,17 +260,13 @@
             calcularFinanceiroGlobal(tecs);
         });
 
-        // Carregar Tipos de Serviço
         db.ref('tipos_servico').on('value', s => {
             const servicos = s.val() || {};
             const opt = Object.keys(servicos).map(k => `<option value="${servicos[k].nome}">${servicos[k].nome}</option>`).join('');
             document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha um serviço...</option>' + opt;
-            
             const listaAdmin = document.getElementById('lista-servicos-admin');
             listaAdmin.innerHTML = '';
-            Object.keys(servicos).forEach(k => {
-                listaAdmin.innerHTML += `<li>${servicos[k].nome}</li>`;
-            });
+            Object.keys(servicos).forEach(k => { listaAdmin.innerHTML += `<li>${servicos[k].nome}</li>`; });
         });
 
         db.ref('os').on('value', s => {
@@ -274,113 +276,63 @@
             Object.keys(dados).reverse().forEach(id => {
                 const os = dados[id];
                 const concluida = os.status === 'concluido';
-                lista.innerHTML += `
-                    <div class="card os-item ${os.status}" onclick="toggleDetalhe('${id}')">
-                        <div style="display:flex; justify-content:space-between">
-                            <b>${os.os_numero ? 'O.S. ' + os.os_numero : ''} | ${os.cliente}</b>
-                            <span style="font-size:10px">${concluida ? '✅' : '⏳'}</span>
-                        </div>
-                        <small>${os.endereco} | Téc: ${os.tecnico_nome}</small>
-                        <div id="detalhe-${id}" class="detalhe-gasto">
-                            <b>Serviço:</b> ${os.servico_tipo || '---'}<br>
-                            <b>Material:</b> ${os.gasto || 'Nenhum'}<br>
-                            <b>Mão de Obra:</b> R$ ${os.valor_pagar || 0}
-                        </div>
-                        ${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar || 0})">BAIXAR</button>` : ''}
-                    </div>`;
+                lista.innerHTML += `<div class="card os-item ${os.status}" onclick="toggleDetalhe('${id}')">
+                    <div style="display:flex; justify-content:space-between">
+                        <b>${os.os_numero ? 'O.S. ' + os.os_numero : ''} | ${os.cliente}</b>
+                        <span style="font-size:10px">${concluida ? '✅' : '⏳'}</span>
+                    </div>
+                    <small>${os.endereco} | Téc: ${os.tecnico_nome}</small>
+                    <div id="detalhe-${id}" class="detalhe-gasto">
+                        <b>Serviço:</b> ${os.servico_tipo || '---'}<br>
+                        <b>Material:</b> ${os.gasto || 'Nenhum'}<br>
+                        <b>Mão de Obra:</b> R$ ${os.valor_pagar || 0}
+                    </div>
+                    ${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar || 0})">BAIXAR</button>` : ''}
+                </div>`;
             });
-            const tecAtual = document.getElementById('fin-filtro-tecnico').value;
-            if(tecAtual) listarFinanceiroTecnico(tecAtual);
         });
-    }
-
-    function cadastrarTipoServico() {
-        const nome = document.getElementById('cad-servico-nome').value;
-        if(nome) {
-            db.ref('tipos_servico').push({ nome: nome }).then(() => {
-                alert("Serviço cadastrado!");
-                document.getElementById('cad-servico-nome').value = '';
-            });
-        }
-    }
-
-    function toggleDetalhe(id) {
-        const el = document.getElementById('detalhe-'+id);
-        el.style.display = el.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function calcularFinanceiroGlobal(tecnicos) {
-        db.ref('os').once('value', s => {
-            const os = s.val() || {};
-            let resumo = '<table><tr><th>Técnico</th><th>A Pagar</th></tr>';
-            Object.keys(tecnicos).forEach(tecId => {
-                let total = 0;
-                Object.values(os).forEach(o => {
-                    if(o.tecnico_id === tecId && o.status === 'concluido' && !o.pago) {
-                        total += parseFloat(o.valor_pagar || 0);
-                    }
-                });
-                resumo += `<tr><td>${tecnicos[tecId].nome}</td><td style="color:red">R$ ${total.toFixed(2)}</td></tr>`;
-            });
-            document.getElementById('resumo-financeiro').innerHTML = resumo + '</table>';
-        });
-    }
-
-    function listarFinanceiroTecnico(tecId) {
-        if(!tecId) return;
-        db.ref('os').once('value', s => {
-            const os = s.val() || {};
-            let htmlPendentes = '';
-            let htmlPagos = '';
-            Object.keys(os).forEach(id => {
-                const o = os[id];
-                if(o.tecnico_id === tecId && o.status === 'concluido') {
-                    if(!o.pago) {
-                        htmlPendentes += `
-                            <div class="fin-card">
-                                <b>${o.os_numero ? 'O.S. ' + o.os_numero : ''} | ${o.cliente}</b><br>
-                                Valor: R$ ${o.valor_pagar}<br>
-                                <button class="btn btn-green" style="padding:5px; font-size:10px; margin-top:5px" onclick="marcarComoPago('${id}')">MARCAR COMO PAGO</button>
-                            </div>`;
-                    } else {
-                        htmlPagos += `
-                            <div class="pago-card">
-                                <b>${o.os_numero ? 'O.S. ' + o.os_numero : ''} | ${o.cliente}</b><br>
-                                <small>Pago em: ${o.data_pagamento || '---'}</small><br>
-                                <small>Valor: R$ ${o.valor_pagar}</small>
-                            </div>`;
-                    }
-                }
-            });
-            document.getElementById('detalhes-financeiro').innerHTML = htmlPendentes || 'Nada pendente.';
-            document.getElementById('historico-financeiro').innerHTML = htmlPagos || 'Nenhum histórico.';
-        });
-    }
-
-    function marcarComoPago(id) {
-        const dataPadrao = new Date().toLocaleDateString('pt-BR');
-        const dataPagamento = prompt("Confirme a data do pagamento:", dataPadrao);
-        if(dataPagamento) {
-            db.ref('os/'+id).update({ pago: true, data_pagamento: dataPagamento }).then(() => alert("Pago!"));
-        }
     }
 
     function abrirCamera(modo) {
         document.getElementById('reader').style.display = 'block';
+        
+        // Mostrar o display de código nas abas Entrada/Saída
+        if(modo === 'in') document.getElementById('display-in').style.display = 'block';
+        if(modo === 'out') document.getElementById('display-out').style.display = 'block';
+
         scanner = new Html5Qrcode("reader");
         scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            tocarSom();
+            
             if (modo === 'cad') {
                 document.getElementById('cad-item-barcode').value = text;
-                tocarSom();
                 fecharCamera();
             } else {
+                // Atualizar o texto do código lido na tela
+                const display = document.getElementById(modo === 'in' ? 'display-in' : 'display-out');
+                if(display) display.innerText = "Lido: " + text;
+
                 const key = mapaBarcodes[text];
                 if(key) {
                     document.getElementById(modo === 'in' ? 'in-produto' : 'out-produto').value = key;
-                    tocarSom();
                 }
             }
         });
+    }
+
+    function tocarSom() { 
+        const a = new (window.AudioContext || window.webkitAudioContext)(); 
+        const o = a.createOscillator(); 
+        const g = a.createGain();
+        o.connect(g); g.connect(a.destination);
+        o.frequency.value = 880; g.gain.value = 1.0;
+        o.start(); setTimeout(() => o.stop(), 150); 
+    }
+
+    // --- MANUTENÇÃO DE DADOS (CADASTRAR, ENTRADA, SAÍDA, O.S) ---
+    function cadastrarTipoServico() {
+        const nome = document.getElementById('cad-servico-nome').value;
+        if(nome) { db.ref('tipos_servico').push({ nome: nome }).then(() => { alert("Serviço cadastrado!"); document.getElementById('cad-servico-nome').value = ''; }); }
     }
 
     function processarEntrada() {
@@ -388,6 +340,7 @@
         const qtd = parseFloat(document.getElementById('in-qtd').value);
         db.ref(`itens/${key}/estoque_central`).transaction(a => (a || 0) + qtd);
         alert("Entrada OK");
+        document.getElementById('display-in').style.display = 'none';
     }
 
     function processarSaida() {
@@ -398,75 +351,9 @@
         db.ref(`itens/${itemKey}/estoque_central`).transaction(a => (a || 0) - qtd);
         db.ref(`estoque_volante/${tecId}/${itemNome}`).transaction(a => (a || 0) + qtd);
         alert("Transferência OK");
+        document.getElementById('display-out').style.display = 'none';
     }
 
-    function criarOS() {
-        const dados = {
-            os_numero: document.getElementById('os-numero').value,
-            cliente: document.getElementById('os-cliente').value,
-            endereco: document.getElementById('os-endereco').value,
-            tecnico_id: document.getElementById('os-tecnico').value,
-            tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text,
-            servico_tipo: document.getElementById('os-servico-select').value,
-            valor_pagar: document.getElementById('os-valor-pagar').value || 0,
-            status: 'pendente',
-            pago: false,
-            data: Date.now()
-        };
-        db.ref('os').push(dados).then(() => {
-            alert("O.S. Aberta");
-            document.getElementById('os-numero').value = '';
-            document.getElementById('os-cliente').value = '';
-        });
-    }
-
-    function abrirModalBaixa(id, valorSugerido) {
-        osParaBaixar = id;
-        document.getElementById('baixa-valor-final').value = valorSugerido;
-        document.getElementById('modal-baixa').style.display = 'flex';
-        document.getElementById('baixa-itens-container').innerHTML = '';
-        adicionarLinhaBaixa();
-    }
-
-    function adicionarLinhaBaixa() {
-        const container = document.getElementById('baixa-itens-container');
-        const div = document.createElement('div');
-        div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '5px';
-        const options = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join('');
-        div.innerHTML = `<select class="b-item" style="flex:2">${options}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`;
-        container.appendChild(div);
-    }
-
-    function confirmarBaixa() {
-        const nomes = document.querySelectorAll('.b-item');
-        const qtds = document.querySelectorAll('.b-qtd');
-        const valorFinal = document.getElementById('baixa-valor-final').value;
-        db.ref('os/'+osParaBaixar).once('value', snap => {
-            const os = snap.val();
-            let gastoTxt = "";
-            nomes.forEach((el, i) => {
-                const qtd = parseFloat(qtds[i].value);
-                if(qtd > 0) {
-                    db.ref(`estoque_volante/${os.tecnico_id}/${el.value}`).transaction(a => (a || 0) - qtd);
-                    gastoTxt += `${qtd}x ${el.value}, `;
-                }
-            });
-            db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: gastoTxt, valor_pagar: valorFinal });
-            fecharModal();
-        });
-    }
-
-    function fecharModal() { document.getElementById('modal-baixa').style.display = 'none'; }
-    function carregarEstoqueVolante(id) {
-        db.ref('estoque_volante/'+id).on('value', s => {
-            const d = s.val() || {};
-            let h = '<table>';
-            Object.keys(d).forEach(k => h += `<tr><td>${k}</td><td>${d[k]}</td></tr>`);
-            document.getElementById('lista-estoque-volante').innerHTML = h + '</table>';
-        });
-    }
-
-    function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({nome: document.getElementById('cad-tec-nome').value}); }
     function cadastrarItem() { 
         db.ref('itens').push({
             nome: document.getElementById('cad-item-nome').value, 
@@ -478,13 +365,47 @@
             document.getElementById('cad-item-barcode').value = '';
         }); 
     }
-    function buscarCep() {
-        const cep = document.getElementById('os-cep').value.replace(/\D/g, '');
-        if(cep.length === 8) fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()).then(d => {
-            if(!d.erro) document.getElementById('os-endereco').value = `${d.logradouro}, ${d.bairro}, ${d.localidade}`;
+
+    // --- FUNÇÕES RESTANTES (PAGAMENTO, FINANCEIRO, MODAL, ETC - MANTIDAS IGUAIS) ---
+    function toggleDetalhe(id) { const el = document.getElementById('detalhe-'+id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+    function fecharModal() { document.getElementById('modal-baixa').style.display = 'none'; }
+    function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({nome: document.getElementById('cad-tec-nome').value}); }
+    function criarOS() {
+        const dados = { os_numero: document.getElementById('os-numero').value, cliente: document.getElementById('os-cliente').value, endereco: document.getElementById('os-endereco').value, tecnico_id: document.getElementById('os-tecnico').value, tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text, servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0, status: 'pendente', pago: false, data: Date.now() };
+        db.ref('os').push(dados).then(() => { alert("O.S. Aberta"); document.getElementById('os-numero').value = ''; document.getElementById('os-cliente').value = ''; });
+    }
+    function abrirModalBaixa(id, valorSugerido) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = valorSugerido; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
+    function adicionarLinhaBaixa() {
+        const container = document.getElementById('baixa-itens-container');
+        const div = document.createElement('div'); div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '5px';
+        const options = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join('');
+        div.innerHTML = `<select class="b-item" style="flex:2">${options}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`;
+        container.appendChild(div);
+    }
+    function confirmarBaixa() {
+        const nomes = document.querySelectorAll('.b-item'); const qtds = document.querySelectorAll('.b-qtd'); const valorFinal = document.getElementById('baixa-valor-final').value;
+        db.ref('os/'+osParaBaixar).once('value', snap => {
+            const os = snap.val(); let gastoTxt = "";
+            nomes.forEach((el, i) => { const qtd = parseFloat(qtds[i].value); if(qtd > 0) { db.ref(`estoque_volante/${os.tecnico_id}/${el.value}`).transaction(a => (a || 0) - qtd); gastoTxt += `${qtd}x ${el.value}, `; } });
+            db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: gastoTxt, valor_pagar: valorFinal }); fecharModal();
         });
     }
-    function tocarSom() { const a = new AudioContext(); const o = a.createOscillator(); o.connect(a.destination); o.start(); setTimeout(()=>o.stop(), 100); }
+    function carregarEstoqueVolante(id) {
+        db.ref('estoque_volante/'+id).on('value', s => { const d = s.val() || {}; let h = '<table>'; Object.keys(d).forEach(k => h += `<tr><td>${k}</td><td>${d[k]}</td></tr>`); document.getElementById('lista-estoque-volante').innerHTML = h + '</table>'; });
+    }
+    function calcularFinanceiroGlobal(tecnicos) {
+        db.ref('os').once('value', s => { const os = s.val() || {}; let resumo = '<table><tr><th>Técnico</th><th>A Pagar</th></tr>'; Object.keys(tecnicos).forEach(tecId => { let total = 0; Object.values(os).forEach(o => { if(o.tecnico_id === tecId && o.status === 'concluido' && !o.pago) { total += parseFloat(o.valor_pagar || 0); } }); resumo += `<tr><td>${tecnicos[tecId].nome}</td><td style="color:red">R$ ${total.toFixed(2)}</td></tr>`; }); document.getElementById('resumo-financeiro').innerHTML = resumo + '</table>'; });
+    }
+    function listarFinanceiroTecnico(tecId) {
+        if(!tecId) return;
+        db.ref('os').once('value', s => {
+            const os = s.val() || {}; let hp = ''; let hpg = '';
+            Object.keys(os).forEach(id => { const o = os[id]; if(o.tecnico_id === tecId && o.status === 'concluido') { if(!o.pago) { hp += `<div class="fin-card"><b>${o.os_numero ? 'O.S. ' + o.os_numero : ''} | ${o.cliente}</b><br>Valor: R$ ${o.valor_pagar}<br><button class="btn btn-green" style="padding:5px; font-size:10px; margin-top:5px" onclick="marcarComoPago('${id}')">MARCAR COMO PAGO</button></div>`; } else { hpg += `<div class="pago-card"><b>${o.os_numero ? 'O.S. ' + o.os_numero : ''} | ${o.cliente}</b><br><small>Pago em: ${o.data_pagamento || '---'}</small><br><small>Valor: R$ ${o.valor_pagar}</small></div>`; } } });
+            document.getElementById('detalhes-financeiro').innerHTML = hp || 'Nada pendente.'; document.getElementById('historico-financeiro').innerHTML = hpg || 'Nenhum histórico.';
+        });
+    }
+    function marcarComoPago(id) { const dp = new Date().toLocaleDateString('pt-BR'); const dat = prompt("Data pagamento:", dp); if(dat) { db.ref('os/'+id).update({ pago: true, data_pagamento: dat }).then(() => alert("Pago!")); } }
+    function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) document.getElementById('os-endereco').value = `${d.logradouro}, ${d.bairro}, ${d.localidade}`; }); }
 </script>
 </body>
 </html>
