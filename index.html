@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TELECOM ERP Pro - Gestão Total</title>
+    <title>WV SERVIÇOS</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -117,7 +117,7 @@
 
     <div id="login-screen">
         <div class="card-login">
-            <h1 style="color:var(--primary); font-size:24px; margin-bottom:24px;">Telecom ERP</h1>
+            <h1 style="color:var(--primary); font-size:24px; margin-bottom:24px;">WV SERVIÇOS</h1>
             <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="senha" placeholder="Senha">
             <button class="btn btn-blue" onclick="fazerLogin()">ENTRAR</button>
@@ -177,13 +177,27 @@
                 <div class="card">
                     <h3 id="os-form-title">📋 Nova O.S.</h3>
                     <input type="hidden" id="os-edit-id">
-                    <input type="text" id="os-numero" placeholder="Nº da O.S.">
+                    
+                    <div style="display:flex; gap:5px;">
+                        <div style="flex:1;">
+                            <label>Número O.S.</label>
+                            <input type="text" id="os-numero" placeholder="Nº">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Data da O.S.</label>
+                            <input type="date" id="os-data-manual">
+                        </div>
+                    </div>
+
+                    <label>Nome do Cliente</label>
                     <input type="text" id="os-cliente" placeholder="Nome do Cliente">
+                    
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="os-cep" placeholder="CEP" onblur="buscarCep()" style="flex:1">
                         <input type="text" id="os-bairro" placeholder="Bairro" style="flex:1">
                     </div>
                     <input type="text" id="os-endereco" placeholder="Endereço Completo">
+                    
                     <label>Técnico</label><select id="os-tecnico"></select>
                     <label>Serviço</label><select id="os-servico-select"></select>
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar" placeholder="R$">
@@ -269,7 +283,6 @@
         auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro no Login"));
     }
 
-    // Função de Logout Adicionada
     function fazerLogout() {
         if(confirm("Deseja sair da conta?")) {
             auth.signOut().then(() => {
@@ -356,10 +369,16 @@
                 if(concl && !o.pago) tPendente += val;
                 if(concl && o.pago) tPago += val;
 
+                // AJUSTE: Adicionado o Nº da O.S. no Histórico
                 lista.innerHTML += `<div class="card os-item ${o.status}">
                     <div style="position:absolute; right:15px; top:15px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
                     <b>${o.cliente}</b><br>
-                    <small>${o.bairro ? o.bairro + ' | ' : ''}${o.servico_tipo} | ${o.tecnico_nome}</small><br>
+                    <small>
+                        ${o.os_numero ? 'Nº ' + o.os_numero + ' | ' : ''}
+                        ${o.data_manual ? '📅 ' + o.data_manual + ' | ' : ''}
+                        ${o.bairro ? o.bairro + ' | ' : ''}
+                        ${o.servico_tipo} | ${o.tecnico_nome}
+                    </small><br>
                     <b style="color:var(--success)">R$ ${val.toFixed(2)}</b>
                     ${!concl ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : ''}
                 </div>`;
@@ -400,6 +419,7 @@
                 const o = s.val(); 
                 document.getElementById('os-edit-id').value = id;
                 document.getElementById('os-numero').value = o.os_numero || '';
+                document.getElementById('os-data-manual').value = o.data_manual || ''; 
                 document.getElementById('os-cliente').value = o.cliente;
                 document.getElementById('os-bairro').value = o.bairro || '';
                 document.getElementById('os-endereco').value = o.endereco;
@@ -416,7 +436,7 @@
 
     function cancelarEdicaoOS() {
         document.getElementById('os-edit-id').value = '';
-        ['os-numero','os-cliente','os-endereco','os-bairro','os-valor-pagar'].forEach(i => document.getElementById(i).value = '');
+        ['os-numero','os-data-manual','os-cliente','os-endereco','os-bairro','os-valor-pagar'].forEach(i => document.getElementById(i).value = '');
         document.getElementById('os-form-title').innerText = "📋 Nova O.S.";
         document.getElementById('btn-salvar-os').innerText = "CRIAR O.S.";
         document.getElementById('btn-cancelar-edit').style.display = "none";
@@ -426,6 +446,7 @@
         const id = document.getElementById('os-edit-id').value;
         const d = {
             os_numero: document.getElementById('os-numero').value,
+            data_manual: document.getElementById('os-data-manual').value, 
             cliente: document.getElementById('os-cliente').value,
             bairro: document.getElementById('os-bairro').value,
             endereco: document.getElementById('os-endereco').value,
@@ -433,7 +454,8 @@
             tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text,
             servico_tipo: document.getElementById('os-servico-select').value,
             valor_pagar: document.getElementById('os-valor-pagar').value || 0,
-            status: id ? undefined : 'pendente', data: Date.now()
+            status: id ? undefined : 'pendente', 
+            data_registro: Date.now()
         };
         if(id) db.ref('os/'+id).update(d).then(() => { alert("Atualizada!"); cancelarEdicaoOS(); });
         else db.ref('os').push(d).then(() => { alert("Criada!"); cancelarEdicaoOS(); });
