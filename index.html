@@ -132,6 +132,7 @@
             <button class="nav-btn" onclick="nav('os')">📋 O.S.</button>
             <button class="nav-btn" onclick="nav('financeiro')">💰 Financeiro</button>
             <button class="nav-btn" onclick="nav('admin')">⚙️ ADM</button>
+            <button class="nav-btn" onclick="fazerLogout()" style="color:var(--danger)">🚪 SAIR</button>
         </nav>
 
         <div class="content">
@@ -267,11 +268,24 @@
     function fazerLogin() {
         auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro no Login"));
     }
+
+    // Função de Logout Adicionada
+    function fazerLogout() {
+        if(confirm("Deseja sair da conta?")) {
+            auth.signOut().then(() => {
+                location.reload();
+            });
+        }
+    }
+
     auth.onAuthStateChanged(user => {
         if(user) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-container').style.display = 'flex';
             carregarTudo();
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
         }
     });
 
@@ -289,22 +303,21 @@
     }
 
     function carregarTudo() {
-        // Itens e Estoque
         db.ref('itens').on('value', s => {
             itensCadastrados = s.val() || {};
             const opt = Object.keys(itensCadastrados).map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
             document.getElementById('in-produto').innerHTML = opt;
             document.getElementById('out-produto').innerHTML = opt;
-            let h = '<table><tr><th>Item</th><th>Qtd</th><th style="text-align:right">Editar</th></tr>';
+            let h = '<table><tr><th>Item</th><th>Qtd</th><th style="text-align:right">Ações</th></tr>';
             Object.keys(itensCadastrados).forEach(k => {
                 h += `<tr><td>${itensCadastrados[k].nome}</td><td><b>${itensCadastrados[k].estoque_central || 0}</b></td><td style="text-align:right">
-                <button class="btn-edit" onclick="editarProd('${k}','${itensCadastrados[k].nome}')">✏️</button></td></tr>`;
+                <button class="btn-edit" onclick="editarProd('${k}','${itensCadastrados[k].nome}')">✏️</button>
+                <button class="btn-delete" onclick="apagar('itens/${k}')">🗑️</button></td></tr>`;
                 if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k;
             });
             document.getElementById('lista-estoque-central').innerHTML = h + '</table>';
         });
 
-        // Técnicos
         db.ref('tecnicos').on('value', s => {
             const t = s.val() || {};
             const o = Object.keys(t).map(k => `<option value="${k}">${t[k].nome}</option>`).join('');
@@ -314,13 +327,9 @@
             document.getElementById('fin-filtro-tecnico').innerHTML = '<option value="">Técnico...</option>'+o;
         });
 
-        // TIPOS DE SERVIÇO (Restaurado Completo)
         db.ref('tipos_servico').on('value', s => {
             const sv = s.val() || {};
-            // Dropdown na OS
             document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha...</option>' + Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join('');
-            
-            // Lista no ADM com Editar e Deletar
             let h = ''; 
             Object.keys(sv).forEach(k => {
                 h += `
@@ -335,7 +344,6 @@
             document.getElementById('lista-servicos-admin').innerHTML = h;
         });
 
-        // O.S. e Financeiro
         db.ref('os').on('value', s => {
             const dados = s.val() || {};
             const lista = document.getElementById('lista-os');
@@ -350,7 +358,8 @@
 
                 lista.innerHTML += `<div class="card os-item ${o.status}">
                     <div style="position:absolute; right:15px; top:15px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
-                    <b>${o.cliente}</b><br><small>${o.servico_tipo} | ${o.tecnico_nome}</small><br>
+                    <b>${o.cliente}</b><br>
+                    <small>${o.bairro ? o.bairro + ' | ' : ''}${o.servico_tipo} | ${o.tecnico_nome}</small><br>
                     <b style="color:var(--success)">R$ ${val.toFixed(2)}</b>
                     ${!concl ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : ''}
                 </div>`;
@@ -360,7 +369,6 @@
         });
     }
 
-    // FUNÇÕES DE SERVIÇO (Restauradas)
     function cadastrarTipoServico() {
         const n = document.getElementById('cad-servico-nome').value;
         if(n) db.ref('tipos_servico').push({ nome: n }).then(() => document.getElementById('cad-servico-nome').value = '');
@@ -386,7 +394,6 @@
         });
     }
 
-    // CRUD O.S.
     function editarOS(id) {
         validarSenhaAcesso(() => {
             db.ref('os/'+id).once('value', s => {
@@ -394,6 +401,7 @@
                 document.getElementById('os-edit-id').value = id;
                 document.getElementById('os-numero').value = o.os_numero || '';
                 document.getElementById('os-cliente').value = o.cliente;
+                document.getElementById('os-bairro').value = o.bairro || '';
                 document.getElementById('os-endereco').value = o.endereco;
                 document.getElementById('os-tecnico').value = o.tecnico_id;
                 document.getElementById('os-servico-select').value = o.servico_tipo;
@@ -408,7 +416,7 @@
 
     function cancelarEdicaoOS() {
         document.getElementById('os-edit-id').value = '';
-        ['os-numero','os-cliente','os-endereco','os-valor-pagar'].forEach(i => document.getElementById(i).value = '');
+        ['os-numero','os-cliente','os-endereco','os-bairro','os-valor-pagar'].forEach(i => document.getElementById(i).value = '');
         document.getElementById('os-form-title').innerText = "📋 Nova O.S.";
         document.getElementById('btn-salvar-os').innerText = "CRIAR O.S.";
         document.getElementById('btn-cancelar-edit').style.display = "none";
@@ -419,6 +427,7 @@
         const d = {
             os_numero: document.getElementById('os-numero').value,
             cliente: document.getElementById('os-cliente').value,
+            bairro: document.getElementById('os-bairro').value,
             endereco: document.getElementById('os-endereco').value,
             tecnico_id: document.getElementById('os-tecnico').value,
             tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text,
@@ -430,7 +439,6 @@
         else db.ref('os').push(d).then(() => { alert("Criada!"); cancelarEdicaoOS(); });
     }
 
-    // CAMERA E SCANNER
     function abrirCamera(m) {
         document.getElementById('reader').style.display = 'block';
         scanner = new Html5Qrcode("reader");
@@ -453,14 +461,12 @@
         });
     }
 
-    // ESTOQUE E GESTÃO
     function cadastrarItem() { db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0 }).then(() => alert("Salvo!")); }
     function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({nome: document.getElementById('cad-tec-nome').value}); }
     function processarEntrada() { const k = document.getElementById('in-produto').value; const q = parseFloat(document.getElementById('in-qtd').value); db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) + q); alert("OK"); }
     function processarSaida() { const t = document.getElementById('out-tecnico').value; const k = document.getElementById('out-produto').value; const q = parseFloat(document.getElementById('out-qtd').value); db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) - q); db.ref(`estoque_volante/${t}/${itensCadastrados[k].nome}`).transaction(a => (a || 0) + q); alert("OK"); }
     function carregarEstoqueVolante(id) { db.ref('estoque_volante/'+id).on('value', s => { const d = s.val() || {}; let h = '<table><tr><th>Item</th><th>Mala</th></tr>'; Object.keys(d).forEach(k => h += `<tr><td>${k}</td><td>${d[k]}</td></tr>`); document.getElementById('lista-estoque-volante').innerHTML = h + '</table>'; }); }
 
-    // FINANCEIRO
     function listarFinanceiroTecnico(tecId) {
         db.ref('os').on('value', s => {
             const os = s.val() || {}; let hp = ''; let hpg = '';
@@ -477,7 +483,6 @@
 
     function marcarPago(id) { const d = prompt("Data pagamento:", new Date().toLocaleDateString('pt-BR')); if(d) db.ref('os/'+id).update({ pago: true, data_pagamento: d }); }
     
-    // BAIXA DE O.S.
     function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
     function adicionarLinhaBaixa() {
         const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.style.display = 'flex'; d.style.gap = '5px'; d.style.marginBottom = '5px';
