@@ -74,7 +74,7 @@
         </nav>
 
         <div class="content">
-            <div id="reader" style="width:100%; height:250px; display:none;"></div>
+            <div id="reader" style="width:100%; height:250px; display:none; border-radius: 10px; overflow: hidden; margin-bottom: 10px; border: 3px solid #f59e0b;"></div>
 
             <div id="view-estoque" class="view-section active">
                 <div class="card">
@@ -155,7 +155,8 @@
                 <div class="card">
                     <h3>📦 Novo Produto</h3>
                     <input type="text" id="cad-item-nome" placeholder="Nome do Produto">
-                    <input type="text" id="cad-item-barcode" placeholder="Barcode">
+                    <input type="text" id="cad-item-barcode" placeholder="Barcode (Ou use a câmera abaixo)">
+                    <button class="btn btn-orange" onclick="abrirCamera('cad')">📷 LER CÓDIGO DO PRODUTO</button>
                     <button class="btn btn-green" onclick="cadastrarItem()">SALVAR ITEM</button>
                 </div>
             </div>
@@ -213,7 +214,15 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('view-'+id).classList.add('active');
         if(event) event.target.classList.add('active');
-        if(scanner) scanner.stop();
+        fecharCamera();
+    }
+
+    function fecharCamera() {
+        if(scanner) {
+            scanner.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+            });
+        }
     }
 
     function carregarTudo() {
@@ -261,7 +270,6 @@
                         ${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar || 0})">BAIXAR</button>` : ''}
                     </div>`;
             });
-            // Atualiza financeiro detalhado se houver técnico selecionado
             const tecAtual = document.getElementById('fin-filtro-tecnico').value;
             if(tecAtual) listarFinanceiroTecnico(tecAtual);
         });
@@ -295,7 +303,6 @@
             const os = s.val() || {};
             let htmlPendentes = '';
             let htmlPagos = '';
-            
             Object.keys(os).forEach(id => {
                 const o = os[id];
                 if(o.tecnico_id === tecId && o.status === 'concluido') {
@@ -323,13 +330,9 @@
 
     function marcarComoPago(id) {
         const dataPadrao = new Date().toLocaleDateString('pt-BR');
-        const dataPagamento = prompt("Confirme a data do pagamento (pode editar):", dataPadrao);
-        
+        const dataPagamento = prompt("Confirme a data do pagamento:", dataPadrao);
         if(dataPagamento) {
-            db.ref('os/'+id).update({ 
-                pago: true,
-                data_pagamento: dataPagamento
-            }).then(() => alert("Pagamento arquivado no histórico!"));
+            db.ref('os/'+id).update({ pago: true, data_pagamento: dataPagamento }).then(() => alert("Pago!"));
         }
     }
 
@@ -338,10 +341,16 @@
         document.getElementById('reader').style.display = 'block';
         scanner = new Html5Qrcode("reader");
         scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            const key = mapaBarcodes[text];
-            if(key) {
-                document.getElementById(modo === 'in' ? 'in-produto' : 'out-produto').value = key;
+            if (modo === 'cad') {
+                document.getElementById('cad-item-barcode').value = text;
                 tocarSom();
+                fecharCamera();
+            } else {
+                const key = mapaBarcodes[text];
+                if(key) {
+                    document.getElementById(modo === 'in' ? 'in-produto' : 'out-produto').value = key;
+                    tocarSom();
+                }
             }
         });
     }
@@ -405,7 +414,6 @@
         const nomes = document.querySelectorAll('.b-item');
         const qtds = document.querySelectorAll('.b-qtd');
         const valorFinal = document.getElementById('baixa-valor-final').value;
-        
         db.ref('os/'+osParaBaixar).once('value', snap => {
             const os = snap.val();
             let gastoTxt = "";
@@ -416,11 +424,7 @@
                     gastoTxt += `${qtd}x ${el.value}, `;
                 }
             });
-            db.ref('os/'+osParaBaixar).update({ 
-                status: 'concluido', 
-                gasto: gastoTxt, 
-                valor_pagar: valorFinal 
-            });
+            db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: gastoTxt, valor_pagar: valorFinal });
             fecharModal();
         });
     }
@@ -436,7 +440,17 @@
     }
 
     function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({nome: document.getElementById('cad-tec-nome').value}); }
-    function cadastrarItem() { db.ref('itens').push({nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0}); }
+    function cadastrarItem() { 
+        db.ref('itens').push({
+            nome: document.getElementById('cad-item-nome').value, 
+            barcode: document.getElementById('cad-item-barcode').value, 
+            estoque_central: 0
+        }).then(() => {
+            alert("Item Salvo!");
+            document.getElementById('cad-item-nome').value = '';
+            document.getElementById('cad-item-barcode').value = '';
+        }); 
+    }
     function buscarCep() {
         const cep = document.getElementById('os-cep').value.replace(/\D/g, '');
         if(cep.length === 8) fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()).then(d => {
