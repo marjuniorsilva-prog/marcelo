@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
-        :root { --primary: #0f172a; --accent: #3b82f6; --bg: #f8fafc; --success: #10b981; --danger: #ef4444; }
+        :root { --primary: #0f172a; --accent: #3b82f6; --bg: #f8fafc; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: var(--bg); color: #1e293b; display: flex; flex-direction: column; height: 100vh; }
         
         #login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -35,7 +35,8 @@
         .btn-blue { background: var(--accent); color: white; }
         .btn-green { background: var(--success); color: white; }
         .btn-orange { background: #f59e0b; color: white; }
-        .btn-delete { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px; padding: 5px; }
+        .btn-delete { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; padding: 5px; }
+        .btn-edit { background: none; border: none; color: var(--warning); cursor: pointer; font-size: 16px; padding: 5px; }
 
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th { text-align: left; padding: 8px; background: #f1f5f9; }
@@ -51,8 +52,6 @@
         
         #reader { width: 100%; height: 250px; display: none; border-radius: 10px; overflow: hidden; margin-bottom: 15px; border: 3px solid #f59e0b; }
         .display-codigo { background: #f1f5f9; padding: 10px; border-radius: 6px; font-family: monospace; font-weight: bold; color: var(--accent); margin-bottom: 10px; text-align: center; border: 1px dashed var(--accent); }
-        
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -145,22 +144,22 @@
             <div id="view-admin" class="view-section">
                 <button class="btn btn-orange" onclick="abrirCamera('cad')">📷 CÂMERA PARA CADASTRAR</button>
                 <div class="card">
-                    <h3>👤 Novo Técnico</h3>
-                    <input type="text" id="cad-tec-nome" placeholder="Nome">
-                    <input type="text" id="cad-tec-id" placeholder="ID (ex: tec_01)">
-                    <button class="btn btn-blue" onclick="cadastrarTecnico()">SALVAR TÉCNICO</button>
+                    <h3>📦 Produto</h3>
+                    <input type="text" id="cad-item-nome" placeholder="Nome do Produto">
+                    <input type="text" id="cad-item-barcode" placeholder="Código Lido (Bipe acima)">
+                    <button class="btn btn-green" onclick="cadastrarItem()">SALVAR PRODUTO</button>
                 </div>
                 <div class="card">
                     <h3>🛠️ Serviços</h3>
                     <input type="text" id="cad-servico-nome" placeholder="Nome do Serviço">
-                    <button class="btn btn-blue" onclick="cadastrarTipoServico()">SALVAR</button>
+                    <button class="btn btn-blue" onclick="cadastrarTipoServico()">SALVAR TIPO DE SERVIÇO</button>
                     <div id="lista-servicos-admin" style="margin-top:10px;"></div>
                 </div>
                 <div class="card">
-                    <h3>📦 Produto</h3>
-                    <input type="text" id="cad-item-nome" placeholder="Nome">
-                    <input type="text" id="cad-item-barcode" placeholder="Barcode">
-                    <button class="btn btn-green" onclick="cadastrarItem()">SALVAR PRODUTO</button>
+                    <h3>👤 Novo Técnico</h3>
+                    <input type="text" id="cad-tec-nome" placeholder="Nome do Técnico">
+                    <input type="text" id="cad-tec-id" placeholder="ID (ex: tec_01)">
+                    <button class="btn btn-blue" onclick="cadastrarTecnico()">SALVAR TÉCNICO</button>
                 </div>
             </div>
         </div>
@@ -194,6 +193,8 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
+    const SENHA_PADRAO = "1503"; // SENHA DEFINIDA PELO USUÁRIO
+
     let scanner;
     let mapaBarcodes = {};
     let itensCadastrados = {};
@@ -221,59 +222,66 @@
 
     function fecharCamera() { if(scanner) scanner.stop().then(() => document.getElementById('reader').style.display = 'none'); }
 
-    // --- SEGURANÇA: EXCLUIR COM SENHA ---
-    function solicitarExclusao(path, callback) {
-        const senhaConfirmacao = prompt("Para excluir, confirme sua SENHA de login:");
-        if (!senhaConfirmacao) return;
+    // SEGURANÇA GLOBAL: SENHA PADRÃO 1503
+    function validarSenhaAcesso(callback) {
+        const inputSenha = prompt("Digite a senha de autorização (4 dígitos):");
+        if (inputSenha === SENHA_PADRAO) {
+            callback();
+        } else {
+            alert("Senha incorreta! Operação não autorizada.");
+        }
+    }
 
-        // Tenta re-autenticar temporariamente para validar a senha
-        const user = auth.currentUser;
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, senhaConfirmacao);
-        
-        user.reauthenticateWithCredential(credential).then(() => {
-            if(confirm("Tem certeza que deseja apagar permanentemente?")) {
-                db.ref(path).remove().then(() => {
-                    alert("Excluído com sucesso!");
-                    if(callback) callback();
-                });
+    function solicitarExclusao(path) {
+        validarSenhaAcesso(() => {
+            if(confirm("Tem certeza que deseja apagar?")) {
+                db.ref(path).remove().then(() => alert("Excluído com sucesso!"));
             }
-        }).catch(() => alert("Senha incorreta! Operação cancelada."));
+        });
+    }
+
+    function solicitarEdicaoProduto(k, nomeAntigo) {
+        validarSenhaAcesso(() => {
+            const novoNome = prompt("Digite o novo nome para o produto:", nomeAntigo);
+            if (novoNome && novoNome !== nomeAntigo) {
+                db.ref(`itens/${k}/nome`).set(novoNome).then(() => alert("Nome atualizado!"));
+            }
+        });
     }
 
     function carregarTudo() {
-        // Itens com Lixeira
         db.ref('itens').on('value', s => {
             itensCadastrados = s.val() || {};
             const opt = Object.keys(itensCadastrados).map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
             document.getElementById('in-produto').innerHTML = opt;
             document.getElementById('out-produto').innerHTML = opt;
             
-            let html = '<table><tr><th>Item</th><th>Qtd</th><th></th></tr>';
+            let html = '<table><tr><th>Item</th><th>Qtd</th><th style="text-align:right">Ações</th></tr>';
             Object.keys(itensCadastrados).forEach(k => {
+                const item = itensCadastrados[k];
                 html += `<tr>
-                    <td>${itensCadastrados[k].nome}</td>
-                    <td><b>${itensCadastrados[k].estoque_central || 0}</b></td>
-                    <td style="text-align:right"><button class="btn-delete" onclick="solicitarExclusao('itens/${k}')">🗑️</button></td>
+                    <td>${item.nome}</td>
+                    <td><b>${item.estoque_central || 0}</b></td>
+                    <td style="text-align:right">
+                        <button class="btn-edit" onclick="solicitarEdicaoProduto('${k}', '${item.nome}')">✏️</button>
+                        <button class="btn-delete" onclick="solicitarExclusao('itens/${k}')">🗑️</button>
+                    </td>
                 </tr>`;
-                if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k;
+                if(item.barcode) mapaBarcodes[item.barcode] = k;
             });
             document.getElementById('lista-estoque-central').innerHTML = html + '</table>';
         });
 
-        // Serviços com Lixeira
         db.ref('tipos_servico').on('value', s => {
             const servicos = s.val() || {};
-            document.getElementById('os-servico-select').innerHTML = '<option value="">Selecione...</option>' + 
-                Object.keys(servicos).map(k => `<option value="${servicos[k].nome}">${servicos[k].nome}</option>`).join('');
-            
+            document.getElementById('os-servico-select').innerHTML = '<option value="">Selecione...</option>' + Object.keys(servicos).map(k => `<option value="${servicos[k].nome}">${servicos[k].nome}</option>`).join('');
             const listaAdmin = document.getElementById('lista-servicos-admin');
             listaAdmin.innerHTML = '';
-            Object.keys(servicos).forEach(k => {
-                listaAdmin.innerHTML += `<div class="item-row">${servicos[k].nome} <button class="btn-delete" onclick="solicitarExclusao('tipos_servico/${k}')">🗑️</button></div>`;
+            Object.keys(servicos).forEach(k => { 
+                listaAdmin.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #eee;">${servicos[k].nome} <button class="btn-delete" onclick="solicitarExclusao('tipos_servico/${k}')">🗑️</button></div>`; 
             });
         });
 
-        // O.S. com Lixeira
         db.ref('os').on('value', s => {
             const dados = s.val() || {};
             const lista = document.getElementById('lista-os');
@@ -281,22 +289,10 @@
             Object.keys(dados).reverse().forEach(id => {
                 const os = dados[id];
                 const concluida = os.status === 'concluido';
-                lista.innerHTML += `
-                    <div class="card os-item ${os.status}">
-                        <button class="btn-delete" style="position:absolute; right:10px; top:10px;" onclick="solicitarExclusao('os/${id}')">🗑️</button>
-                        <div onclick="toggleDetalhe('${id}')">
-                            <b>${os.os_numero ? 'O.S. ' + os.os_numero : ''} | ${os.cliente}</b><br>
-                            <small>${os.endereco}</small>
-                        </div>
-                        <div id="detalhe-${id}" class="detalhe-gasto">
-                            Material: ${os.gasto || '---'}<br>Mão de Obra: R$ ${os.valor_pagar}
-                        </div>
-                        ${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar})">BAIXAR</button>` : ''}
-                    </div>`;
+                lista.innerHTML += `<div class="card os-item ${os.status}"><button class="btn-delete" style="position:absolute; right:10px; top:10px;" onclick="solicitarExclusao('os/${id}')">🗑️</button><div onclick="toggleDetalhe('${id}')"><b>${os.os_numero ? 'O.S. ' + os.os_numero : ''} | ${os.cliente}</b><br><small>${os.endereco}</small></div><div id="detalhe-${id}" class="detalhe-gasto">Material: ${os.gasto || '---'}<br>Mão de Obra: R$ ${os.valor_pagar}</div>${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar})">BAIXAR</button>` : ''}</div>`;
             });
         });
 
-        // Técnicos
         db.ref('tecnicos').on('value', s => {
             const tecs = s.val() || {};
             const opt = Object.keys(tecs).map(k => `<option value="${k}">${tecs[k].nome}</option>`).join('');
@@ -307,12 +303,10 @@
         });
     }
 
-    // --- FUNÇÕES DE CAMERA E BIPI ---
     function abrirCamera(modo) {
         document.getElementById('reader').style.display = 'block';
         if(modo === 'in') document.getElementById('display-in').style.display = 'block';
         if(modo === 'out') document.getElementById('display-out').style.display = 'block';
-
         scanner = new Html5Qrcode("reader");
         scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
             tocarSom();
@@ -326,59 +320,20 @@
         });
     }
 
-    function tocarSom() { 
-        const a = new AudioContext(); const o = a.createOscillator(); const g = a.createGain();
-        o.connect(g); g.connect(a.destination); o.frequency.value = 880; g.gain.value = 1.0;
-        o.start(); setTimeout(() => o.stop(), 150); 
-    }
-
-    // --- RESTANTE DAS FUNÇÕES (PROCESSAR, CADASTRAR, MODAL) ---
-    function cadastrarTipoServico() {
-        const n = document.getElementById('cad-servico-nome').value;
-        if(n) db.ref('tipos_servico').push({ nome: n }).then(() => document.getElementById('cad-servico-nome').value = '');
-    }
-    function processarEntrada() {
-        const k = document.getElementById('in-produto').value;
-        const q = parseFloat(document.getElementById('in-qtd').value);
-        db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) + q);
-        alert("Entrada OK"); document.getElementById('display-in').style.display = 'none';
-    }
-    function processarSaida() {
-        const t = document.getElementById('out-tecnico').value;
-        const k = document.getElementById('out-produto').value;
-        const q = parseFloat(document.getElementById('out-qtd').value);
-        db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) - q);
-        db.ref(`estoque_volante/${t}/${itensCadastrados[k].nome}`).transaction(a => (a || 0) + q);
-        alert("Saída OK"); document.getElementById('display-out').style.display = 'none';
-    }
-    function cadastrarItem() {
-        db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0 })
-        .then(() => { document.getElementById('cad-item-nome').value = ''; document.getElementById('cad-item-barcode').value = ''; });
-    }
-    function criarOS() {
-        const d = { os_numero: document.getElementById('os-numero').value, cliente: document.getElementById('os-cliente').value, endereco: document.getElementById('os-endereco').value, tecnico_id: document.getElementById('os-tecnico').value, tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text, servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0, status: 'pendente', pago: false, data: Date.now() };
-        db.ref('os').push(d).then(() => { alert("Aberta!"); document.getElementById('os-numero').value=''; document.getElementById('os-cliente').value=''; });
-    }
+    function tocarSom() { const a = new AudioContext(); const o = a.createOscillator(); const g = a.createGain(); o.connect(g); g.connect(a.destination); o.frequency.value = 880; g.gain.value = 1.0; o.start(); setTimeout(() => o.stop(), 150); }
+    function cadastrarTipoServico() { const n = document.getElementById('cad-servico-nome').value; if(n) db.ref('tipos_servico').push({ nome: n }).then(() => document.getElementById('cad-servico-nome').value = ''); }
+    function processarEntrada() { const k = document.getElementById('in-produto').value; const q = parseFloat(document.getElementById('in-qtd').value); db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) + q); alert("Entrada OK"); document.getElementById('display-in').style.display = 'none'; }
+    function processarSaida() { const t = document.getElementById('out-tecnico').value; const k = document.getElementById('out-produto').value; const q = parseFloat(document.getElementById('out-qtd').value); db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) - q); db.ref(`estoque_volante/${t}/${itensCadastrados[k].nome}`).transaction(a => (a || 0) + q); alert("Saída OK"); document.getElementById('display-out').style.display = 'none'; }
+    function cadastrarItem() { db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0 }).then(() => { document.getElementById('cad-item-nome').value = ''; document.getElementById('cad-item-barcode').value = ''; }); }
+    function criarOS() { const d = { os_numero: document.getElementById('os-numero').value, cliente: document.getElementById('os-cliente').value, endereco: document.getElementById('os-endereco').value, tecnico_id: document.getElementById('os-tecnico').value, tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text, servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0, status: 'pendente', pago: false, data: Date.now() }; db.ref('os').push(d).then(() => { alert("Aberta!"); document.getElementById('os-numero').value=''; document.getElementById('os-cliente').value=''; }); }
     function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
-    function adicionarLinhaBaixa() {
-        const c = document.getElementById('baixa-itens-container');
-        const d = document.createElement('div'); d.style.display = 'flex'; d.style.gap = '5px'; d.style.marginBottom = '5px';
-        const o = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join('');
-        d.innerHTML = `<select class="b-item" style="flex:2">${o}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`;
-        c.appendChild(d);
-    }
-    function confirmarBaixa() {
-        const ns = document.querySelectorAll('.b-item'); const qs = document.querySelectorAll('.b-qtd'); const vf = document.getElementById('baixa-valor-final').value;
-        db.ref('os/'+osParaBaixar).once('value', snap => {
-            const os = snap.val(); let g = "";
-            ns.forEach((el, i) => { const q = parseFloat(qs[i].value); if(q > 0) { db.ref(`estoque_volante/${os.tecnico_id}/${el.value}`).transaction(a => (a || 0) - q); g += `${q}x ${el.value}, `; } });
-            db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf }); fecharModal();
-        });
-    }
+    function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.style.display = 'flex'; d.style.gap = '5px'; d.style.marginBottom = '5px'; const o = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<select class="b-item" style="flex:2">${o}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`; c.appendChild(d); }
+    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'); const qs = document.querySelectorAll('.b-qtd'); const vf = document.getElementById('baixa-valor-final').value; db.ref('os/'+osParaBaixar).once('value', snap => { const os = snap.val(); let g = ""; ns.forEach((el, i) => { const q = parseFloat(qs[i].value); if(q > 0) { db.ref(`estoque_volante/${os.tecnico_id}/${el.value}`).transaction(a => (a || 0) - q); g += `${q}x ${el.value}, `; } }); db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf }); fecharModal(); }); }
     function fecharModal() { document.getElementById('modal-baixa').style.display = 'none'; }
     function toggleDetalhe(id) { const e = document.getElementById('detalhe-'+id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
     function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({nome: document.getElementById('cad-tec-nome').value}); }
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) document.getElementById('os-endereco').value = `${d.logradouro}, ${d.bairro}, ${d.localidade}`; }); }
+    function carregarEstoqueVolante(id) { db.ref('estoque_volante/'+id).on('value', s => { const d = s.val() || {}; let h = '<table><tr><th>Item</th><th>Mala</th></tr>'; Object.keys(d).forEach(k => h += `<tr><td>${k}</td><td>${d[k]}</td></tr>`); document.getElementById('lista-estoque-volante').innerHTML = h + '</table>'; }); }
 </script>
 </body>
 </html>
