@@ -54,6 +54,7 @@
             display: flex; overflow-x: auto; padding: 0 10px; 
             gap: 15px; border-bottom: 4px solid var(--accent);
             scrollbar-width: none;
+            align-items: center;
         }
         .navbar::-webkit-scrollbar { display: none; }
         .nav-btn { 
@@ -117,6 +118,7 @@
 
     <div id="login-screen">
         <div class="card-login">
+            <img src="logo.jpg" alt="WV SERVIÇOS" style="width: 120px; height: auto; margin-bottom: 15px; border-radius: 10px;">
             <h1 style="color:var(--primary); font-size:24px; margin-bottom:24px;">WV SERVIÇOS</h1>
             <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="senha" placeholder="Senha">
@@ -126,6 +128,7 @@
 
     <div id="app-container" style="display:none; flex-direction:column; height:100%;">
         <nav class="navbar">
+            <img src="logo.jpg" alt="WV" style="width: 30px; height: 30px; margin-left: 10px; border-radius: 4px; object-fit: cover;">
             <button class="nav-btn active" onclick="nav('estoque')">📦 Estoque</button>
             <button class="nav-btn" onclick="nav('entrada')">📥 Entrada</button>
             <button class="nav-btn" onclick="nav('saida')">📤 Saída</button>
@@ -369,7 +372,6 @@
                 if(concl && !o.pago) tPendente += val;
                 if(concl && o.pago) tPago += val;
 
-                // AJUSTE: Adicionado o Nº da O.S. no Histórico
                 lista.innerHTML += `<div class="card os-item ${o.status}">
                     <div style="position:absolute; right:15px; top:15px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
                     <b>${o.cliente}</b><br>
