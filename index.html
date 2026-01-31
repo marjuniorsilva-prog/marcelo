@@ -123,6 +123,7 @@
             <div id="view-os" class="view-section">
                 <div class="card">
                     <h3>📋 Nova O.S.</h3>
+                    <input type="text" id="os-numero" placeholder="Nº da O.S. (Manual)">
                     <input type="text" id="os-cliente" placeholder="Nome / Razão Social">
                     <input type="text" id="os-doc" placeholder="CPF / CNPJ">
                     <div style="display:flex; gap:5px;">
@@ -242,7 +243,7 @@
                 lista.innerHTML += `
                     <div class="card os-item ${os.status}" onclick="toggleDetalhe('${id}')">
                         <div style="display:flex; justify-content:space-between">
-                            <b>${os.cliente}</b>
+                            <b>${os.os_numero ? 'O.S. ' + os.os_numero : ''} | ${os.cliente}</b>
                             <span style="font-size:10px">${concluida ? '✅' : '⏳'}</span>
                         </div>
                         <small>${os.endereco} | Téc: ${os.tecnico_nome}</small>
@@ -288,7 +289,7 @@
                 if(o.tecnico_id === tecId && o.status === 'concluido' && !o.pago) {
                     html += `
                         <div class="fin-card">
-                            <b>${o.cliente}</b><br>
+                            <b>${o.os_numero ? 'O.S. ' + o.os_numero : ''} | ${o.cliente}</b><br>
                             Mão de obra: R$ ${o.valor_pagar}<br>
                             <button class="btn btn-green" style="padding:5px; font-size:10px" onclick="marcarComoPago('${id}')">MARCAR COMO PAGO</button>
                         </div>`;
@@ -338,6 +339,7 @@
     // --- O.S. ---
     function criarOS() {
         const dados = {
+            os_numero: document.getElementById('os-numero').value,
             cliente: document.getElementById('os-cliente').value,
             endereco: document.getElementById('os-endereco').value,
             tecnico_id: document.getElementById('os-tecnico').value,
@@ -347,7 +349,11 @@
             pago: false,
             data: Date.now()
         };
-        db.ref('os').push(dados).then(() => alert("O.S. Aberta"));
+        db.ref('os').push(dados).then(() => {
+            alert("O.S. Aberta");
+            document.getElementById('os-numero').value = '';
+            document.getElementById('os-cliente').value = '';
+        });
     }
 
     function abrirModalBaixa(id, valorSugerido) {
