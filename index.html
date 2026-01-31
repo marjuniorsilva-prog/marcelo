@@ -42,16 +42,15 @@
         th { text-align: left; padding: 8px; background: #f1f5f9; }
         td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
 
-        .os-item { border-left: 4px solid #cbd5e1; padding-left: 10px; margin-bottom: 10px; cursor: pointer; }
+        .os-item { border-left: 5px solid #cbd5e1; padding-left: 10px; margin-bottom: 10px; }
         .os-item.pendente { border-color: #f59e0b; }
         .os-item.concluido { border-color: var(--success); }
-        .detalhe-gasto { background: #f8fafc; padding: 8px; border-radius: 5px; font-size: 11px; margin-top: 5px; display: none; }
+        .os-info-box { font-size: 13px; margin-bottom: 5px; }
+        .badge-tec { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
 
         #modal-baixa { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 5000; padding: 20px; align-items: center; justify-content: center; }
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; }
-        
         #reader { width: 100%; height: 250px; display: none; border-radius: 10px; overflow: hidden; margin-bottom: 15px; border: 3px solid #f59e0b; }
-        .display-codigo { background: #f1f5f9; padding: 10px; border-radius: 6px; font-family: monospace; font-weight: bold; color: var(--accent); margin-bottom: 10px; text-align: center; border: 1px dashed var(--accent); }
     </style>
 </head>
 <body>
@@ -78,262 +77,155 @@
         <div class="content">
             <div id="reader"></div>
 
-            <div id="view-estoque" class="view-section active">
+            <div id="view-os" class="view-section active">
                 <div class="card">
-                    <h3>🏢 Estoque Central</h3>
-                    <div id="lista-estoque-central"></div>
-                </div>
-                <div class="card">
-                    <h3>🚚 Mala do Técnico</h3>
-                    <select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select>
-                    <div id="lista-estoque-volante">Selecione um técnico.</div>
-                </div>
-            </div>
-
-            <div id="view-entrada" class="view-section">
-                <div class="card">
-                    <h3>📥 Entrada de Material</h3>
-                    <button class="btn btn-orange" onclick="abrirCamera('in')">📷 LER CÓDIGO</button>
-                    <div id="display-in" class="display-codigo" style="display:none;">Aguardando leitura...</div>
-                    <label>Produto</label><select id="in-produto"></select>
-                    <label>Quantidade</label><input type="number" id="in-qtd" step="0.01" value="1">
-                    <button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR ENTRADA</button>
-                </div>
-            </div>
-
-            <div id="view-saida" class="view-section">
-                <div class="card">
-                    <h3>📤 Saída p/ Técnico</h3>
-                    <label>Técnico</label><select id="out-tecnico"></select>
-                    <button class="btn btn-orange" onclick="abrirCamera('out')">📷 BIPAR PRODUTO</button>
-                    <div id="display-out" class="display-codigo" style="display:none;">Aguardando leitura...</div>
-                    <label>Produto</label><select id="out-produto"></select>
-                    <label>Quantidade</label><input type="number" id="out-qtd" step="0.01" value="1">
-                    <button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button>
-                </div>
-            </div>
-
-            <div id="view-os" class="view-section">
-                <div class="card">
-                    <h3>📋 Nova O.S.</h3>
+                    <h3 id="os-form-title">📋 Nova O.S.</h3>
+                    <input type="hidden" id="os-edit-id">
                     <input type="text" id="os-numero" placeholder="Nº da O.S. (Manual)">
                     <input type="text" id="os-cliente" placeholder="Nome / Razão Social">
                     <input type="text" id="os-doc" placeholder="CPF / CNPJ">
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="os-cep" placeholder="CEP" onblur="buscarCep()" style="flex:1">
-                        <select id="os-tecnico" style="flex:1"></select>
+                        <input type="text" id="os-bairro" placeholder="Bairro" style="flex:1">
                     </div>
-                    <input type="text" id="os-endereco" placeholder="Endereço">
+                    <input type="text" id="os-endereco" placeholder="Endereço Completo">
+                    <label>Técnico Responsável</label><select id="os-tecnico"></select>
                     <label>Tipo de Serviço</label><select id="os-servico-select"></select>
                     <input type="number" id="os-valor-pagar" placeholder="Valor Mão de Obra (R$)">
-                    <button class="btn btn-blue" onclick="criarOS()">CRIAR O.S.</button>
+                    <button class="btn btn-blue" id="btn-salvar-os" onclick="criarOS()">CRIAR O.S.</button>
+                    <button class="btn btn-orange" id="btn-cancelar-edit" onclick="cancelarEdicaoOS()" style="display:none;">CANCELAR EDIÇÃO</button>
                 </div>
                 <div id="lista-os"></div>
             </div>
 
-            <div id="view-financeiro" class="view-section">
-                <div class="card"><h3>💰 Contas a Pagar</h3><div id="resumo-financeiro"></div></div>
-                <div class="card">
-                    <h3>📜 Detalhes</h3>
-                    <select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select>
-                    <div id="detalhes-financeiro"></div>
-                    <hr><div id="historico-financeiro"></div>
-                </div>
+            <div id="view-estoque" class="view-section">
+                <div class="card"><h3>🏢 Estoque Central</h3><div id="lista-estoque-central"></div></div>
+                <div class="card"><h3>🚚 Mala Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante"></div></div>
             </div>
-
-            <div id="view-admin" class="view-section">
-                <button class="btn btn-orange" onclick="abrirCamera('cad')">📷 CÂMERA PARA CADASTRAR</button>
-                <div class="card">
-                    <h3>📦 Produto</h3>
-                    <input type="text" id="cad-item-nome" placeholder="Nome do Produto">
-                    <input type="text" id="cad-item-barcode" placeholder="Código Lido (Bipe acima)">
-                    <button class="btn btn-green" onclick="cadastrarItem()">SALVAR PRODUTO</button>
-                </div>
-                <div class="card">
-                    <h3>🛠️ Serviços</h3>
-                    <input type="text" id="cad-servico-nome" placeholder="Nome do Serviço">
-                    <button class="btn btn-blue" onclick="cadastrarTipoServico()">SALVAR TIPO DE SERVIÇO</button>
-                    <div id="lista-servicos-admin" style="margin-top:10px;"></div>
-                </div>
-                <div class="card">
-                    <h3>👤 Novo Técnico</h3>
-                    <input type="text" id="cad-tec-nome" placeholder="Nome do Técnico">
-                    <input type="text" id="cad-tec-id" placeholder="ID (ex: tec_01)">
-                    <button class="btn btn-blue" onclick="cadastrarTecnico()">SALVAR TÉCNICO</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-baixa">
-        <div class="modal-content">
-            <h3>Baixar O.S.</h3>
-            <div id="baixa-itens-container"></div>
-            <button class="btn btn-orange" onclick="adicionarLinhaBaixa()">+ ITEM</button>
-            <input type="number" id="baixa-valor-final" placeholder="Valor Final">
-            <div style="display:flex; gap:5px;">
-                <button class="btn btn-blue" onclick="fecharModal()">VOLTAR</button>
-                <button class="btn btn-green" onclick="confirmarBaixa()">FINALIZAR</button>
-            </div>
+            <div id="view-entrada" class="view-section">...</div>
+             <div id="view-saida" class="view-section">...</div>
+             <div id="view-financeiro" class="view-section">...</div>
+             <div id="view-admin" class="view-section">...</div>
         </div>
     </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBS8t51QON29MIYDkkcZETchdevHFVMzCk",
-        authDomain: "internet-f2434.firebaseapp.com",
-        databaseURL: "https://internet-f2434-default-rtdb.firebaseio.com",
-        projectId: "internet-f2434",
-        storageBucket: "internet-f2434.firebasestorage.app",
-        messagingSenderId: "506788174813",
-        appId: "1:506788174813:web:50e05b1a194d70f412b434"
-    };
-
+    // CONFIGURAÇÃO FIREBASE E SENHA
+    const firebaseConfig = { /* Seus dados do Firebase */ };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+    const SENHA_PADRAO = "1503";
 
-    const SENHA_PADRAO = "1503"; // SENHA DEFINIDA PELO USUÁRIO
+    // --- FUNÇÕES DE O.S. ---
 
-    let scanner;
-    let mapaBarcodes = {};
-    let itensCadastrados = {};
-    let osParaBaixar = null;
-
-    function fazerLogin() {
-        auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(e => alert("Erro login"));
-    }
-    auth.onAuthStateChanged(user => {
-        if(user) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-container').style.display = 'flex';
-            carregarTudo();
+    function buscarCep() {
+        const cep = document.getElementById('os-cep').value.replace(/\D/g, '');
+        if(cep.length === 8) {
+            fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r => r.json()).then(d => {
+                if(!d.erro) {
+                    document.getElementById('os-endereco').value = d.logradouro;
+                    document.getElementById('os-bairro').value = d.bairro;
+                }
+            });
         }
-    });
-    function logout() { auth.signOut(); location.reload(); }
-
-    function nav(id) {
-        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('view-'+id).classList.add('active');
-        if(event) event.target.classList.add('active');
-        fecharCamera();
     }
 
-    function fecharCamera() { if(scanner) scanner.stop().then(() => document.getElementById('reader').style.display = 'none'); }
+    function criarOS() {
+        const idEdicao = document.getElementById('os-edit-id').value;
+        const dados = {
+            os_numero: document.getElementById('os-numero').value,
+            cliente: document.getElementById('os-cliente').value,
+            documento: document.getElementById('os-doc').value,
+            cep: document.getElementById('os-cep').value,
+            bairro: document.getElementById('os-bairro').value,
+            endereco: document.getElementById('os-endereco').value,
+            tecnico_id: document.getElementById('os-tecnico').value,
+            tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text,
+            servico_tipo: document.getElementById('os-servico-select').value,
+            valor_pagar: document.getElementById('os-valor-pagar').value || 0,
+            status: idEdicao ? undefined : 'pendente', // Não muda status se for edição
+            data: Date.now()
+        };
 
-    // SEGURANÇA GLOBAL: SENHA PADRÃO 1503
-    function validarSenhaAcesso(callback) {
-        const inputSenha = prompt("Digite a senha de autorização (4 dígitos):");
-        if (inputSenha === SENHA_PADRAO) {
-            callback();
+        if(idEdicao) {
+            db.ref('os/' + idEdicao).update(dados).then(() => {
+                alert("O.S. Atualizada!");
+                cancelarEdicaoOS();
+            });
         } else {
-            alert("Senha incorreta! Operação não autorizada.");
+            db.ref('os').push(dados).then(() => {
+                alert("O.S. Criada!");
+                limparCamposOS();
+            });
         }
     }
 
-    function solicitarExclusao(path) {
-        validarSenhaAcesso(() => {
-            if(confirm("Tem certeza que deseja apagar?")) {
-                db.ref(path).remove().then(() => alert("Excluído com sucesso!"));
-            }
-        });
-    }
+    function editarOS(id) {
+        const senha = prompt("Digite a senha 1503 para EDITAR:");
+        if(senha !== SENHA_PADRAO) return alert("Senha incorreta!");
 
-    function solicitarEdicaoProduto(k, nomeAntigo) {
-        validarSenhaAcesso(() => {
-            const novoNome = prompt("Digite o novo nome para o produto:", nomeAntigo);
-            if (novoNome && novoNome !== nomeAntigo) {
-                db.ref(`itens/${k}/nome`).set(novoNome).then(() => alert("Nome atualizado!"));
-            }
-        });
-    }
-
-    function carregarTudo() {
-        db.ref('itens').on('value', s => {
-            itensCadastrados = s.val() || {};
-            const opt = Object.keys(itensCadastrados).map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
-            document.getElementById('in-produto').innerHTML = opt;
-            document.getElementById('out-produto').innerHTML = opt;
+        db.ref('os/' + id).once('value', s => {
+            const os = s.val();
+            document.getElementById('os-edit-id').value = id;
+            document.getElementById('os-numero').value = os.os_numero || '';
+            document.getElementById('os-cliente').value = os.cliente;
+            document.getElementById('os-doc').value = os.documento || '';
+            document.getElementById('os-cep').value = os.cep || '';
+            document.getElementById('os-bairro').value = os.bairro || '';
+            document.getElementById('os-endereco').value = os.endereco;
+            document.getElementById('os-tecnico').value = os.tecnico_id;
+            document.getElementById('os-servico-select').value = os.servico_tipo;
+            document.getElementById('os-valor-pagar').value = os.valor_pagar;
             
-            let html = '<table><tr><th>Item</th><th>Qtd</th><th style="text-align:right">Ações</th></tr>';
-            Object.keys(itensCadastrados).forEach(k => {
-                const item = itensCadastrados[k];
-                html += `<tr>
-                    <td>${item.nome}</td>
-                    <td><b>${item.estoque_central || 0}</b></td>
-                    <td style="text-align:right">
-                        <button class="btn-edit" onclick="solicitarEdicaoProduto('${k}', '${item.nome}')">✏️</button>
-                        <button class="btn-delete" onclick="solicitarExclusao('itens/${k}')">🗑️</button>
-                    </td>
-                </tr>`;
-                if(item.barcode) mapaBarcodes[item.barcode] = k;
-            });
-            document.getElementById('lista-estoque-central').innerHTML = html + '</table>';
+            document.getElementById('os-form-title').innerText = "✏️ Editando O.S. " + (os.os_numero || '');
+            document.getElementById('btn-salvar-os').innerText = "SALVAR ALTERAÇÕES";
+            document.getElementById('btn-cancelar-edit').style.display = "block";
+            window.scrollTo(0,0);
         });
+    }
 
-        db.ref('tipos_servico').on('value', s => {
-            const servicos = s.val() || {};
-            document.getElementById('os-servico-select').innerHTML = '<option value="">Selecione...</option>' + Object.keys(servicos).map(k => `<option value="${servicos[k].nome}">${servicos[k].nome}</option>`).join('');
-            const listaAdmin = document.getElementById('lista-servicos-admin');
-            listaAdmin.innerHTML = '';
-            Object.keys(servicos).forEach(k => { 
-                listaAdmin.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #eee;">${servicos[k].nome} <button class="btn-delete" onclick="solicitarExclusao('tipos_servico/${k}')">🗑️</button></div>`; 
-            });
-        });
+    function cancelarEdicaoOS() {
+        document.getElementById('os-edit-id').value = '';
+        limparCamposOS();
+        document.getElementById('os-form-title').innerText = "📋 Nova O.S.";
+        document.getElementById('btn-salvar-os').innerText = "CRIAR O.S.";
+        document.getElementById('btn-cancelar-edit').style.display = "none";
+    }
 
+    function limparCamposOS() {
+        ['os-numero','os-cliente','os-doc','os-cep','os-bairro','os-endereco','os-valor-pagar'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function carregarListaOS() {
         db.ref('os').on('value', s => {
             const dados = s.val() || {};
             const lista = document.getElementById('lista-os');
-            lista.innerHTML = '<h3>Histórico</h3>';
+            lista.innerHTML = '<h3>Histórico de O.S.</h3>';
             Object.keys(dados).reverse().forEach(id => {
                 const os = dados[id];
                 const concluida = os.status === 'concluido';
-                lista.innerHTML += `<div class="card os-item ${os.status}"><button class="btn-delete" style="position:absolute; right:10px; top:10px;" onclick="solicitarExclusao('os/${id}')">🗑️</button><div onclick="toggleDetalhe('${id}')"><b>${os.os_numero ? 'O.S. ' + os.os_numero : ''} | ${os.cliente}</b><br><small>${os.endereco}</small></div><div id="detalhe-${id}" class="detalhe-gasto">Material: ${os.gasto || '---'}<br>Mão de Obra: R$ ${os.valor_pagar}</div>${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar})">BAIXAR</button>` : ''}</div>`;
+                lista.innerHTML += `
+                    <div class="card os-item ${os.status}">
+                        <div style="position:absolute; right:10px; top:10px;">
+                            <button class="btn-edit" onclick="editarOS('${id}')">✏️</button>
+                            <button class="btn-delete" onclick="solicitarExclusao('os/${id}')">🗑️</button>
+                        </div>
+                        <div class="os-info-box">
+                            <span class="badge-tec">${os.tecnico_nome}</span> 
+                            <b style="color:var(--accent); margin-left:5px;">${os.servico_tipo}</b>
+                        </div>
+                        <b>${os.os_numero ? 'Nº ' + os.os_numero : ''} | ${os.cliente}</b><br>
+                        <small>${os.endereco} - <b>${os.bairro || 'Sem Bairro'}</b></small>
+                        ${!concluida ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}', ${os.valor_pagar})">BAIXAR</button>` : ''}
+                    </div>`;
             });
         });
-
-        db.ref('tecnicos').on('value', s => {
-            const tecs = s.val() || {};
-            const opt = Object.keys(tecs).map(k => `<option value="${k}">${tecs[k].nome}</option>`).join('');
-            document.getElementById('out-tecnico').innerHTML = opt;
-            document.getElementById('os-tecnico').innerHTML = opt;
-            document.getElementById('filtro-tecnico-estoque').innerHTML = '<option value="">Filtrar...</option>' + opt;
-            document.getElementById('fin-filtro-tecnico').innerHTML = '<option value="">Técnico...</option>' + opt;
-        });
     }
 
-    function abrirCamera(modo) {
-        document.getElementById('reader').style.display = 'block';
-        if(modo === 'in') document.getElementById('display-in').style.display = 'block';
-        if(modo === 'out') document.getElementById('display-out').style.display = 'block';
-        scanner = new Html5Qrcode("reader");
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            tocarSom();
-            if (modo === 'cad') { document.getElementById('cad-item-barcode').value = text; fecharCamera(); } 
-            else {
-                const display = document.getElementById(modo === 'in' ? 'display-in' : 'display-out');
-                if(display) display.innerText = "Lido: " + text;
-                const key = mapaBarcodes[text];
-                if(key) document.getElementById(modo === 'in' ? 'in-produto' : 'out-produto').value = key;
-            }
-        });
-    }
+    // ... (Mantenha o restante das funções de Login, Câmera, Estoque e Financeiro do código anterior) ...
+    // Basta chamar carregarListaOS() no AuthStateChanged.
 
-    function tocarSom() { const a = new AudioContext(); const o = a.createOscillator(); const g = a.createGain(); o.connect(g); g.connect(a.destination); o.frequency.value = 880; g.gain.value = 1.0; o.start(); setTimeout(() => o.stop(), 150); }
-    function cadastrarTipoServico() { const n = document.getElementById('cad-servico-nome').value; if(n) db.ref('tipos_servico').push({ nome: n }).then(() => document.getElementById('cad-servico-nome').value = ''); }
-    function processarEntrada() { const k = document.getElementById('in-produto').value; const q = parseFloat(document.getElementById('in-qtd').value); db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) + q); alert("Entrada OK"); document.getElementById('display-in').style.display = 'none'; }
-    function processarSaida() { const t = document.getElementById('out-tecnico').value; const k = document.getElementById('out-produto').value; const q = parseFloat(document.getElementById('out-qtd').value); db.ref(`itens/${k}/estoque_central`).transaction(a => (a || 0) - q); db.ref(`estoque_volante/${t}/${itensCadastrados[k].nome}`).transaction(a => (a || 0) + q); alert("Saída OK"); document.getElementById('display-out').style.display = 'none'; }
-    function cadastrarItem() { db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0 }).then(() => { document.getElementById('cad-item-nome').value = ''; document.getElementById('cad-item-barcode').value = ''; }); }
-    function criarOS() { const d = { os_numero: document.getElementById('os-numero').value, cliente: document.getElementById('os-cliente').value, endereco: document.getElementById('os-endereco').value, tecnico_id: document.getElementById('os-tecnico').value, tecnico_nome: document.getElementById('os-tecnico').selectedOptions[0].text, servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0, status: 'pendente', pago: false, data: Date.now() }; db.ref('os').push(d).then(() => { alert("Aberta!"); document.getElementById('os-numero').value=''; document.getElementById('os-cliente').value=''; }); }
-    function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
-    function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.style.display = 'flex'; d.style.gap = '5px'; d.style.marginBottom = '5px'; const o = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<select class="b-item" style="flex:2">${o}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`; c.appendChild(d); }
-    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'); const qs = document.querySelectorAll('.b-qtd'); const vf = document.getElementById('baixa-valor-final').value; db.ref('os/'+osParaBaixar).once('value', snap => { const os = snap.val(); let g = ""; ns.forEach((el, i) => { const q = parseFloat(qs[i].value); if(q > 0) { db.ref(`estoque_volante/${os.tecnico_id}/${el.value}`).transaction(a => (a || 0) - q); g += `${q}x ${el.value}, `; } }); db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf }); fecharModal(); }); }
-    function fecharModal() { document.getElementById('modal-baixa').style.display = 'none'; }
-    function toggleDetalhe(id) { const e = document.getElementById('detalhe-'+id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
-    function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({nome: document.getElementById('cad-tec-nome').value}); }
-    function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) document.getElementById('os-endereco').value = `${d.logradouro}, ${d.bairro}, ${d.localidade}`; }); }
-    function carregarEstoqueVolante(id) { db.ref('estoque_volante/'+id).on('value', s => { const d = s.val() || {}; let h = '<table><tr><th>Item</th><th>Mala</th></tr>'; Object.keys(d).forEach(k => h += `<tr><td>${k}</td><td>${d[k]}</td></tr>`); document.getElementById('lista-estoque-volante').innerHTML = h + '</table>'; }); }
 </script>
 </body>
 </html>
