@@ -48,16 +48,12 @@
         #reader { width: 100%; max-width: 400px; margin: 0 auto 20px; border-radius: 16px; overflow: hidden; display: none; border: 3px solid var(--accent); }
         .scanned-display { background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin: 10px 0; display: none; }
 
-        .fin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .fin-stat { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
-
         .os-item { border-left: 6px solid #cbd5e1; position: relative; }
         .os-item.pendente { border-color: var(--warning); }
         .os-item.concluido { border-color: var(--success); }
         
         .view-section { display: none; }
         .view-section.active { display: block; }
-        .editing-mode { border: 3px solid var(--warning) !important; background: #fffdf0 !important; }
 
         .os-info-grid { display: grid; grid-template-columns: 1fr; gap: 3px; margin-top: 10px; font-size: 12px; color: var(--text-main); }
         .os-info-item b { color: var(--text-muted); font-size: 10px; text-transform: uppercase; margin-right: 5px; }
@@ -100,7 +96,6 @@
                     </div>
                     <label>Cliente</label><input type="text" id="os-cliente">
                     <label>Telefone</label><input type="tel" id="os-telefone">
-                    
                     <div style="display:flex; gap:5px;">
                         <div style="flex:2;"><label>CEP</label><input type="text" id="os-cep" placeholder="CEP" onblur="buscarCep()"></div>
                         <div style="flex:1;"><label>Número</label><input type="text" id="os-numero-casa" placeholder="Nº"></div>
@@ -110,34 +105,20 @@
                         <div style="flex:1;"><label>Cidade</label><input type="text" id="os-cidade" placeholder="Cidade"></div>
                     </div>
                     <label>Logradouro (Rua)</label><input type="text" id="os-endereco" placeholder="Endereço">
-                    
                     <label>Técnico</label><select id="os-tecnico"></select>
                     <label>Serviço</label><select id="os-servico-select"></select>
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
                     <button class="btn btn-blue" id="btn-salvar-os" onclick="criarOS()">CRIAR O.S.</button>
                     <button class="btn" id="btn-cancelar-edit" onclick="cancelarEdicaoOS()" style="display:none; background:#ff4444; color:white;">CANCELAR EDIÇÃO</button>
                 </div>
-                <div class="card"><h3>🔍 Histórico por Técnico</h3><select id="filtro-tecnico-os" onchange="renderizarListaOS()"><option value="">Todos os Técnicos</option></select></div>
+                <div class="card"><h3>🔍 Filtrar por Técnico</h3><select id="filtro-tecnico-os" onchange="renderizarListaOS()"><option value="">Todos os Técnicos</option></select></div>
                 <div id="lista-os"></div>
             </div>
 
-            <div id="view-financeiro" class="view-section">
-                <div class="fin-grid">
-                    <div class="fin-stat"><span>Aberto Total</span><br><b id="fin-total-pendente" style="color:var(--danger)">R$ 0,00</b></div>
-                    <div class="fin-stat"><span>Pago Total</span><br><b id="fin-total-pago" style="color:var(--success)">R$ 0,00</b></div>
-                </div>
-                <div class="card"><h3>💰 Pagamentos de Técnicos</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr style="margin:20px 0;"><div id="historico-financeiro"></div></div>
-            </div>
-
-            <div id="view-estoque" class="view-section">
-                <div class="card"><h3>🏢 Estoque Central</h3><div id="lista-estoque-central"></div></div>
-                <div class="card"><h3>🚚 Mala do Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante"></div></div>
-                <div class="card"><h3>📜 Movimentações</h3><div id="log-movimentacao" style="max-height: 200px; overflow-y: auto; font-size: 11px;"></div></div>
-            </div>
-
+            <div id="view-financeiro" class="view-section"><div class="card"><h3>💰 Financeiro</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr><div id="historico-financeiro"></div></div></div>
+            <div id="view-estoque" class="view-section"><div class="card"><h3>🏢 Estoque Central</h3><div id="lista-estoque-central"></div></div><div class="card"><h3>🚚 Mala do Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante"></div></div></div>
             <div id="view-entrada" class="view-section"><div class="card"><h3>📥 Entrada</h3><button class="btn btn-orange" onclick="abrirCamera('in')">📷 LER BARCODE</button><div id="display-in" class="scanned-display"></div><select id="in-produto"></select><input type="number" id="in-qtd" value="1"><button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR</button></div></div>
             <div id="view-saida" class="view-section"><div class="card"><h3>📤 Saída</h3><select id="out-tecnico"></select><button class="btn btn-orange" onclick="abrirCamera('out')">📷 BIPAR</button><div id="display-out" class="scanned-display"></div><select id="out-produto"></select><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button></div></div>
-            
             <div id="view-admin" class="view-section">
                 <div class="card"><h3>📦 Novo Produto</h3><button class="btn btn-orange" onclick="abrirCamera('cad')">📷 LER BARCODE</button><div id="display-cad" class="scanned-display"></div><input type="text" id="cad-item-nome" placeholder="Nome"><input type="text" id="cad-item-barcode" placeholder="Código"><button class="btn btn-green" onclick="cadastrarItem()">SALVAR</button></div>
                 <div class="card"><h3>🛠️ Gestão de Serviços</h3><label>Novo Tipo de Serviço</label><input type="text" id="cad-servico-nome"><button class="btn btn-blue" onclick="cadastrarTipoServico()">+ CADASTRAR SERVIÇO</button><div id="lista-servicos-admin"></div></div>
@@ -146,7 +127,8 @@
         </div>
     </div>
 
-    <div id="modal-senha" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px);"><div class="card" style="width: 90%; max-width: 320px; text-align: center;"><img src="logo.jpg" style="width: 60px; margin-bottom: 10px; border-radius: 8px;"><h3>AUTORIZAÇÃO</h3><input type="password" id="input-senha-modal" placeholder="****" style="text-align: center; font-size: 24px; letter-spacing: 10px;"><div id="erro-senha" style="color: var(--danger); font-size: 11px; display: none;">Senha incorreta!</div><div style="display: flex; gap: 10px; margin-top: 15px;"><button class="btn" onclick="fecharModalSenha()" style="background: #f1f5f9; flex: 1;">VOLTAR</button><button class="btn btn-blue" onclick="verificarSenhaModal()" style="flex: 1;">OK</button></div></div></div>
+    <div id="modal-senha" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px);"><div class="card" style="width: 90%; max-width: 320px; text-align: center;"><img src="logo.jpg" style="width: 60px; margin-bottom: 10px; border-radius: 8px;"><h3>AUTORIZAÇÃO</h3><input type="password" id="input-senha-modal" placeholder="****" style="text-align: center; font-size: 24px; letter-spacing: 10px;"><div style="display: flex; gap: 10px; margin-top: 15px;"><button class="btn" onclick="fecharModalSenha()" style="background: #f1f5f9; flex: 1;">VOLTAR</button><button class="btn btn-blue" onclick="verificarSenhaModal()" style="flex: 1;">OK</button></div></div></div>
+    
     <div id="modal-baixa" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 5000; padding: 20px; align-items: center; justify-content: center;"><div class="card" style="width: 100%; max-width: 400px;"><h3>Finalizar Serviço</h3><div id="baixa-itens-container"></div><button class="btn" onclick="adicionarLinhaBaixa()">+ MATERIAL</button><label>Valor Pago ao Técnico</label><input type="number" id="baixa-valor-final"><div style="display:flex; gap:10px;"><button class="btn" onclick="fecharModalBaixa()" style="background:#eee;">VOLTAR</button><button class="btn btn-green" onclick="confirmarBaixa()">FINALIZAR O.S.</button></div></div></div>
 
 <script>
@@ -164,135 +146,67 @@
 
     function carregarTudo() {
         db.ref('itens').on('value', s => { itensCadastrados = s.val() || {}; mapaBarcodes = {}; Object.keys(itensCadastrados).forEach(k => { if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; }); });
-        
-        // TÉCNICOS (CORRIGIDO 3.0 - COM EDITAR)
-        db.ref('tecnicos').on('value', s => {
-            const t = s.val() || {}; const o = Object.keys(t).map(k => `<option value="${k}">${t[k].nome}</option>`).join('');
-            ['out-tecnico','os-tecnico','filtro-tecnico-estoque','fin-filtro-tecnico','filtro-tecnico-os'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + o; });
-            let ha = '<h4>Técnicos Cadastrados</h4>';
-            Object.keys(t).forEach(k => {
-                ha += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
-                    <span>${t[k].nome}</span>
-                    <div>
-                        <button class="btn-edit" onclick="editarTecnico('${k}','${t[k].nome}')">✏️</button>
-                        <button class="btn-delete" onclick="apagar('tecnicos/${k}')">🗑️</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('lista-tecnicos-admin').innerHTML = ha;
-        });
-
-        // SERVIÇOS (CORRIGIDO 3.0 - COM EDITAR)
-        db.ref('tipos_servico').on('value', s => {
-            const sv = s.val() || {};
-            document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha...</option>' + Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join('');
-            let h = '<h4>Serviços Cadastrados</h4>';
-            Object.keys(sv).forEach(k => {
-                h += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;">
-                    <span>${sv[k].nome}</span>
-                    <div>
-                        <button class="btn-edit" onclick="editarServico('${k}','${sv[k].nome}')">✏️</button>
-                        <button class="btn-delete" onclick="apagar('tipos_servico/${k}')">🗑️</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('lista-servicos-admin').innerHTML = h;
-        });
-
-        db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
+        db.ref('tecnicos').on('value', s => { const t = s.val() || {}; const o = Object.keys(t).map(k => `<option value="${k}">${t[k].nome}</option>`).join(''); ['out-tecnico','os-tecnico','filtro-tecnico-estoque','fin-filtro-tecnico','filtro-tecnico-os'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + o; }); let ha = '<h4>Técnicos Cadastrados</h4>'; Object.keys(t).forEach(k => { ha += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;"><span>${t[k].nome}</span><div><button class="btn-edit" onclick="editarTecnico('${k}','${t[k].nome}')">✏️</button><button class="btn-delete" onclick="apagar('tecnicos/${k}')">🗑️</button></div></div>`; }); document.getElementById('lista-tecnicos-admin').innerHTML = ha; });
+        db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha...</option>' + Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); let h = '<h4>Serviços Cadastrados</h4>'; Object.keys(sv).forEach(k => { h += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;"><span>${sv[k].nome}</span><div><button class="btn-edit" onclick="editarServico('${k}','${sv[k].nome}')">✏️</button><button class="btn-delete" onclick="apagar('tipos_servico/${k}')">🗑️</button></div></div>`; }); document.getElementById('lista-servicos-admin').innerHTML = h; });
+        db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); });
     }
 
-    // --- FUNÇÕES DE EDIÇÃO ADMIN 3.0 ---
-    function editarTecnico(id, nome) { validarSenhaAcesso(() => { const nn = prompt("Novo nome do técnico:", nome); if(nn) db.ref(`tecnicos/${id}`).update({ nome: nn }); }); }
-    function editarServico(id, nome) { validarSenhaAcesso(() => { const nn = prompt("Novo nome do serviço:", nome); if(nn) db.ref(`tipos_servico/${id}`).update({ nome: nn }); }); }
-
-    // --- BUSCA CEP 3.0 (COMPLETA) ---
-    function buscarCep() {
-        const c = document.getElementById('os-cep').value.replace(/\D/g, '');
-        if(c.length === 8) {
-            fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => {
-                if(!d.erro) {
-                    document.getElementById('os-endereco').value = d.logradouro;
-                    document.getElementById('os-bairro').value = d.bairro;
-                    document.getElementById('os-cidade').value = d.localidade;
-                }
-            });
-        }
-    }
-
-    // --- O.S (ATUALIZADA 3.0) ---
-    function criarOS() {
-        const id = document.getElementById('os-edit-id').value;
-        const sel = document.getElementById('os-tecnico');
-        const d = {
-            os_numero: document.getElementById('os-numero').value,
-            data_manual: document.getElementById('os-data-manual').value, 
-            cliente: document.getElementById('os-cliente').value,
-            telefone: document.getElementById('os-telefone').value,
-            cep: document.getElementById('os-cep').value,
-            numero_casa: document.getElementById('os-numero-casa').value,
-            bairro: document.getElementById('os-bairro').value,
-            cidade: document.getElementById('os-cidade').value,
-            endereco: document.getElementById('os-endereco').value,
-            tecnico_id: sel.value,
-            tecnico_nome: sel.options[sel.selectedIndex]?.text || '',
-            servico_tipo: document.getElementById('os-servico-select').value,
-            valor_pagar: document.getElementById('os-valor-pagar').value || 0
-        };
-        const ref = id ? db.ref('os/'+id) : db.ref('os').push();
-        if(!id) { d.status = 'pendente'; d.data_registro = Date.now(); }
-        ref.update(d).then(() => { alert("Salvo!"); cancelarEdicaoOS(); });
-    }
-
-    function editarOS(id) {
-        validarSenhaAcesso(() => {
-            const o = cacheDadosOS[id];
-            document.getElementById('os-edit-id').value = id;
-            document.getElementById('os-numero').value = o.os_numero || '';
-            document.getElementById('os-data-manual').value = o.data_manual || ''; 
-            document.getElementById('os-cliente').value = o.cliente || '';
-            document.getElementById('os-telefone').value = o.telefone || '';
-            document.getElementById('os-cep').value = o.cep || '';
-            document.getElementById('os-numero-casa').value = o.numero_casa || '';
-            document.getElementById('os-bairro').value = o.bairro || '';
-            document.getElementById('os-cidade').value = o.cidade || '';
-            document.getElementById('os-endereco').value = o.endereco || '';
-            document.getElementById('os-tecnico').value = o.tecnico_id || '';
-            document.getElementById('os-servico-select').value = o.servico_tipo || '';
-            document.getElementById('os-valor-pagar').value = o.valor_pagar || 0;
-            document.getElementById('form-os-card').classList.add('editing-mode');
-            document.getElementById('btn-cancelar-edit').style.display='block';
-            document.getElementById('main-content').scrollTop = 0;
-        });
-    }
-
-    function cancelarEdicaoOS() {
-        document.getElementById('os-edit-id').value = '';
-        ['os-numero','os-data-manual','os-cliente','os-telefone','os-cep','os-numero-casa','os-endereco','os-bairro','os-cidade','os-valor-pagar'].forEach(i => document.getElementById(i).value = '');
-        document.getElementById('form-os-card').classList.remove('editing-mode');
-        document.getElementById('btn-cancelar-edit').style.display='none';
-    }
-
+    // --- HISTÓRICO O.S. (RESTAURADO COM BOTÕES) ---
     function renderizarListaOS() {
         const f = document.getElementById('filtro-tecnico-os').value;
         const lista = document.getElementById('lista-os');
         lista.innerHTML = '<h3>Histórico de O.S.</h3>';
         Object.keys(cacheDadosOS).reverse().forEach(id => {
             const o = cacheDadosOS[id]; if (f && o.tecnico_id !== f) return;
-            lista.innerHTML += `<div class="card os-item ${o.status}">
-                <div style="position:absolute; right:10px; top:10px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
-                <b>${o.cliente}</b>
-                <div class="os-info-grid">
-                    <div class="os-info-item"><b>OS / Tel:</b> ${o.os_numero || 'S/N'} | ${o.telefone || '-'}</div>
-                    <div class="os-info-item"><b>Endereço:</b> ${o.endereco}, ${o.numero_casa || 'S/N'}</div>
-                    <div class="os-info-item"><b>Bairro / Cid:</b> ${o.bairro || '-'} / ${o.cidade || '-'}</div>
-                </div>
-                <b style="color:var(--success)">PAGAMENTO: R$ ${parseFloat(o.valor_pagar || 0).toFixed(2)}</b>
-            </div>`;
+            lista.innerHTML += `
+                <div class="card os-item ${o.status}">
+                    <div style="position:absolute; right:10px; top:10px;"><button class="btn-edit" onclick="editarOS('${id}')">✏️</button><button class="btn-delete" onclick="apagar('os/${id}')">🗑️</button></div>
+                    <b>${o.cliente}</b>
+                    <div class="os-info-grid">
+                        <div class="os-info-item"><b>OS / Tel:</b> ${o.os_numero || 'S/N'} | ${o.telefone || '-'}</div>
+                        <div class="os-info-item"><b>Endereço:</b> ${o.endereco}, ${o.numero_casa || 'S/N'}</div>
+                        <div class="os-info-item"><b>Bairro / Cid:</b> ${o.bairro || '-'} / ${o.cidade || '-'}</div>
+                        <div class="os-info-item"><b>Téc:</b> ${o.tecnico_nome} | <b>Serviço:</b> ${o.servico_tipo}</div>
+                    </div>
+                    <b style="color:var(--success)">PAGAMENTO: R$ ${parseFloat(o.valor_pagar || 0).toFixed(2)}</b>
+                    <div style="margin-top:10px;">
+                        ${o.status === 'pendente' ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : `<button class="btn btn-blue" onclick="gerarPDF('${id}')">📄 PDF</button>`}
+                    </div>
+                </div>`;
         });
     }
 
-    // --- AUXILIARES (PRESERVADAS) ---
+    // --- PDF COMPLETO (RESTAURADO) ---
+    function gerarPDF(id) {
+        const o = cacheDadosOS[id]; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        // Dados Empresa
+        doc.setFontSize(16); doc.text("WV SERVIÇOS E MANUTENCOES LTDA", 10, 20);
+        doc.setFontSize(10); doc.text("CNPJ: 61.108.911/0001-21 | End: Rua Sl05, 43", 10, 28);
+        doc.line(10, 32, 200, 32);
+        // Dados Cliente e Serviço
+        doc.setFontSize(14); doc.text(`ORDEM DE SERVIÇO Nº ${o.os_numero || 'S/N'}`, 10, 42);
+        doc.setFontSize(11); doc.text(`Cliente: ${o.cliente} | Tel: ${o.telefone || '-'}`, 10, 52);
+        doc.text(`Endereço: ${o.endereco}, ${o.numero_casa || 'S/N'} - ${o.bairro || '-'} / ${o.cidade || '-'}`, 10, 60);
+        doc.text(`Técnico: ${o.tecnico_nome} | Data: ${o.data_manual || '-'}`, 10, 68);
+        doc.text(`Serviço Realizado: ${o.servico_tipo}`, 10, 76);
+        // Materiais e Valor
+        doc.text(`Material Utilizado: ${o.gasto || 'Nenhum'}`, 10, 86);
+        doc.setFontSize(13); doc.text(`VALOR TOTAL: R$ ${parseFloat(o.valor_pagar).toFixed(2)}`, 10, 100);
+        // Assinaturas
+        doc.line(20, 140, 80, 140); doc.text("Assinatura Técnico", 30, 145);
+        doc.line(120, 140, 180, 140); doc.text("Assinatura Cliente", 130, 145);
+        doc.save(`OS_${o.os_numero || o.cliente}.pdf`);
+    }
+
+    // --- DEMAIS FUNÇÕES (CEP, ADMIN, O.S., ETC) ---
+    function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
+    function criarOS() { const id = document.getElementById('os-edit-id').value; const sel = document.getElementById('os-tecnico'); const d = { os_numero: document.getElementById('os-numero').value, data_manual: document.getElementById('os-data-manual').value, cliente: document.getElementById('os-cliente').value, telefone: document.getElementById('os-telefone').value, cep: document.getElementById('os-cep').value, numero_casa: document.getElementById('os-numero-casa').value, bairro: document.getElementById('os-bairro').value, cidade: document.getElementById('os-cidade').value, endereco: document.getElementById('os-endereco').value, tecnico_id: sel.value, tecnico_nome: sel.options[sel.selectedIndex]?.text || '', servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0 }; const ref = id ? db.ref('os/'+id) : db.ref('os').push(); if(!id) { d.status = 'pendente'; d.data_registro = Date.now(); } ref.update(d).then(() => { alert("Salvo!"); cancelarEdicaoOS(); }); }
+    function editarOS(id) { validarSenhaAcesso(() => { const o = cacheDadosOS[id]; document.getElementById('os-edit-id').value = id; document.getElementById('os-numero').value = o.os_numero || ''; document.getElementById('os-data-manual').value = o.data_manual || ''; document.getElementById('os-cliente').value = o.cliente; document.getElementById('os-telefone').value = o.telefone; document.getElementById('os-cep').value = o.cep || ''; document.getElementById('os-numero-casa').value = o.numero_casa || ''; document.getElementById('os-bairro').value = o.bairro; document.getElementById('os-cidade').value = o.cidade || ''; document.getElementById('os-endereco').value = o.endereco; document.getElementById('os-tecnico').value = o.tecnico_id; document.getElementById('os-servico-select').value = o.servico_tipo; document.getElementById('os-valor-pagar').value = o.valor_pagar; document.getElementById('main-content').scrollTop = 0; }); }
+    function cancelarEdicaoOS() { document.getElementById('os-edit-id').value = ''; ['os-numero','os-data-manual','os-cliente','os-telefone','os-cep','os-numero-casa','os-endereco','os-bairro','os-cidade','os-valor-pagar'].forEach(i => document.getElementById(i).value = ''); document.getElementById('btn-cancelar-edit').style.display='none'; }
+    function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display='flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
+    function fecharModalBaixa() { document.getElementById('modal-baixa').style.display='none'; }
+    function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'), d = document.createElement('div'); d.style.display='flex'; d.style.gap='5px'; d.style.marginBottom='5px'; const o = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<select class="b-item" style="flex:2">${o}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`; c.appendChild(d); }
+    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; ns.forEach((el, i) => { const q = parseFloat(qs[i].value); if(q > 0) { db.ref(`estoque_volante/${o.tecnico_id}/${el.value}`).transaction(a => (a || 0) - q); g += `${q}x ${el.value}, `; } }); db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR') }); fecharModalBaixa(); }); }
     function nav(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById('view-'+id).classList.add('active'); fecharCamera(); }
     function apagar(path) { validarSenhaAcesso(() => { if(confirm("Excluir?")) db.ref(path).remove(); }); }
     function validarSenhaAcesso(c) { callbackAcesso = c; document.getElementById('modal-senha').style.display='flex'; document.getElementById('input-senha-modal').value=''; setTimeout(()=>document.getElementById('input-senha-modal').focus(), 150); }
@@ -300,6 +214,11 @@
     function verificarSenhaModal() { if(document.getElementById('input-senha-modal').value === SENHA_PADRAO) { fecharModalSenha(); if(callbackAcesso) setTimeout(callbackAcesso, 300); } else alert("Erro!"); }
     function abrirCamera(m) { document.getElementById('reader').style.display='block'; if(scanner) scanner.clear(); scanner = new Html5Qrcode("reader"); scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (t) => { fecharCamera(); document.getElementById('display-'+m).style.display='block'; document.getElementById('display-'+m).innerText = "Lido: " + t; if(m==='cad') document.getElementById('cad-item-barcode').value = t; else { const k = mapaBarcodes[t]; if(k) document.getElementById(m+'-produto').value = k; } }); }
     function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none'); }
+    function cadastrarTipoServico() { const n = document.getElementById('cad-servico-nome').value; if(n) db.ref('tipos_servico').push({ nome: n }).then(() => document.getElementById('cad-servico-nome').value = ''); }
+    function editarServico(id, nome) { validarSenhaAcesso(() => { const nn = prompt("Novo nome:", nome); if(nn) db.ref(`tipos_servico/${id}`).update({ nome: nn }); }); }
+    function editarTecnico(id, nome) { validarSenhaAcesso(() => { const nn = prompt("Novo nome:", nome); if(nn) db.ref(`tecnicos/${id}`).update({ nome: nn }); }); }
+    function cadastrarTecnico() { const n = document.getElementById('cad-tec-nome').value, id = document.getElementById('cad-tec-id').value; if(n && id) db.ref('tecnicos/'+id).set({ nome: n }); }
+    function cadastrarItem() { const n = document.getElementById('cad-item-nome').value, b = document.getElementById('cad-item-barcode').value; if(n) db.ref('itens').push({ nome: n, barcode: b, estoque_central: 0 }); }
 </script>
 </body>
 </html>
