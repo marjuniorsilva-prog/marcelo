@@ -117,7 +117,7 @@
                     <button class="btn btn-blue" id="btn-salvar-os" onclick="criarOS()">CRIAR O.S.</button>
                     <button class="btn" id="btn-cancelar-edit" onclick="cancelarEdicaoOS()" style="display:none; background:#ff4444; color:white;">CANCELAR EDIÇÃO</button>
                 </div>
-                <div class="card"><h3>🔍 Filtrar por Técnico</h3><select id="filtro-tecnico-os" onchange="renderizarListaOS()"><option value="">Todos os Técnicos</option></select></div>
+                <div class="card"><h3>🔍 Histórico por Técnico</h3><select id="filtro-tecnico-os" onchange="renderizarListaOS()"><option value="">Todos os Técnicos</option></select></div>
                 <div id="lista-os"></div>
             </div>
 
@@ -126,11 +126,18 @@
                     <div class="fin-stat"><span>Aberto Total</span><br><b id="fin-total-pendente" style="color:var(--danger)">R$ 0,00</b></div>
                     <div class="fin-stat"><span>Pago Total</span><br><b id="fin-total-pago" style="color:var(--success)">R$ 0,00</b></div>
                 </div>
-                <div class="card"><h3>💰 Financeiro</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr><div id="historico-financeiro"></div></div>
+                <div class="card"><h3>💰 Pagamentos de Técnicos</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr style="margin:20px 0;"><div id="historico-financeiro"></div></div>
             </div>
-            <div id="view-estoque" class="view-section"><div class="card"><h3>🏢 Estoque Central</h3><div id="lista-estoque-central"></div></div><div class="card"><h3>🚚 Mala do Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante"></div></div><div class="card"><h3>📜 Movimentações</h3><div id="log-movimentacao" style="max-height: 200px; overflow-y: auto; font-size: 11px;"></div></div></div>
+
+            <div id="view-estoque" class="view-section">
+                <div class="card"><h3>🏢 Estoque Central</h3><div id="lista-estoque-central"></div></div>
+                <div class="card"><h3>🚚 Mala do Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante"></div></div>
+                <div class="card"><h3>📜 Movimentações</h3><div id="log-movimentacao" style="max-height: 200px; overflow-y: auto; font-size: 11px;"></div></div>
+            </div>
+
             <div id="view-entrada" class="view-section"><div class="card"><h3>📥 Entrada</h3><button class="btn btn-orange" onclick="abrirCamera('in')">📷 LER BARCODE</button><div id="display-in" class="scanned-display"></div><select id="in-produto"></select><input type="number" id="in-qtd" value="1"><button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR</button></div></div>
             <div id="view-saida" class="view-section"><div class="card"><h3>📤 Saída</h3><select id="out-tecnico"></select><button class="btn btn-orange" onclick="abrirCamera('out')">📷 BIPAR</button><div id="display-out" class="scanned-display"></div><select id="out-produto"></select><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button></div></div>
+            
             <div id="view-admin" class="view-section">
                 <div class="card"><h3>📦 Novo Produto</h3><button class="btn btn-orange" onclick="abrirCamera('cad')">📷 LER BARCODE</button><div id="display-cad" class="scanned-display"></div><input type="text" id="cad-item-nome" placeholder="Nome"><input type="text" id="cad-item-barcode" placeholder="Código"><button class="btn btn-green" onclick="cadastrarItem()">SALVAR</button></div>
                 <div class="card"><h3>🛠️ Gestão de Serviços</h3><label>Novo Tipo de Serviço</label><input type="text" id="cad-servico-nome"><button class="btn btn-blue" onclick="cadastrarTipoServico()">+ CADASTRAR SERVIÇO</button><div id="lista-servicos-admin"></div></div>
@@ -155,15 +162,51 @@
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
     auth.onAuthStateChanged(user => { if(user) { document.getElementById('login-screen').style.display='none'; document.getElementById('app-container').style.display='flex'; carregarTudo(); } });
 
-    // --- CARREGAMENTO ---
     function carregarTudo() {
         db.ref('itens').on('value', s => { itensCadastrados = s.val() || {}; mapaBarcodes = {}; Object.keys(itensCadastrados).forEach(k => { if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; }); });
-        db.ref('tecnicos').on('value', s => { const t = s.val() || {}; const o = Object.keys(t).map(k => `<option value="${k}">${t[k].nome}</option>`).join(''); ['out-tecnico','os-tecnico','filtro-tecnico-estoque','fin-filtro-tecnico','filtro-tecnico-os'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + o; }); });
-        db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha...</option>' + Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); });
+        
+        // TÉCNICOS (CORRIGIDO 3.0 - COM EDITAR)
+        db.ref('tecnicos').on('value', s => {
+            const t = s.val() || {}; const o = Object.keys(t).map(k => `<option value="${k}">${t[k].nome}</option>`).join('');
+            ['out-tecnico','os-tecnico','filtro-tecnico-estoque','fin-filtro-tecnico','filtro-tecnico-os'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + o; });
+            let ha = '<h4>Técnicos Cadastrados</h4>';
+            Object.keys(t).forEach(k => {
+                ha += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
+                    <span>${t[k].nome}</span>
+                    <div>
+                        <button class="btn-edit" onclick="editarTecnico('${k}','${t[k].nome}')">✏️</button>
+                        <button class="btn-delete" onclick="apagar('tecnicos/${k}')">🗑️</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('lista-tecnicos-admin').innerHTML = ha;
+        });
+
+        // SERVIÇOS (CORRIGIDO 3.0 - COM EDITAR)
+        db.ref('tipos_servico').on('value', s => {
+            const sv = s.val() || {};
+            document.getElementById('os-servico-select').innerHTML = '<option value="">Escolha...</option>' + Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join('');
+            let h = '<h4>Serviços Cadastrados</h4>';
+            Object.keys(sv).forEach(k => {
+                h += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;">
+                    <span>${sv[k].nome}</span>
+                    <div>
+                        <button class="btn-edit" onclick="editarServico('${k}','${sv[k].nome}')">✏️</button>
+                        <button class="btn-delete" onclick="apagar('tipos_servico/${k}')">🗑️</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('lista-servicos-admin').innerHTML = h;
+        });
+
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
 
-    // --- AJUSTE CEP 2.0 ---
+    // --- FUNÇÕES DE EDIÇÃO ADMIN 3.0 ---
+    function editarTecnico(id, nome) { validarSenhaAcesso(() => { const nn = prompt("Novo nome do técnico:", nome); if(nn) db.ref(`tecnicos/${id}`).update({ nome: nn }); }); }
+    function editarServico(id, nome) { validarSenhaAcesso(() => { const nn = prompt("Novo nome do serviço:", nome); if(nn) db.ref(`tipos_servico/${id}`).update({ nome: nn }); }); }
+
+    // --- BUSCA CEP 3.0 (COMPLETA) ---
     function buscarCep() {
         const c = document.getElementById('os-cep').value.replace(/\D/g, '');
         if(c.length === 8) {
@@ -177,7 +220,7 @@
         }
     }
 
-    // --- O.S (ATUALIZADA 2.0) ---
+    // --- O.S (ATUALIZADA 3.0) ---
     function criarOS() {
         const id = document.getElementById('os-edit-id').value;
         const sel = document.getElementById('os-tecnico');
@@ -249,7 +292,7 @@
         });
     }
 
-    // --- DEMAIS FUNÇÕES (CÂMERA, FINANCEIRO, ETC - PRESERVADAS) ---
+    // --- AUXILIARES (PRESERVADAS) ---
     function nav(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById('view-'+id).classList.add('active'); fecharCamera(); }
     function apagar(path) { validarSenhaAcesso(() => { if(confirm("Excluir?")) db.ref(path).remove(); }); }
     function validarSenhaAcesso(c) { callbackAcesso = c; document.getElementById('modal-senha').style.display='flex'; document.getElementById('input-senha-modal').value=''; setTimeout(()=>document.getElementById('input-senha-modal').focus(), 150); }
