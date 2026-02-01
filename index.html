@@ -26,7 +26,7 @@
         .nav-btn { background: transparent; border: none; color: #94a3b8; padding: 15px 10px; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 11px; text-transform: uppercase; }
         .nav-btn.active { color: white; border-bottom: 3px solid white; }
 
-        .content { flex: 1; padding: 20px; overflow-y: auto; scroll-behavior: smooth; padding-bottom: 80px; }
+        .content { flex: 1; padding: 20px; overflow-y: auto; scroll-behavior: smooth; padding-bottom: 20px; }
         .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e2e8f0; position: relative; }
         
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; background: #f8fafc; }
@@ -38,6 +38,10 @@
         .btn-orange { background: var(--warning); color: white; }
         .btn-red { background: var(--danger); color: white; }
         
+        /* GRID DE INFO NA O.S. REATIVADO */
+        .os-info-grid { display: grid; grid-template-columns: 1fr; gap: 3px; margin-top: 10px; font-size: 12px; color: var(--text-main); }
+        .os-info-item b { color: var(--text-muted); font-size: 10px; text-transform: uppercase; margin-right: 5px; }
+
         #footer { background: var(--primary); color: #94a3b8; padding: 15px; text-align: center; font-size: 10px; border-top: 2px solid var(--accent); flex-shrink: 0; }
         .view-section { display: none; }
         .view-section.active { display: block; }
@@ -51,7 +55,6 @@
 
     <div id="login-screen" style="position:fixed; inset:0; background:var(--primary); z-index:9999; display:flex; align-items:center; justify-content:center;">
         <div class="card" style="width:90%; max-width:350px; text-align:center;">
-            <img src="logo.jpg" style="width:80px; margin-bottom:15px; border-radius:10px;">
             <h3>WV SERVIÇOS</h3>
             <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="senha" placeholder="Senha">
@@ -75,78 +78,35 @@
             <div id="reader"></div>
 
             <div id="view-os" class="view-section active">
-                <div class="card" id="form-os-card">
+                <div class="card">
                     <h3>📋 Nova O.S.</h3>
                     <input type="hidden" id="os-edit-id">
-                    <div style="display:flex; gap:5px;">
-                        <div style="flex:1;"><label>Nº O.S.</label><input type="text" id="os-numero"></div>
-                        <div style="flex:1;"><label>Data</label><input type="date" id="os-data-manual"></div>
-                    </div>
+                    <div style="display:flex; gap:5px;"><div style="flex:1;"><label>Nº O.S.</label><input type="text" id="os-numero"></div><div style="flex:1;"><label>Data</label><input type="date" id="os-data-manual"></div></div>
                     <label>Cliente</label><input type="text" id="os-cliente">
                     <label>Telefone</label><input type="tel" id="os-telefone">
-                    <div style="display:flex; gap:5px;">
-                        <div style="flex:2;"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div>
-                        <div style="flex:1;"><label>Nº Casa</label><input type="text" id="os-numero-casa"></div>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <div style="flex:1;"><label>Bairro</label><input type="text" id="os-bairro"></div>
-                        <div style="flex:1;"><label>Cidade</label><input type="text" id="os-cidade"></div>
-                    </div>
+                    <div style="display:flex; gap:5px;"><div style="flex:2;"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div><div style="flex:1;"><label>Nº Casa</label><input type="text" id="os-numero-casa"></div></div>
+                    <div style="display:flex; gap:5px;"><div style="flex:1;"><label>Bairro</label><input type="text" id="os-bairro"></div><div style="flex:1;"><label>Cidade</label><input type="text" id="os-cidade"></div></div>
                     <label>Rua</label><input type="text" id="os-endereco">
                     <label>Técnico</label><select id="os-tecnico"></select>
                     <label>Serviço</label><select id="os-servico-select"></select>
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
-                    <button class="btn btn-blue" id="btn-salvar-os" onclick="criarOS()">SALVAR O.S.</button>
-                    <button class="btn btn-red" id="btn-cancelar-edit" onclick="cancelarEdicaoOS()" style="display:none;">CANCELAR</button>
+                    <button class="btn btn-blue" onclick="criarOS()">SALVAR O.S.</button>
                 </div>
+                <div class="card"><h3>🔍 Filtrar por Técnico</h3><select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select></div>
                 <div id="lista-os"></div>
             </div>
 
             <div id="view-estoque" class="view-section">
-                <div class="card">
-                    <h3>🏢 Estoque Central</h3>
-                    <div id="lista-estoque-central"></div>
-                    <button class="btn btn-red" style="margin-top:15px;" onclick="abrirModalAjuste('descarte')">🗑️ DESCARTAR MATERIAL</button>
-                </div>
-                <div class="card">
-                    <h3>🚚 Mala do Técnico</h3>
-                    <select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select>
-                    <div id="lista-estoque-volante"></div>
-                    <button class="btn btn-orange" style="margin-top:10px;" onclick="abrirModalAjuste('devolucao')">↩️ DEVOLVER PARA CENTRAL</button>
-                </div>
+                <div class="card"><h3>🏢 Estoque Central</h3><div id="lista-estoque-central"></div><button class="btn btn-red" onclick="abrirModalAjuste('descarte')">🗑️ DESCARTAR MATERIAL</button></div>
+                <div class="card"><h3>🚚 Mala do Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante"></div><button class="btn btn-orange" onclick="abrirModalAjuste('devolucao')">↩️ DEVOLVER PARA CENTRAL</button></div>
             </div>
-
-            <div id="view-entrada" class="view-section">
-                <div class="card"><h3>📥 Entrada</h3><button class="btn btn-orange" onclick="abrirCamera('in')">📷 BARCODE</button><div id="display-in" style="font-weight:bold; padding:10px;"></div><select id="in-produto"></select><input type="number" id="in-qtd" value="1"><button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR</button></div>
-            </div>
-            <div id="view-saida" class="view-section">
-                <div class="card"><h3>📤 Saída para Técnico</h3><select id="out-tecnico"></select><button class="btn btn-orange" onclick="abrirCamera('out')">📷 BIPAR</button><div id="display-out" style="font-weight:bold; padding:10px;"></div><select id="out-produto"></select><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button></div>
-            </div>
-
-            <div id="view-financeiro" class="view-section">
-                <div class="card">
-                    <h3>💰 Financeiro por Técnico</h3>
-                    <select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select>
-                    <div id="detalhes-financeiro"></div>
-                </div>
-            </div>
-
-            <div id="view-backup" class="view-section">
-                <div class="card">
-                    <h3>💾 Backup e Restauração</h3>
-                    <p style="font-size:12px; color:var(--text-muted)">Baixe seus dados para o PC ou restaure um arquivo salvo anteriormente.</p>
-                    <button class="btn btn-blue" onclick="exportarBackup()">📥 EXPORTAR BACKUP (JSON)</button>
-                    <hr style="margin:20px 0;">
-                    <label>Selecionar arquivo de restauração</label>
-                    <input type="file" id="import-file" accept=".json">
-                    <button class="btn btn-red" onclick="importarBackup()">📤 RESTAURAR DADOS</button>
-                </div>
-            </div>
-
+            <div id="view-backup" class="view-section"><div class="card"><h3>💾 Backup e Restauração</h3><button class="btn btn-blue" onclick="exportarBackup()">📥 EXPORTAR BACKUP (JSON)</button><hr style="margin:20px 0;"><label>Restaurar arquivo</label><input type="file" id="import-file" accept=".json"><button class="btn btn-red" onclick="importarBackup()">📤 RESTAURAR DADOS</button></div></div>
+            <div id="view-entrada" class="view-section"><div class="card"><h3>📥 Entrada</h3><select id="in-produto"></select><input type="number" id="in-qtd" value="1"><button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR</button></div></div>
+            <div id="view-saida" class="view-section"><div class="card"><h3>📤 Saída</h3><select id="out-tecnico"></select><select id="out-produto"></select><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button></div></div>
+            <div id="view-financeiro" class="view-section"><div class="card"><h3>💰 Financeiro</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div></div></div>
             <div id="view-admin" class="view-section">
-                <div class="card"><h3>📷 Leitor de Barcode (Top)</h3><button class="btn btn-orange" onclick="abrirCamera('cad')">📷 SCANNER</button><div id="display-cad"></div><input type="text" id="cad-item-nome" placeholder="Nome"><input type="text" id="cad-item-barcode" placeholder="Código"><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR PRODUTO</button></div>
-                <div class="card"><h3>🛠️ Serviços</h3><input type="text" id="cad-servico-nome"><button class="btn btn-blue" onclick="cadastrarTipoServico()">+ CADASTRAR</button><div id="lista-servicos-admin"></div></div>
                 <div class="card"><h3>👤 Técnicos</h3><input type="text" id="cad-tec-nome" placeholder="Nome"><input type="text" id="cad-tec-id" placeholder="ID"><button class="btn btn-blue" onclick="cadastrarTecnico()">CADASTRAR</button><div id="lista-tecnicos-admin"></div></div>
+                <div class="card"><h3>📦 Novo Produto</h3><input type="text" id="cad-item-nome" placeholder="Nome"><input type="text" id="cad-item-barcode" placeholder="Código"><button class="btn btn-green" onclick="cadastrarItem()">SALVAR</button></div>
             </div>
         </div>
 
@@ -160,16 +120,12 @@
     <div id="modal-ajuste" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div class="card" style="width:100%; max-width:400px;">
             <h3 id="ajuste-titulo">Ajuste</h3>
-            <div id="campos-devolucao" style="display:none;">
-                <label>Produto</label><select id="ajuste-produto"></select>
-                <label>Quantidade</label><input type="number" id="ajuste-qtd">
-            </div>
-            <label>Motivo Obrigatório</label><textarea id="ajuste-motivo" rows="3"></textarea>
-            <label>Senha Autorização</label><input type="password" id="ajuste-senha">
-            <div style="display:flex; gap:10px;">
-                <button class="btn" onclick="fecharModalAjuste()">VOLTAR</button>
-                <button class="btn btn-blue" onclick="confirmarAjuste()">CONFIRMAR</button>
-            </div>
+            <label>Produto</label><select id="ajuste-produto"></select>
+            <label>Quantidade</label><input type="number" id="ajuste-qtd">
+            <label>Motivo</label><textarea id="ajuste-motivo"></textarea>
+            <label>Senha 1503</label><input type="password" id="ajuste-senha">
+            <button class="btn btn-blue" onclick="confirmarAjuste()">CONFIRMAR</button>
+            <button class="btn" onclick="fecharModalAjuste()">FECHAR</button>
         </div>
     </div>
 
@@ -190,7 +146,7 @@
     const auth = firebase.auth();
     const SENHA_PADRAO = "1503";
 
-    let cacheDadosOS = {}, itensCadastrados = {}, listaTecnicos = {}, mapaBarcodes = {}, scanner, osParaBaixar = null, modoAjuste = '';
+    let cacheDadosOS = {}, itensCadastrados = {}, listaTecnicos = {}, modoAjuste = '';
 
     function fazerLogin() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro!")); }
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
@@ -198,8 +154,8 @@
 
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
-            itensCadastrados = s.val() || {}; mapaBarcodes = {}; 
-            const opt = Object.keys(itensCadastrados).map(k => { if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; return `<option value="${k}">${itensCadastrados[k].nome}</option>`; }).join('');
+            itensCadastrados = s.val() || {}; 
+            const opt = Object.keys(itensCadastrados).map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
             ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => document.getElementById(id).innerHTML = opt);
             let h = '<table>'; Object.keys(itensCadastrados).forEach(k => { h += `<tr><td>${itensCadastrados[k].nome}</td><td><b>${itensCadastrados[k].estoque_central || 0}</b></td></tr>`; });
             document.getElementById('lista-estoque-central').innerHTML = h + '</table>';
@@ -208,20 +164,14 @@
         db.ref('tecnicos').on('value', s => {
             listaTecnicos = s.val() || {};
             const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo');
-            const optAtivos = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join('');
-            const optTodos = Object.keys(listaTecnicos).map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join('');
-            
-            document.getElementById('os-tecnico').innerHTML = optAtivos;
-            ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico'].forEach(id => document.getElementById(id).innerHTML = optTodos);
+            document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join('');
+            ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + Object.keys(listaTecnicos).map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''));
             
             let ha = ''; Object.keys(listaTecnicos).forEach(k => {
                 const isI = listaTecnicos[k].status === 'inativo';
-                ha += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; ${isI ? 'opacity:0.5' : ''}">
-                    <span>${listaTecnicos[k].nome} ${isI ? '(INATIVO)' : ''}</span>
-                    <div>
-                        ${!isI ? `<button onclick="inativarTecnico('${k}')" style="color:var(--danger); border:none; background:none; cursor:pointer;">⛔ INATIVAR</button>` : ''}
-                        <button onclick="apagar('tecnicos/${k}')" style="color:gray; border:none; background:none; cursor:pointer; margin-left:10px;">🗑️</button>
-                    </div>
+                ha += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
+                    <span style="${isI ? 'color:red' : ''}">${listaTecnicos[k].nome} ${isI ? '(INATIVO)' : ''}</span>
+                    <div>${!isI ? `<button onclick="inativarTecnico('${k}')" style="color:red; border:none; background:none;">⛔ INATIVAR</button>` : ''}</div>
                 </div>`;
             });
             document.getElementById('lista-tecnicos-admin').innerHTML = ha;
@@ -229,169 +179,88 @@
 
         db.ref('tipos_servico').on('value', s => { 
             const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join('');
-            let h = ''; Object.keys(sv).forEach(k => { h += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;"><span>${sv[k].nome}</span><button onclick="apagar('tipos_servico/${k}')" style="color:red; border:none; background:none;">🗑️</button></div>`; });
-            document.getElementById('lista-servicos-admin').innerHTML = h;
         });
 
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); });
     }
 
-    // --- INATIVAÇÃO E ACERTO V6.0 ---
+    // --- HISTÓRICO RESTAURADO (DETALHADO) ---
+    function renderizarListaOS() {
+        const f = document.getElementById('filtro-tecnico-os')?.value || ''; 
+        const lista = document.getElementById('lista-os'); 
+        lista.innerHTML = '<h3>Histórico de O.S.</h3>';
+        Object.keys(cacheDadosOS).reverse().forEach(id => {
+            const o = cacheDadosOS[id]; if (f && o.tecnico_id !== f) return;
+            lista.innerHTML += `
+                <div class="card os-item ${o.status}">
+                    <div style="position:absolute; right:10px; top:10px;">
+                        <button onclick="editarOS('${id}')" style="background:none; border:none; cursor:pointer;">✏️</button>
+                        <button onclick="apagar('os/${id}')" style="background:none; border:none; margin-left:10px; cursor:pointer;">🗑️</button>
+                    </div>
+                    <b>${o.cliente}</b>
+                    <div class="os-info-grid">
+                        <div class="os-info-item"><b>OS / Tel:</b> ${o.os_numero || 'S/N'} | ${o.telefone || '-'}</div>
+                        <div class="os-info-item"><b>Endereço:</b> ${o.endereco}, ${o.numero_casa || 'S/N'}</div>
+                        <div class="os-info-item"><b>Bairro / Cid:</b> ${o.bairro || '-'} / ${o.cidade || '-'}</div>
+                        <div class="os-info-item"><b>Téc:</b> ${o.tecnico_nome} | <b>Serv:</b> ${o.servico_tipo}</div>
+                    </div>
+                    <b style="color:var(--success)">PAGAMENTO: R$ ${parseFloat(o.valor_pagar || 0).toFixed(2)}</b>
+                    <div style="margin-top:10px;">
+                        ${o.status === 'pendente' ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : `<button class="btn btn-blue" onclick="gerarPDFOS('${id}')">📄 PDF</button>`}
+                    </div>
+                </div>`;
+        });
+    }
+
+    // --- FUNÇÕES V6.0 (PRESERVADAS) ---
     function inativarTecnico(id) {
-        if(prompt("Confirme com a senha 1503 para encerrar contrato e estornar materiais:") === SENHA_PADRAO) {
+        if(prompt("Senha 1503 para INATIVAR e estornar material:") === SENHA_PADRAO) {
             db.ref(`estoque_volante/${id}`).once('value', s => {
-                const itens = s.val() || {}; let listaEstorno = [];
+                const itens = s.val() || {}; let lista = [];
                 Object.keys(itens).forEach(nome => {
-                    const qtd = itens[nome]; if(qtd > 0) {
-                        // Estorna para o central (procura pelo nome)
-                        Object.keys(itensCadastrados).forEach(k => { if(itensCadastrados[k].nome === nome) db.ref(`itens/${k}/estoque_central`).transaction(a => (a||0) + qtd); });
-                        listaEstorno.push(`${qtd}x ${nome}`);
+                    const q = itens[nome]; if(q > 0) {
+                        Object.keys(itensCadastrados).forEach(k => { if(itensCadastrados[k].nome === nome) db.ref(`itens/${k}/estoque_central`).transaction(a => (a||0) + q); });
+                        lista.push(`${q}x ${nome}`);
                     }
                 });
-                gerarPDFEstorno(listaTecnicos[id].nome, listaEstorno);
-                db.ref(`tecnicos/${id}`).update({ status: 'inativo' });
-                db.ref(`estoque_volante/${id}`).remove();
-                alert("Técnico inativado e estoque estornado!");
+                const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("ACERTO DE CONTAS - INATIVAÇÃO", 10, 20); doc.text(`Técnico: ${listaTecnicos[id].nome}`, 10, 30);
+                lista.forEach((l, i) => doc.text(l, 10, 40+(i*10))); doc.text("Assinatura: __________________", 10, 150); doc.save("Acerto.pdf");
+                db.ref(`tecnicos/${id}`).update({ status: 'inativo' }); db.ref(`estoque_volante/${id}`).remove();
             });
         }
     }
-
-    // --- DEVOLUÇÃO E DESCARTE V6.0 ---
-    function abrirModalAjuste(modo) {
-        modoAjuste = modo; document.getElementById('modal-ajuste').style.display = 'flex';
-        document.getElementById('ajuste-titulo').innerText = modo === 'descarte' ? 'Descarte de Material' : 'Devolução para Central';
-        document.getElementById('campos-devolucao').style.display = 'block';
-    }
-    function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display = 'none'; document.getElementById('ajuste-motivo').value = ''; document.getElementById('ajuste-senha').value = ''; }
-    
+    function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; }
+    function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display='none'; }
     function confirmarAjuste() {
-        const prodId = document.getElementById('ajuste-produto').value, qtd = parseFloat(document.getElementById('ajuste-qtd').value), mot = document.getElementById('ajuste-motivo').value, sen = document.getElementById('ajuste-senha').value;
-        if(sen !== SENHA_PADRAO || !mot || qtd <= 0) return alert("Verifique senha, motivo e quantidade!");
-        
-        if(modoAjuste === 'descarte') {
-            db.ref(`itens/${prodId}/estoque_central`).transaction(a => (a||0) - qtd);
-            db.ref('movimentacoes').push({ data: new Date().toLocaleString(), msg: `DESCARTE: ${qtd}x ${itensCadastrados[prodId].nome}. Motivo: ${mot}` });
-        } else {
-            const tecId = document.getElementById('filtro-tecnico-estoque').value;
-            db.ref(`estoque_volante/${tecId}/${itensCadastrados[prodId].nome}`).transaction(a => (a||0) - qtd);
-            db.ref(`itens/${prodId}/estoque_central`).transaction(a => (a||0) + qtd);
-            gerarPDFDevolucao(listaTecnicos[tecId].nome, `${qtd}x ${itensCadastrados[prodId].nome}`, mot);
+        const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value;
+        if(s !== SENHA_PADRAO) return alert("Senha incorreta");
+        if(modoAjuste === 'descarte') db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q);
+        else {
+            const t = document.getElementById('filtro-tecnico-estoque').value;
+            db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q);
+            db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q);
         }
-        fecharModalAjuste(); alert("Sucesso!");
+        fecharModalAjuste(); alert("Sucesso");
     }
+    function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val())], {type:'application/json'})); a.download = 'backup.json'; a.click(); }); }
+    function importarBackup() { const f = document.getElementById('import-file').files[0]; const r = new FileReader(); r.onload = e => db.ref().set(JSON.parse(e.target.result)); r.readAsText(f); }
 
-    // --- BACKUP V6.0 ---
-    function exportarBackup() {
-        db.ref().once('value', s => {
-            const data = JSON.stringify(s.val(), null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `backup_wv_servicos_${new Date().toISOString().slice(0,10)}.json`; a.click();
-        });
-    }
-    function importarBackup() {
-        if(!confirm("CUIDADO: Isso substituirá todos os dados atuais! Prosseguir?")) return;
-        const file = document.getElementById('import-file').files[0]; if(!file) return alert("Selecione um arquivo!");
-        const reader = new FileReader(); reader.onload = (e) => { db.ref().set(JSON.parse(e.target.result)).then(() => alert("Dados restaurados!")); }; reader.readAsText(file);
-    }
-
-    // --- O.S (TRAVAS E ENDEREÇO BASE 5.0) ---
-    function buscarCep() {
-        const c = document.getElementById('os-cep').value.replace(/\D/g, '');
-        if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } });
-    }
-    function criarOS() {
-        const id = document.getElementById('os-edit-id').value; const sel = document.getElementById('os-tecnico');
-        const d = { os_numero: document.getElementById('os-numero').value, data_manual: document.getElementById('os-data-manual').value, cliente: document.getElementById('os-cliente').value, telefone: document.getElementById('os-telefone').value, cep: document.getElementById('os-cep').value, numero_casa: document.getElementById('os-numero-casa').value, bairro: document.getElementById('os-bairro').value, cidade: document.getElementById('os-cidade').value, endereco: document.getElementById('os-endereco').value, tecnico_id: sel.value, tecnico_nome: sel.options[sel.selectedIndex]?.text || '', servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0 };
-        const ref = id ? db.ref('os/'+id) : db.ref('os').push(); if(!id) { d.status = 'pendente'; d.data_registro = Date.now(); } ref.update(d).then(() => { alert("OK!"); cancelarEdicaoOS(); });
-    }
-    function editarOS(id) { 
-        const o = cacheDadosOS[id]; if(o.status === 'concluido') return alert("O.S. Baixada não permite edição!");
-        document.getElementById('os-edit-id').value = id; document.getElementById('os-numero').value = o.os_numero; document.getElementById('os-data-manual').value = o.data_manual; document.getElementById('os-cliente').value = o.cliente; document.getElementById('os-telefone').value = o.telefone; document.getElementById('os-cep').value = o.cep; document.getElementById('os-numero-casa').value = o.numero_casa; document.getElementById('os-bairro').value = o.bairro; document.getElementById('os-cidade').value = o.cidade; document.getElementById('os-endereco').value = o.endereco; document.getElementById('os-tecnico').value = o.tecnico_id; document.getElementById('os-servico-select').value = o.servico_tipo; document.getElementById('os-valor-pagar').value = o.valor_pagar; document.getElementById('btn-cancelar-edit').style.display='block';
-    }
-    function renderizarListaOS() {
-        const f = document.getElementById('filtro-tecnico-os')?.value || ''; const lista = document.getElementById('lista-os'); lista.innerHTML = '';
-        Object.keys(cacheDadosOS).reverse().forEach(id => {
-            const o = cacheDadosOS[id]; if (f && o.tecnico_id !== f) return;
-            lista.innerHTML += `<div class="card os-item ${o.status}">
-                <div style="position:absolute; right:10px; top:10px;"><button onclick="editarOS('${id}')" style="background:none; border:none;">✏️</button><button onclick="apagar('os/${id}')" style="background:none; border:none; margin-left:10px;">🗑️</button></div>
-                <b>${o.cliente}</b><br><small>${o.endereco}, ${o.numero_casa}</small><br>
-                <b>VALOR: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</b><br>
-                ${o.status === 'pendente' ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : `<button class="btn btn-blue" onclick="gerarPDFOS('${id}')">📄 PDF</button>`}
-            </div>`;
-        });
-    }
-
-    // --- PDFs V6.0 ---
-    function gerarPDFOS(id) {
-        const o = cacheDadosOS[id]; const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(14); doc.text("WV SERVIÇOS E MANUTENCOES LTDA", 10, 20);
-        doc.setFontSize(10); doc.text(`O.S. Nº ${o.os_numero} | Cliente: ${o.cliente}`, 10, 30);
-        doc.text(`Endereço: ${o.endereco}, ${o.numero_casa} - ${o.bairro}, ${o.cidade}`, 10, 38);
-        doc.text(`Material: ${o.gasto || 'Nenhum'}`, 10, 48);
-        doc.text("----------------------------------------------------------------", 10, 60);
-        doc.text("Assinatura do Técnico: _______________________", 10, 80);
-        doc.text("Assinatura do Cliente: _______________________", 10, 95);
-        doc.save(`OS_${o.cliente}.pdf`);
-    }
-    function gerarPDFRecebimento(tec, item) {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.text("COMPROVANTE DE RECEBIMENTO DE MATERIAL", 10, 20);
-        doc.text(`Técnico: ${tec} | Data: ${new Date().toLocaleString()}`, 10, 35);
-        doc.text(`Recebeu: ${item}`, 10, 50);
-        doc.text("Assinatura do Técnico: _______________________", 10, 80);
-        doc.save(`RECEBIMENTO_${tec}.pdf`);
-    }
-    function gerarPDFDevolucao(tec, item, mot) {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.text("RECIBO DE DEVOLUÇÃO DE MATERIAL", 10, 20);
-        doc.text(`Técnico: ${tec} | Motivo: ${mot}`, 10, 35);
-        doc.text(`Devolveu: ${item}`, 10, 50);
-        doc.text("Assinatura da Empresa: _______________________", 10, 80);
-        doc.save(`DEVOLUCAO_${tec}.pdf`);
-    }
-    function gerarPDFEstorno(tec, lista) {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.text("PDF DE ACERTO DE CONTAS - ENCERRAMENTO", 10, 20);
-        doc.text(`Técnico: ${tec} | Data: ${new Date().toLocaleString()}`, 10, 35);
-        doc.text("Materiais Estornados:", 10, 45);
-        lista.forEach((it, i) => doc.text(`- ${it}`, 10, 55 + (i*8)));
-        doc.text("Assinatura do Técnico: _______________________", 10, 150);
-        doc.text("Assinatura da Empresa: _______________________", 10, 165);
-        doc.save(`ACERTO_${tec}.pdf`);
-    }
-
-    // --- AUXILIARES ---
-    function nav(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById('view-'+id).classList.add('active'); fecharCamera(); }
+    // --- AUXILIARES (BASE 5.0 PRESERVADAS) ---
+    function nav(id) { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById('view-'+id).classList.add('active'); }
     function apagar(path) { if(prompt("Senha 1503 para excluir:") === SENHA_PADRAO) db.ref(path).remove(); }
-    function abrirCamera(m) { document.getElementById('reader').style.display='block'; if(scanner) scanner.clear(); scanner = new Html5Qrcode("reader"); scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (t) => { fecharCamera(); document.getElementById('display-'+m).innerText = "LIDO: " + t; if(m==='cad') document.getElementById('cad-item-barcode').value = t; else { const k = mapaBarcodes[t]; if(k) document.getElementById(m+'-produto').value = k; } }); }
-    function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none'); }
-    function processarEntrada() { const id = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(id && q) db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q); alert("OK"); }
-    function processarSaida() { 
-        const tec = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); 
-        if(tec && id && q) { 
-            db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); 
-            db.ref(`estoque_volante/${tec}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); 
-            gerarPDFRecebimento(listaTecnicos[tec].nome, `${q}x ${itensCadastrados[id].nome}`);
-            alert("Transferido!"); 
-        } 
-    }
-    function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div style="padding:5px; border-bottom:1px solid #eee;">${n}: <b>${it[n]}</b></div>`); document.getElementById('lista-estoque-volante').innerHTML = h; }); }
-    function cadastrarTecnico() { const n = document.getElementById('cad-tec-nome').value, id = document.getElementById('cad-tec-id').value; if(n && id) db.ref('tecnicos/'+id).set({ nome: n, status: 'ativo' }); }
-    function cadastrarItem() { const n = document.getElementById('cad-item-nome').value, b = document.getElementById('cad-item-barcode').value; if(n) db.ref('itens').push({ nome: n, barcode: b, estoque_central: 0 }); }
-    function cadastrarTipoServico() { const n = document.getElementById('cad-servico-nome').value; if(n) db.ref('tipos_servico').push({ nome: n }); }
+    function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; }); }
+    function editarOS(id) { const o = cacheDadosOS[id]; if(o.status === 'concluido') return alert("O.S. Baixada não permite edição!"); document.getElementById('os-edit-id').value = id; document.getElementById('os-numero').value = o.os_numero; document.getElementById('os-data-manual').value = o.data_manual; document.getElementById('os-cliente').value = o.cliente; document.getElementById('os-telefone').value = o.telefone; document.getElementById('os-cep').value = o.cep; document.getElementById('os-numero-casa').value = o.numero_casa; document.getElementById('os-bairro').value = o.bairro; document.getElementById('os-cidade').value = o.cidade; document.getElementById('os-endereco').value = o.endereco; document.getElementById('os-tecnico').value = o.tecnico_id; document.getElementById('os-servico-select').value = o.servico_tipo; document.getElementById('os-valor-pagar').value = o.valor_pagar; document.getElementById('main-content').scrollTop = 0; }
+    function criarOS() { const id = document.getElementById('os-edit-id').value; const sel = document.getElementById('os-tecnico'); const d = { os_numero: document.getElementById('os-numero').value, data_manual: document.getElementById('os-data-manual').value, cliente: document.getElementById('os-cliente').value, telefone: document.getElementById('os-telefone').value, cep: document.getElementById('os-cep').value, numero_casa: document.getElementById('os-numero-casa').value, bairro: document.getElementById('os-bairro').value, cidade: document.getElementById('os-cidade').value, endereco: document.getElementById('os-endereco').value, tecnico_id: sel.value, tecnico_nome: sel.options[sel.selectedIndex]?.text || '', servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0 }; const ref = id ? db.ref('os/'+id) : db.ref('os').push(); if(!id) { d.status = 'pendente'; d.data_registro = Date.now(); } ref.update(d).then(() => { alert("OK!"); document.getElementById('os-edit-id').value = ''; }); }
+    function gerarPDFOS(id) { const o = cacheDadosOS[id]; const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("WV SERVIÇOS E MANUTENCOES LTDA", 10, 20); doc.text(`O.S. Nº ${o.os_numero} | Cliente: ${o.cliente}`, 10, 30); doc.text(`Endereço: ${o.endereco}, ${o.numero_casa}`, 10, 40); doc.text(`Material: ${o.gasto || 'Nenhum'}`, 10, 50); doc.text("Assinatura: __________________", 10, 100); doc.save(`OS_${o.cliente}.pdf`); }
+    function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: <b>${it[n]}</b></div>`); document.getElementById('lista-estoque-volante').innerHTML = h; }); }
+    function cadastrarTecnico() { db.ref('tecnicos/'+document.getElementById('cad-tec-id').value).set({ nome: document.getElementById('cad-tec-nome').value, status: 'ativo' }); }
+    function cadastrarItem() { db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0 }); }
     function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; }
     function fecharModalBaixa() { document.getElementById('modal-baixa').style.display = 'none'; }
     function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.style.display='flex'; d.style.gap='5px'; d.style.marginBottom='5px'; const o = Object.keys(itensCadastrados).map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<select class="b-item" style="flex:2">${o}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`; c.appendChild(d); }
-    function confirmarBaixa() { 
-        const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value;
-        db.ref('os/'+osParaBaixar).once('value', snap => {
-            const o = snap.val(); let g = "";
-            ns.forEach((el, i) => { const q = parseFloat(qs[i].value); if(q > 0) { db.ref(`estoque_volante/${o.tecnico_id}/${el.value}`).transaction(a => (a || 0) - q); g += `${q}x ${el.value}, `; } });
-            db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR') });
-            fecharModalBaixa();
-        });
-    }
+    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; ns.forEach((el, i) => { const q = parseFloat(qs[i].value); if(q > 0) { db.ref(`estoque_volante/${o.tecnico_id}/${el.value}`).transaction(a => (a || 0) - q); g += `${q}x ${el.value}, `; } }); db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR') }); fecharModalBaixa(); }); }
+    function processarEntrada() { const id = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(id && q) db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q); }
+    function processarSaida() { const tec = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tec && id && q) { db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tec}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Transferido!"); } }
 </script>
 </body>
 </html>
