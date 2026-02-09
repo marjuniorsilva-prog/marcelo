@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS - V6.2 (SERIAL)</title>
+    <title>WV SERVIÇOS - V6.3 (Clean)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -146,7 +146,7 @@
         <footer id="footer">
             <b>WV SERVIÇOS E MANUTENCOES LTDA | CNPJ: 61.108.911/0001-21</b><br>
             Rua Sl05, 43 - Jardim Sao Lucas III | CEP: 14684-544 | Jardinópolis - SP<br>
-            <b>Versão 6.2</b>
+            <b>Versão 6.3</b>
         </footer>
     </div>
 
@@ -173,7 +173,8 @@
             const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
             const opt = ativos.map(k => { 
                 if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; 
-                return `<option value="${k}">${itensCadastrados[k].nome} ${itensCadastrados[k].tem_serial ? '(S/N)' : ''}</option>`; 
+                // REMOVIDO: a sigla visual (S/N) para não confundir. O sistema sabe internamente.
+                return `<option value="${k}">${itensCadastrados[k].nome}</option>`; 
             }).join('');
             
             ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => {
@@ -184,7 +185,7 @@
             let h = '<table>'; 
             ativos.forEach(k => { 
                 h += `<tr>
-                    <td>${itensCadastrados[k].nome} ${itensCadastrados[k].tem_serial ? '<b style="color:blue">[S/N]</b>' : ''}</td>
+                    <td>${itensCadastrados[k].nome}</td>
                     <td style="text-align:right"><b>${itensCadastrados[k].estoque_central || 0}</b></td>
                     <td style="width:60px; text-align:right;">
                         <button class="btn-edit" onclick="editarItem('${k}')" style="font-size:12px;">✏️</button>
@@ -229,10 +230,7 @@
     function rastrearSerial() {
         const sn = document.getElementById('busca-serial').value.trim();
         if(!sn) return alert("Digite o Serial!");
-        // O serial é salvo com tratamento de chave do firebase, mas vamos buscar direto
-        // Dica: para evitar problemas com caracteres especiais no serial, usamos encode
         const safeSN = sn.replace(/[.#$/\[\]]/g, "_");
-        
         db.ref('seriais_rastro/' + safeSN).once('value', s => {
             const data = s.val();
             if(data) {
@@ -310,7 +308,6 @@
         if(s !== SENHA_PADRAO || !m) return alert("Erro senha/motivo");
         const item = itensCadastrados[p];
 
-        // Se for serial, perguntar qual serial está sendo ajustado
         let sn = null;
         if(item.tem_serial) {
             sn = prompt(`ATENÇÃO: Este produto exige serial.\nDigite o S/N que está sendo ajustado (${modoAjuste}):`);
@@ -443,14 +440,11 @@
             const o = snap.val(); 
             let g = ""; 
             
-            // Loop síncrono para garantir prompts
             for (let i = 0; i < ns.length; i++) {
                 const el = ns[i];
                 const q = parseFloat(qs[i].value);
                 
                 if(q > 0) {
-                    // Verifica se o item selecionado exige serial (usando atributo data que coloquei no option, ou buscando no objeto global)
-                    // Como o select tem apenas o nome no value, busco no objeto itensCadastrados pelo nome
                     const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === el.value);
                     const item = itensCadastrados[itemKey];
                     let sn = null;
