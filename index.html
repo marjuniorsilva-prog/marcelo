@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS - V6.3 (Clean)</title>
+    <title>WV SERVIÇOS - V6.4 (OBS)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -146,13 +146,25 @@
         <footer id="footer">
             <b>WV SERVIÇOS E MANUTENCOES LTDA | CNPJ: 61.108.911/0001-21</b><br>
             Rua Sl05, 43 - Jardim Sao Lucas III | CEP: 14684-544 | Jardinópolis - SP<br>
-            <b>Versão 6.3</b>
+            <b>Versão 6.4</b>
         </footer>
     </div>
 
     <div id="modal-ajuste" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; align-items:center; justify-content:center; padding:20px;"><div class="card" style="width:100%; max-width:400px;"><h3 id="ajuste-titulo">Ajuste</h3><label>Produto</label><select id="ajuste-produto"></select><label>Qtd</label><input type="number" id="ajuste-qtd"><label>Motivo</label><textarea id="ajuste-motivo"></textarea><label>Senha 1503</label><input type="password" id="ajuste-senha"><button class="btn btn-blue" onclick="confirmarAjuste()">CONFIRMAR</button><button class="btn" onclick="fecharModalAjuste()">CANCELAR</button></div></div>
     
-    <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;"><div class="card" style="width:100%; max-width:400px;"><h3>Finalizar Serviço</h3><div id="baixa-itens-container"></div><button class="btn" onclick="adicionarLinhaBaixa()">+ MATERIAL</button><label>Valor Final</label><input type="number" id="baixa-valor-final"><button class="btn btn-green" onclick="confirmarBaixa()">CONCLUIR</button><button class="btn" onclick="fecharModalBaixa()">VOLTAR</button></div></div>
+    <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;">
+        <div class="card" style="width:100%; max-width:400px;">
+            <h3>Finalizar Serviço</h3>
+            <div id="baixa-itens-container"></div>
+            <button class="btn" onclick="adicionarLinhaBaixa()">+ MATERIAL</button>
+            <label style="margin-top:10px;">Observações / Detalhes</label>
+            <textarea id="baixa-obs" style="height:60px;" placeholder="Ex: Furou parede, cliente ausente, trocou conector..."></textarea>
+            <label>Valor Final</label>
+            <input type="number" id="baixa-valor-final">
+            <button class="btn btn-green" onclick="confirmarBaixa()">CONCLUIR</button>
+            <button class="btn" onclick="fecharModalBaixa()">VOLTAR</button>
+        </div>
+    </div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyBS8t51QON29MIYDkkcZETchdevHFVMzCk", authDomain: "internet-f2434.firebaseapp.com", databaseURL: "https://internet-f2434-default-rtdb.firebaseio.com", projectId: "internet-f2434", storageBucket: "internet-f2434.firebasestorage.app", messagingSenderId: "506788174813", appId: "1:506788174813:web:50e05b1a194d70f412b434" };
@@ -173,7 +185,6 @@
             const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
             const opt = ativos.map(k => { 
                 if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; 
-                // REMOVIDO: a sigla visual (S/N) para não confundir. O sistema sabe internamente.
                 return `<option value="${k}">${itensCadastrados[k].nome}</option>`; 
             }).join('');
             
@@ -295,6 +306,7 @@
                     <div class="os-info-item"><b>Téc:</b> ${o.tecnico_nome} | <b>Serv:</b> ${o.servico_tipo}</div>
                 </div>
                 <b style="color:var(--success)">PAGAMENTO: R$ ${parseFloat(o.valor_pagar || 0).toFixed(2)}</b>
+                ${o.obs_baixa ? `<div style="margin-top:5px; font-size:11px; color:#64748b; background:#f1f5f9; padding:5px; border-radius:4px;"><i>Obs: ${o.obs_baixa}</i></div>` : ''}
                 <div style="margin-top:10px;">${o.status === 'pendente' ? `<button class="btn btn-green" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : `<button class="btn btn-blue" onclick="gerarPDFOS('${id}')">📄 PDF</button>`}</div>
             </div>`;
         });
@@ -420,7 +432,14 @@
     }
     function cadastrarTipoServico() { db.ref('tipos_servico').push({ nome: document.getElementById('cad-servico-nome').value }); }
     
-    function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
+    function abrirModalBaixa(id, val) { 
+        osParaBaixar = id; 
+        document.getElementById('baixa-valor-final').value = val; 
+        document.getElementById('baixa-obs').value = ''; // Limpa OBS anterior
+        document.getElementById('modal-baixa').style.display = 'flex'; 
+        document.getElementById('baixa-itens-container').innerHTML = ''; 
+        adicionarLinhaBaixa(); 
+    }
     function fecharModalBaixa() { document.getElementById('modal-baixa').style.display = 'none'; }
     function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; document.getElementById('ajuste-titulo').innerText = m === 'descarte' ? 'Descarte (Central)' : 'Devolução (Mala -> Central)'; }
     function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display='none'; }
@@ -432,10 +451,11 @@
         d.innerHTML = `<select class="b-item" style="flex:2">${o}</select><input type="number" class="b-qtd" placeholder="Qtd" style="flex:1">`; c.appendChild(d); 
     }
     
-    // --- BAIXA (MODIFICADA PARA SERIAL) ---
+    // --- BAIXA (MODIFICADA COM OBS) ---
     function confirmarBaixa() { 
         const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; 
-        
+        const obs = document.getElementById('baixa-obs').value; // PEGA A OBSERVAÇÃO
+
         db.ref('os/'+osParaBaixar).once('value', snap => { 
             const o = snap.val(); 
             let g = ""; 
@@ -460,7 +480,13 @@
                 }
             }
 
-            db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR') }).then(()=>fecharModalBaixa()); 
+            db.ref('os/'+osParaBaixar).update({ 
+                status: 'concluido', 
+                gasto: g, 
+                valor_pagar: vf, 
+                data_baixa: new Date().toLocaleDateString('pt-BR'),
+                obs_baixa: obs // SALVA NO BANCO DE DADOS
+            }).then(()=>fecharModalBaixa()); 
         }); 
     }
 </script>
