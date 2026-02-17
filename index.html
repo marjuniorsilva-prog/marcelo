@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | Evolution V7.1</title>
+    <title>WV SERVIÇOS | Evolution V7.2</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,21 +23,23 @@
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
         body { background: var(--primary); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR (PC) */
+        /* SIDEBAR */
         aside { width: 260px; background: var(--secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; }
         .brand { padding: 25px; text-align: center; color: var(--gold); font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid var(--border); }
         
         .menu-container { flex: 1; overflow-y: auto; }
         .menu-item { padding: 15px 20px; cursor: pointer; color: #94a3b8; transition: 0.3s; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; border-right: 4px solid transparent; }
         .menu-item:hover, .menu-item.active { background: rgba(99, 102, 241, 0.1); color: var(--accent); border-right-color: var(--accent); }
+        .menu-item.active i { color: var(--gold); }
 
-        /* MINI FOOTER NO MENU */
-        .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.4; }
+        .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.4; text-align: center; }
 
-        /* CONTEÚDO */
+        /* CONTEÚDO E ABAS (CORREÇÃO AQUI) */
         main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
-        .section { display: none; animation: fadeIn 0.2s; } 
-        .section.active { display: block; }
+        
+        /* A CLASSE CORRETA AGORA É .view-section */
+        .view-section { display: none; animation: fadeIn 0.3s; } 
+        .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .panel { background: var(--secondary); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
@@ -45,6 +47,7 @@
 
         .row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .col { flex: 1; min-width: 120px; }
+        .col-small { width: 100px; }
         label { display: block; margin-bottom: 5px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #020617; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
 
@@ -59,13 +62,11 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
 
-        /* MOBILE ADAPTATION */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; height: auto; }
-            aside { width: 100%; height: auto; flex-direction: row; overflow-x: auto; position: sticky; top: 0; border-bottom: 1px solid var(--border); border-right: none; }
+            aside { width: 100%; height: auto; flex-direction: row; overflow-x: auto; position: sticky; top: 0; border-bottom: 1px solid var(--border); border-right: none; background: var(--secondary); }
             .brand { display: none; }
-            .menu-container { display: flex; flex-direction: row; overflow-x: auto; scrollbar-width: none; }
-            .menu-container::-webkit-scrollbar { display: none; }
+            .menu-container { display: flex; flex-direction: row; overflow-x: auto; }
             .menu-item { padding: 12px; flex-direction: column; font-size: 9px; min-width: 75px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
             .menu-item.active { border-bottom-color: var(--accent); background: none; }
             .mini-footer { display: none; }
@@ -100,7 +101,7 @@
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
             <div class="mini-footer">
-                <b>WV SERVIÇOS V7.1</b><br>
+                <b>WV SERVIÇOS V7.2</b><br>
                 CNPJ: 61.108.911/0001-21
             </div>
         </aside>
@@ -130,20 +131,20 @@
                         <div class="col"><label>Serviço</label><select id="os-servico-select"></select></div>
                     </div>
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
-                    <button class="btn btn-gold" onclick="criarOS()">FINALIZAR REGISTRO</button>
+                    <button class="btn btn-gold" style="margin-top:10px" onclick="criarOS()">FINALIZAR REGISTRO</button>
                 </div>
                 <div class="panel"><label>Filtrar por Técnico</label><select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select></div>
                 <div id="lista-os"></div>
             </div>
 
             <div id="view-estoque" class="view-section">
-                <div class="panel"><h3>🏢 Central</h3><div id="lista-estoque-central"></div><button class="btn btn-red btn-sm" onclick="abrirModalAjuste('descarte')">DESCARTAR</button></div>
-                <div class="panel"><h3>🚚 Mala Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante" style="margin-top:10px;"></div><button class="btn btn-gold btn-sm" onclick="abrirModalAjuste('devolucao')">DEVOLVER</button></div>
+                <div class="panel"><h3>🏢 Central</h3><div id="lista-estoque-central"></div><button class="btn btn-red btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('descarte')">DESCARTAR</button></div>
+                <div class="panel"><h3>🚚 Mala Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante" style="margin-top:10px;"></div><button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('devolucao')">DEVOLVER</button></div>
             </div>
 
             <div id="view-movimentacao" class="view-section">
-                <div class="panel"><h3>📥 Entrada</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN</button><div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="in-produto"></select><label>Qtd</label><input type="number" id="in-qtd" value="1"><button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR</button></div>
-                <div class="panel"><h3>📤 Saída Técnico</h3><label>Técnico</label><select id="out-tecnico"></select><button class="btn btn-gold btn-sm" onclick="abrirCamera('out')">📷 SCAN</button><div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="out-produto"></select><label>Qtd</label><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button></div>
+                <div class="panel"><h3>📥 Entrada</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN</button><div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="in-produto"></select><label>Qtd</label><input type="number" id="in-qtd" value="1"><button class="btn btn-green" style="margin-top:10px" onclick="processarEntrada()">CONFIRMAR</button></div>
+                <div class="panel"><h3>📤 Saída Técnico</h3><label>Técnico</label><select id="out-tecnico"></select><button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirCamera('out')">📷 SCAN</button><div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="out-produto"></select><label>Qtd</label><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" style="margin-top:10px" onclick="processarSaida()">TRANSFERIR</button></div>
             </div>
 
             <div id="view-financeiro" class="view-section">
@@ -156,33 +157,33 @@
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
-                <div class="panel"><h3>📦 Novo Item</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome"><input type="text" id="cad-item-barcode" placeholder="Barcode"><div style="margin:10px 0"><input type="checkbox" id="cad-tem-serial"> <label style="display:inline">Exigir Serial?</label></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
+                <div class="panel"><h3>📦 Novo Item</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome" style="margin-top:5px"><input type="text" id="cad-item-barcode" placeholder="Barcode" style="margin-top:5px"><div style="margin:10px 0"><input type="checkbox" id="cad-tem-serial"> <label style="display:inline">Exigir Serial?</label></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
         </main>
     </div>
 
     <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px;">
+        <div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--success);">
             <h3>✅ Concluir O.S.</h3>
             <div id="baixa-itens-container"></div>
             <button class="btn btn-blue btn-sm" onclick="adicionarLinhaBaixa()">+ MATERIAL</button>
             <textarea id="baixa-obs" placeholder="Obs..." style="margin-top:10px"></textarea>
             <input type="number" id="baixa-valor-final" placeholder="Valor Final">
             <button class="btn btn-green" style="margin-top:10px" onclick="confirmarBaixa()">CONCLUIR</button>
-            <button class="btn btn-sm" style="width:100%" onclick="fecharModalBaixa()">VOLTAR</button>
+            <button class="btn btn-sm" style="width:100%; margin-top:10px; background: #333; color: white;" onclick="fecharModalBaixa()">VOLTAR</button>
         </div>
     </div>
 
     <div id="modal-ajuste" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10000; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px;">
+        <div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--gold);">
             <h3 id="ajuste-titulo">Ajuste</h3>
             <select id="ajuste-produto"></select>
             <input type="number" id="ajuste-qtd" placeholder="Qtd">
             <textarea id="ajuste-motivo" placeholder="Motivo"></textarea>
             <input type="password" id="ajuste-senha" placeholder="Senha">
             <button class="btn btn-gold" style="margin-top:10px" onclick="confirmarAjuste()">CONFIRMAR</button>
-            <button class="btn btn-sm" style="width:100%" onclick="fecharModalAjuste()">CANCELAR</button>
+            <button class="btn btn-sm" style="width:100%; margin-top:10px; background: #333; color: white;" onclick="fecharModalAjuste()">CANCELAR</button>
         </div>
     </div>
 
@@ -199,7 +200,7 @@
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
     auth.onAuthStateChanged(user => { if(user) { document.getElementById('login-screen').style.display='none'; document.getElementById('app-container').style.display='flex'; carregarTudo(); } });
     
-    // --- CORREÇÃO DO BOTÃO DE NAVEGAÇÃO ---
+    // NAVEGAÇÃO CORRIGIDA
     window.nav = function(id, btn) { 
         document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active')); 
         if(btn) btn.classList.add('active'); 
@@ -265,8 +266,51 @@
     function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
     function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
+    
+    function adicionarLinhaBaixa() { 
+        const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; 
+        const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
+        const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); 
+        d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; 
+        c.appendChild(d); 
+    }
+    
+    function confirmarBaixa() { 
+        const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; 
+        const obs = document.getElementById('baixa-obs').value;
+        db.ref('os/'+osParaBaixar).once('value', snap => { 
+            const o = snap.val(); let g = ""; 
+            for (let i = 0; i < ns.length; i++) {
+                const q = parseFloat(qs[i].value);
+                if(q > 0) {
+                    const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value);
+                    const item = itensCadastrados[itemKey];
+                    let sn = "";
+                    if(item.tem_serial) {
+                        sn = prompt(`S/N DO ITEM: ${ns[i].value}`);
+                        if(!sn) return alert("Cancelado: S/N obrigatório!");
+                        atualizarRastroSerial(sn, `INSTALADO: ${o.cliente} (OS ${o.os_numero})`, ns[i].value);
+                    }
+                    db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); 
+                    g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; 
+                }
+            }
+            db.ref('os/'+osParaBaixar).update({ 
+                status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs 
+            }).then(()=>fecharModalBaixa()); 
+        }); 
+    }
+    
+    // Funções Auxiliares
+    function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
+    function marcarPago(id) { if(prompt("Senha:") === SENHA_PADRAO) db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') }); }
     function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
-    function nav(id, btn) { window.nav(id, btn); }
+    function rastrearSerial() { const sn = document.getElementById('busca-serial').value.trim(); if(!sn) return alert("Digite S/N"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).once('value', s => { const d = s.val(); if(d) alert(`S/N: ${sn}\nITEM: ${d.produto_nome}\nSTATUS: ${d.status}\nDATA: ${d.data}`); else alert("Não encontrado"); }); }
+    function atualizarRastroSerial(serial, status, produtoNome) { if(!serial) return; db.ref('seriais_rastro/' + serial.replace(/[.#$/\[\]]/g, "_")).update({ status: status, produto_nome: produtoNome, data: new Date().toLocaleString() }); }
+    function cadastrarItem() { const temS = document.getElementById('cad-tem-serial').checked; db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0, tem_serial: temS }).then(() => { alert("OK"); document.getElementById('cad-item-nome').value=''; }); }
+    function confirmarAjuste() { const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value; if(s !== SENHA_PADRAO || !m) return alert("Erro"); if(modoAjuste === 'descarte') { db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q); alert("OK"); } else { const t = document.getElementById('filtro-tecnico-estoque').value; if(!t) return alert("Selecione técnico"); db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q); db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q); alert("OK"); } fecharModalAjuste(); }
+    function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; document.getElementById('ajuste-titulo').innerText = m === 'descarte' ? 'Descarte' : 'Devolução'; }
+    function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display='none'; }
 </script>
 </body>
 </html>
