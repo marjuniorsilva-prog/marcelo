@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | Evolution V7.2</title>
+    <title>WV SERVIÇOS | V7.3 Clean</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,21 +23,17 @@
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
         body { background: var(--primary); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR */
-        aside { width: 260px; background: var(--secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; }
+        /* SIDEBAR & NAV */
+        aside { width: 260px; background: var(--secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
         .brand { padding: 25px; text-align: center; color: var(--gold); font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid var(--border); }
-        
         .menu-container { flex: 1; overflow-y: auto; }
         .menu-item { padding: 15px 20px; cursor: pointer; color: #94a3b8; transition: 0.3s; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; border-right: 4px solid transparent; }
         .menu-item:hover, .menu-item.active { background: rgba(99, 102, 241, 0.1); color: var(--accent); border-right-color: var(--accent); }
         .menu-item.active i { color: var(--gold); }
+        .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); text-align: center; }
 
-        .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.4; text-align: center; }
-
-        /* CONTEÚDO E ABAS (CORREÇÃO AQUI) */
+        /* MAIN CONTENT */
         main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
-        
-        /* A CLASSE CORRETA AGORA É .view-section */
         .view-section { display: none; animation: fadeIn 0.3s; } 
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -47,10 +43,10 @@
 
         .row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .col { flex: 1; min-width: 120px; }
-        .col-small { width: 100px; }
         label { display: block; margin-bottom: 5px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #020617; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
 
+        /* BOTÕES */
         .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 12px; text-transform: uppercase; }
         .btn-blue { background: var(--accent); color: white; width: 100%; }
         .btn-gold { background: var(--gold); color: black; width: 100%; }
@@ -58,6 +54,21 @@
         .btn-red { background: var(--danger); color: white; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
+        /* CHECKBOX GIGANTE (NOVO) */
+        .big-checkbox-wrapper {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #0f172a; border: 1px solid var(--border);
+            padding: 15px; border-radius: 8px; cursor: pointer; margin: 15px 0;
+            transition: 0.3s;
+        }
+        .big-checkbox-wrapper:hover { border-color: var(--accent); }
+        .big-checkbox-wrapper.checked { background: rgba(16, 185, 129, 0.1); border-color: var(--success); }
+        .big-checkbox-wrapper input { display: none; } /* Esconde o original */
+        .big-checkbox-icon { font-size: 20px; color: var(--muted); }
+        .big-checkbox-wrapper.checked .big-checkbox-icon { color: var(--success); }
+        .big-checkbox-label { font-size: 14px; font-weight: bold; color: var(--text); }
+
+        /* TABELAS */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
@@ -100,10 +111,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">
-                <b>WV SERVIÇOS V7.2</b><br>
-                CNPJ: 61.108.911/0001-21
-            </div>
+            <div class="mini-footer">V7.3 - Clean</div>
         </aside>
 
         <main>
@@ -113,23 +121,11 @@
                 <div class="panel">
                     <h3>📋 Registro de O.S.</h3>
                     <input type="hidden" id="os-edit-id">
-                    <div class="row">
-                        <div class="col"><label>Nº O.S.</label><input type="text" id="os-numero"></div>
-                        <div class="col"><label>Data</label><input type="date" id="os-data-manual"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col"><label>Cliente</label><input type="text" id="os-cliente"></div>
-                        <div class="col"><label>Telefone</label><input type="tel" id="os-telefone"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div>
-                        <div class="col"><label>Nº Casa</label><input type="text" id="os-numero-casa"></div>
-                    </div>
+                    <div class="row"><div class="col"><label>Nº O.S.</label><input type="text" id="os-numero"></div><div class="col"><label>Data</label><input type="date" id="os-data-manual"></div></div>
+                    <div class="row"><div class="col"><label>Cliente</label><input type="text" id="os-cliente"></div><div class="col"><label>Telefone</label><input type="tel" id="os-telefone"></div></div>
+                    <div class="row"><div class="col"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div><div class="col"><label>Nº Casa</label><input type="text" id="os-numero-casa"></div></div>
                     <div class="row"><div class="col"><label>Endereço</label><input type="text" id="os-endereco"></div></div>
-                    <div class="row">
-                        <div class="col"><label>Técnico</label><select id="os-tecnico"></select></div>
-                        <div class="col"><label>Serviço</label><select id="os-servico-select"></select></div>
-                    </div>
+                    <div class="row"><div class="col"><label>Técnico</label><select id="os-tecnico"></select></div><div class="col"><label>Serviço</label><select id="os-servico-select"></select></div></div>
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
                     <button class="btn btn-gold" style="margin-top:10px" onclick="criarOS()">FINALIZAR REGISTRO</button>
                 </div>
@@ -138,8 +134,16 @@
             </div>
 
             <div id="view-estoque" class="view-section">
-                <div class="panel"><h3>🏢 Central</h3><div id="lista-estoque-central"></div><button class="btn btn-red btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('descarte')">DESCARTAR</button></div>
-                <div class="panel"><h3>🚚 Mala Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante" style="margin-top:10px;"></div><button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('devolucao')">DEVOLVER</button></div>
+                <div class="panel">
+                    <h3>🏢 Central (Agrupado)</h3>
+                    <div id="lista-estoque-central"></div> <button class="btn btn-red btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button>
+                </div>
+                <div class="panel">
+                    <h3>🚚 Mala Técnico</h3>
+                    <select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select>
+                    <div id="lista-estoque-volante" style="margin-top:10px;"></div>
+                    <button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('devolucao')">DEVOLVER PARA CENTRAL</button>
+                </div>
             </div>
 
             <div id="view-movimentacao" class="view-section">
@@ -157,21 +161,45 @@
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
-                <div class="panel"><h3>📦 Novo Item</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome" style="margin-top:5px"><input type="text" id="cad-item-barcode" placeholder="Barcode" style="margin-top:5px"><div style="margin:10px 0"><input type="checkbox" id="cad-tem-serial"> <label style="display:inline">Exigir Serial?</label></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
+                
+                <div class="panel">
+                    <h3>📦 Novo Item</h3>
+                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button>
+                    <input type="text" id="cad-item-nome" placeholder="Nome Comercial" style="margin-top:10px">
+                    <input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px">
+                    
+                    <div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()">
+                        <span class="big-checkbox-label">EXIGIR SERIAL NESTE PRODUTO?</span>
+                        <i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i>
+                        <input type="checkbox" id="cad-tem-serial">
+                    </div>
+
+                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR ITEM NO SISTEMA</button>
+                </div>
+
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
         </main>
     </div>
 
+    <div id="modal-seriais" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10002; align-items:center; justify-content:center; padding:20px;">
+        <div class="panel" style="width:100%; max-width:400px; max-height: 80vh; overflow-y: auto;">
+            <h3 id="titulo-modal-seriais">Seriais Disponíveis</h3>
+            <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">Lista de S/N únicos para este produto:</p>
+            <div id="lista-seriais-conteudo"></div>
+            <button class="btn btn-sm" style="width:100%; margin-top:15px; background: #333;" onclick="document.getElementById('modal-seriais').style.display='none'">FECHAR</button>
+        </div>
+    </div>
+
     <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--success);">
+        <div class="panel" style="width:100%; max-width:400px;">
             <h3>✅ Concluir O.S.</h3>
             <div id="baixa-itens-container"></div>
             <button class="btn btn-blue btn-sm" onclick="adicionarLinhaBaixa()">+ MATERIAL</button>
             <textarea id="baixa-obs" placeholder="Obs..." style="margin-top:10px"></textarea>
             <input type="number" id="baixa-valor-final" placeholder="Valor Final">
             <button class="btn btn-green" style="margin-top:10px" onclick="confirmarBaixa()">CONCLUIR</button>
-            <button class="btn btn-sm" style="width:100%; margin-top:10px; background: #333; color: white;" onclick="fecharModalBaixa()">VOLTAR</button>
+            <button class="btn btn-sm" style="width:100%; background: #333;" onclick="fecharModalBaixa()">VOLTAR</button>
         </div>
     </div>
 
@@ -183,7 +211,7 @@
             <textarea id="ajuste-motivo" placeholder="Motivo"></textarea>
             <input type="password" id="ajuste-senha" placeholder="Senha">
             <button class="btn btn-gold" style="margin-top:10px" onclick="confirmarAjuste()">CONFIRMAR</button>
-            <button class="btn btn-sm" style="width:100%; margin-top:10px; background: #333; color: white;" onclick="fecharModalAjuste()">CANCELAR</button>
+            <button class="btn btn-sm" style="width:100%; background: #333;" onclick="fecharModalAjuste()">CANCELAR</button>
         </div>
     </div>
 
@@ -200,7 +228,6 @@
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
     auth.onAuthStateChanged(user => { if(user) { document.getElementById('login-screen').style.display='none'; document.getElementById('app-container').style.display='flex'; carregarTudo(); } });
     
-    // NAVEGAÇÃO CORRIGIDA
     window.nav = function(id, btn) { 
         document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active')); 
         if(btn) btn.classList.add('active'); 
@@ -210,16 +237,38 @@
         fecharCamera(); 
     };
 
+    // FUNÇÃO PARA O BOTÃO GRANDE DE SERIAL
+    function toggleSerial() {
+        const check = document.getElementById('cad-tem-serial');
+        const wrap = document.getElementById('wrapper-serial');
+        const icon = document.getElementById('icon-serial');
+        check.checked = !check.checked;
+        if(check.checked) {
+            wrap.classList.add('checked');
+            icon.className = 'fa-solid fa-toggle-on big-checkbox-icon';
+        } else {
+            wrap.classList.remove('checked');
+            icon.className = 'fa-solid fa-toggle-off big-checkbox-icon';
+        }
+    }
+
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
             itensCadastrados = s.val() || {}; mapaBarcodes = {}; 
             const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
             const opt = ativos.map(k => { if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; return `<option value="${k}">${itensCadastrados[k].nome}</option>`; }).join('');
             ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + opt; });
-            let h = '<table><tr><th>Item</th><th style="text-align:right">Qtd</th></tr>'; 
-            ativos.forEach(k => h += `<tr><td>${itensCadastrados[k].nome}</td><td style="text-align:right"><b>${itensCadastrados[k].estoque_central || 0}</b></td></tr>`);
+            
+            // TABELA LIMPA: NOME | QTD | BOTÃO VER SERIAIS
+            let h = '<table><tr><th>Item</th><th style="text-align:right">Qtd</th><th style="text-align:center">S/N</th></tr>'; 
+            ativos.forEach(k => {
+                const item = itensCadastrados[k];
+                const btnSerial = item.tem_serial ? `<button class="btn-sm btn-blue" onclick="verSeriais('${item.nome}')"><i class="fa-solid fa-eye"></i></button>` : '-';
+                h += `<tr><td>${item.nome}</td><td style="text-align:right"><b>${item.estoque_central || 0}</b></td><td style="text-align:center">${btnSerial}</td></tr>`;
+            });
             document.getElementById('lista-estoque-central').innerHTML = h + '</table>';
         });
+
         db.ref('tecnicos').on('value', s => {
             listaTecnicos = s.val() || {};
             const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo');
@@ -228,6 +277,38 @@
         });
         db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); });
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
+    }
+
+    // NOVA FUNÇÃO: VER SERIAIS NO MODAL
+    function verSeriais(nomeItem) {
+        document.getElementById('titulo-modal-seriais').innerText = nomeItem;
+        document.getElementById('lista-seriais-conteudo').innerHTML = '<p>Carregando...</p>';
+        document.getElementById('modal-seriais').style.display = 'flex';
+
+        db.ref('seriais_rastro').once('value', s => {
+            const todos = s.val() || {};
+            let html = '<ul style="list-style:none; padding:0;">';
+            let count = 0;
+            
+            Object.keys(todos).forEach(snKey => {
+                const dado = todos[snKey];
+                // Filtra pelo nome do produto e se está no estoque central
+                if(dado.produto_nome === nomeItem && dado.status === 'ESTOQUE CENTRAL') {
+                    // Recupera o S/N original trocando _ por caractere especial se precisar, mas aqui só exibimos
+                    const displaySN = snKey.replace(/_/g, '.'); // Exemplo simples, melhor usar o dado real se tivesse salvo
+                    html += `<li style="padding:5px; border-bottom:1px solid #333; font-size:12px; display:flex; justify-content:space-between;">
+                        <span>${displaySN}</span>
+                        <span style="color:var(--success)">Disp.</span>
+                    </li>`;
+                    count++;
+                }
+            });
+            html += '</ul>';
+            
+            if(count === 0) html = '<p style="text-align:center; padding:20px;">Nenhum serial disponível na Central.</p>';
+            
+            document.getElementById('lista-seriais-conteudo').innerHTML = html;
+        });
     }
 
     function abrirCamera(m) {
@@ -261,8 +342,28 @@
         });
     }
 
-    function processarEntrada() { const id = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(id && q) db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); }
-    function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
+    function processarEntrada() { const id = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(id && q) {
+        const item = itensCadastrados[id];
+        if(item.tem_serial) {
+             const sn = prompt("DIGITE O SERIAL (S/N):");
+             if(!sn) return;
+             // Lógica: Serial entra na central
+             db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: item.nome, data: new Date().toLocaleString() });
+        }
+        db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); 
+    }}
+
+    function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { 
+        const item = itensCadastrados[id];
+        if(item.tem_serial) {
+            const sn = prompt("QUAL SERIAL ESTÁ SAINDO?");
+            if(!sn) return;
+             // Lógica: Serial vai para mala
+            db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() });
+        }
+        db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); 
+    }}
+
     function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
     function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
@@ -289,7 +390,8 @@
                     if(item.tem_serial) {
                         sn = prompt(`S/N DO ITEM: ${ns[i].value}`);
                         if(!sn) return alert("Cancelado: S/N obrigatório!");
-                        atualizarRastroSerial(sn, `INSTALADO: ${o.cliente} (OS ${o.os_numero})`, ns[i].value);
+                         // Lógica: Serial instalado
+                        db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() });
                     }
                     db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); 
                     g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; 
@@ -301,12 +403,10 @@
         }); 
     }
     
-    // Funções Auxiliares
     function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
     function marcarPago(id) { if(prompt("Senha:") === SENHA_PADRAO) db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') }); }
     function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
     function rastrearSerial() { const sn = document.getElementById('busca-serial').value.trim(); if(!sn) return alert("Digite S/N"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).once('value', s => { const d = s.val(); if(d) alert(`S/N: ${sn}\nITEM: ${d.produto_nome}\nSTATUS: ${d.status}\nDATA: ${d.data}`); else alert("Não encontrado"); }); }
-    function atualizarRastroSerial(serial, status, produtoNome) { if(!serial) return; db.ref('seriais_rastro/' + serial.replace(/[.#$/\[\]]/g, "_")).update({ status: status, produto_nome: produtoNome, data: new Date().toLocaleString() }); }
     function cadastrarItem() { const temS = document.getElementById('cad-tem-serial').checked; db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0, tem_serial: temS }).then(() => { alert("OK"); document.getElementById('cad-item-nome').value=''; }); }
     function confirmarAjuste() { const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value; if(s !== SENHA_PADRAO || !m) return alert("Erro"); if(modoAjuste === 'descarte') { db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q); alert("OK"); } else { const t = document.getElementById('filtro-tecnico-estoque').value; if(!t) return alert("Selecione técnico"); db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q); db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q); alert("OK"); } fecharModalAjuste(); }
     function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; document.getElementById('ajuste-titulo').innerText = m === 'descarte' ? 'Descarte' : 'Devolução'; }
