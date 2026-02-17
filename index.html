@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | Evolution V7.0</title>
+    <title>WV SERVIÇOS | Evolution V7.1</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,29 +23,31 @@
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
         body { background: var(--primary); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR (PC) / NAVBAR (MOBILE) */
+        /* SIDEBAR (PC) */
         aside { width: 260px; background: var(--secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; }
-        .brand { padding: 30px; text-align: center; color: var(--gold); font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid var(--border); }
-        .menu-item { padding: 15px 25px; cursor: pointer; color: #94a3b8; transition: 0.3s; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; }
-        .menu-item:hover, .menu-item.active { background: rgba(99, 102, 241, 0.1); color: var(--accent); border-right: 4px solid var(--accent); }
+        .brand { padding: 25px; text-align: center; color: var(--gold); font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid var(--border); }
+        
+        .menu-container { flex: 1; overflow-y: auto; }
+        .menu-item { padding: 15px 20px; cursor: pointer; color: #94a3b8; transition: 0.3s; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13px; border-right: 4px solid transparent; }
+        .menu-item:hover, .menu-item.active { background: rgba(99, 102, 241, 0.1); color: var(--accent); border-right-color: var(--accent); }
+
+        /* MINI FOOTER NO MENU */
+        .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.4; }
 
         /* CONTEÚDO */
         main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
-        .section { display: none; animation: fadeIn 0.3s; } 
+        .section { display: none; animation: fadeIn 0.2s; } 
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .panel { background: var(--secondary); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        h3 { color: var(--gold); margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { color: var(--gold); margin-bottom: 15px; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* FORMS FUTURISTAS */
         .row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .col { flex: 1; min-width: 120px; }
         label { display: block; margin-bottom: 5px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #020617; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
 
-        /* BOTÕES */
         .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 12px; text-transform: uppercase; }
         .btn-blue { background: var(--accent); color: white; width: 100%; }
         .btn-gold { background: var(--gold); color: black; width: 100%; }
@@ -53,23 +55,23 @@
         .btn-red { background: var(--danger); color: white; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
-        /* TABELAS */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
 
-        /* RASTREIO DISPLAY */
-        .scanned-display { background: rgba(99, 102, 241, 0.1); color: var(--accent); padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin: 10px 0; display: none; border: 1px solid var(--accent); }
-
         /* MOBILE ADAPTATION */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; height: auto; }
-            aside { width: 100%; height: auto; flex-direction: row; overflow-x: auto; position: sticky; top: 0; }
+            aside { width: 100%; height: auto; flex-direction: row; overflow-x: auto; position: sticky; top: 0; border-bottom: 1px solid var(--border); border-right: none; }
             .brand { display: none; }
-            .menu-item { padding: 12px; flex-direction: column; font-size: 9px; min-width: 70px; text-align: center; border-right: none; }
-            .menu-item i { font-size: 1.2rem; }
-            main { padding: 15px; }
-            .kpi-grid { grid-template-columns: 1fr !important; }
+            .menu-container { display: flex; flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+            .menu-container::-webkit-scrollbar { display: none; }
+            .menu-item { padding: 12px; flex-direction: column; font-size: 9px; min-width: 75px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
+            .menu-item.active { border-bottom-color: var(--accent); background: none; }
+            .mini-footer { display: none; }
+            main { padding: 15px; overflow: visible; }
+            table { min-width: 600px; }
+            .panel { overflow-x: auto; }
         }
 
         #reader { width: 100%; max-width: 400px; margin: 0 auto 20px; border-radius: 12px; overflow: hidden; display: none; border: 2px solid var(--accent); }
@@ -78,30 +80,36 @@
 <body>
 
     <div id="login-screen" style="position:fixed; inset:0; background:var(--primary); z-index:9999; display:flex; align-items:center; justify-content:center;">
-        <div class="panel" style="width:90%; max-width:350px; text-align:center; border: 1px solid var(--gold);">
+        <div class="panel" style="width:90%; max-width:350px; text-align:center;">
             <h2 style="color:var(--gold); margin-bottom:20px;">WV SERVIÇOS</h2>
-            <input type="email" id="email" placeholder="E-mail Operacional">
-            <input type="password" id="senha" placeholder="Código de Acesso">
-            <button class="btn btn-gold" style="margin-top:15px;" onclick="fazerLogin()">INICIAR SISTEMA</button>
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="senha" placeholder="Senha">
+            <button class="btn btn-gold" style="margin-top:15px;" onclick="fazerLogin()">ENTRAR</button>
         </div>
     </div>
 
     <div id="app-container" style="display:none; width: 100%;">
         <aside>
             <div class="brand">WV SERVIÇOS</div>
-            <div class="menu-item active" onclick="nav('os')"><i class="fa-solid fa-clipboard-list"></i> O.S.</div>
-            <div class="menu-item" onclick="nav('estoque')"><i class="fa-solid fa-warehouse"></i> Estoque</div>
-            <div class="menu-item" onclick="nav('movimentacao')"><i class="fa-solid fa-truck-ramp-box"></i> Entr/Saída</div>
-            <div class="menu-item" onclick="nav('financeiro')"><i class="fa-solid fa-hand-holding-dollar"></i> Fin.</div>
-            <div class="menu-item" onclick="nav('admin')"><i class="fa-solid fa-gears"></i> ADM</div>
-            <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger); margin-top: auto;"><i class="fa-solid fa-power-off"></i> Sair</div>
+            <div class="menu-container">
+                <div class="menu-item active" onclick="nav('os', this)"><i class="fa-solid fa-clipboard-list"></i> O.S.</div>
+                <div class="menu-item" onclick="nav('estoque', this)"><i class="fa-solid fa-warehouse"></i> Estoque</div>
+                <div class="menu-item" onclick="nav('movimentacao', this)"><i class="fa-solid fa-truck-ramp-box"></i> Entr/Saída</div>
+                <div class="menu-item" onclick="nav('financeiro', this)"><i class="fa-solid fa-hand-holding-dollar"></i> Fin.</div>
+                <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
+                <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
+            </div>
+            <div class="mini-footer">
+                <b>WV SERVIÇOS V7.1</b><br>
+                CNPJ: 61.108.911/0001-21
+            </div>
         </aside>
 
         <main>
             <div id="reader"></div>
 
             <div id="view-os" class="view-section active">
-                <div class="panel" id="form-os-card">
+                <div class="panel">
                     <h3>📋 Registro de O.S.</h3>
                     <input type="hidden" id="os-edit-id">
                     <div class="row">
@@ -116,138 +124,69 @@
                         <div class="col"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div>
                         <div class="col"><label>Nº Casa</label><input type="text" id="os-numero-casa"></div>
                     </div>
-                    <div class="row">
-                        <div class="col"><label>Endereço</label><input type="text" id="os-endereco"></div>
-                    </div>
+                    <div class="row"><div class="col"><label>Endereço</label><input type="text" id="os-endereco"></div></div>
                     <div class="row">
                         <div class="col"><label>Técnico</label><select id="os-tecnico"></select></div>
                         <div class="col"><label>Serviço</label><select id="os-servico-select"></select></div>
                     </div>
-                    <label>Valor Mão de Obra</label>
-                    <input type="number" id="os-valor-pagar">
-                    <button class="btn btn-gold" id="btn-salvar-os" onclick="criarOS()">FINALIZAR REGISTRO</button>
+                    <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
+                    <button class="btn btn-gold" onclick="criarOS()">FINALIZAR REGISTRO</button>
                 </div>
-                
-                <div class="panel">
-                    <label>Filtrar por Técnico</label>
-                    <select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select>
-                </div>
+                <div class="panel"><label>Filtrar por Técnico</label><select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select></div>
                 <div id="lista-os"></div>
             </div>
 
             <div id="view-estoque" class="view-section">
-                <div class="panel">
-                    <h3>🏢 Central de Materiais</h3>
-                    <div id="lista-estoque-central"></div>
-                    <button class="btn btn-red btn-sm" style="margin-top:10px;" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button>
-                </div>
-                <div class="panel">
-                    <h3>🚚 Mala do Técnico (Volante)</h3>
-                    <select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select>
-                    <div id="lista-estoque-volante" style="margin-top:15px;"></div>
-                    <button class="btn btn-gold btn-sm" style="margin-top:10px;" onclick="abrirModalAjuste('devolucao')">DEVOLVER PARA CENTRAL</button>
-                </div>
+                <div class="panel"><h3>🏢 Central</h3><div id="lista-estoque-central"></div><button class="btn btn-red btn-sm" onclick="abrirModalAjuste('descarte')">DESCARTAR</button></div>
+                <div class="panel"><h3>🚚 Mala Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante" style="margin-top:10px;"></div><button class="btn btn-gold btn-sm" onclick="abrirModalAjuste('devolucao')">DEVOLVER</button></div>
             </div>
 
             <div id="view-movimentacao" class="view-section">
-                <div class="panel">
-                    <h3>📥 Entrada de Carga</h3>
-                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 BIPAR BARCODE</button>
-                    <div id="display-in" class="scanned-display"></div>
-                    <label>Produto</label><select id="in-produto"></select>
-                    <label>Quantidade</label><input type="number" id="in-qtd" value="1">
-                    <button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR ENTRADA</button>
-                </div>
-                <div class="panel">
-                    <h3>📤 Saída para Técnico</h3>
-                    <label>Destino (Técnico)</label><select id="out-tecnico"></select>
-                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('out')">📷 BIPAR BARCODE</button>
-                    <div id="display-out" class="scanned-display"></div>
-                    <label>Produto</label><select id="out-produto"></select>
-                    <label>Quantidade</label><input type="number" id="out-qtd" value="1">
-                    <button class="btn btn-blue" onclick="processarSaida()">EXECUTAR TRANSFERÊNCIA</button>
-                </div>
+                <div class="panel"><h3>📥 Entrada</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN</button><div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="in-produto"></select><label>Qtd</label><input type="number" id="in-qtd" value="1"><button class="btn btn-green" onclick="processarEntrada()">CONFIRMAR</button></div>
+                <div class="panel"><h3>📤 Saída Técnico</h3><label>Técnico</label><select id="out-tecnico"></select><button class="btn btn-gold btn-sm" onclick="abrirCamera('out')">📷 SCAN</button><div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="out-produto"></select><label>Qtd</label><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" onclick="processarSaida()">TRANSFERIR</button></div>
             </div>
 
             <div id="view-financeiro" class="view-section">
-                <div class="kpi-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
-                    <div class="panel" style="text-align:center; border-left: 4px solid var(--danger);">
-                        <label>Em Aberto</label><h2 id="fin-total-pendente" style="color:var(--danger)">R$ 0,00</h2>
-                    </div>
-                    <div class="panel" style="text-align:center; border-left: 4px solid var(--success);">
-                        <label>Total Pago</label><h2 id="fin-total-pago" style="color:var(--success)">R$ 0,00</h2>
-                    </div>
+                <div class="row">
+                    <div class="col panel" style="text-align:center">Aberto<br><b id="fin-total-pendente" style="color:var(--danger)">0</b></div>
+                    <div class="col panel" style="text-align:center">Pago<br><b id="fin-total-pago" style="color:var(--success)">0</b></div>
                 </div>
-                <div class="panel">
-                    <h3>💰 Controle de Repasses</h3>
-                    <select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select>
-                    <div id="detalhes-financeiro" style="margin-top:20px;"></div>
-                    <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
-                    <div id="historico-financeiro"></div>
-                </div>
+                <div class="panel"><h3>💰 Repasses</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr style="margin:20px 0; border-color:var(--border)"><div id="historico-financeiro"></div></div>
             </div>
 
             <div id="view-admin" class="view-section">
-                <div class="panel">
-                    <h3>🔍 Rastrear Serial (S/N)</h3>
-                    <div class="row">
-                        <div class="col" style="flex:3"><input type="text" id="busca-serial" placeholder="S/N do Equipamento"></div>
-                        <div class="col"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <h3>📦 Catálogo de Itens</h3>
-                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCANNER</button>
-                    <div id="display-cad" class="scanned-display"></div>
-                    <input type="text" id="cad-item-nome" placeholder="Nome Comercial">
-                    <input type="text" id="cad-item-barcode" placeholder="Barcode / EAN">
-                    <div style="display:flex; align-items:center; gap:10px; margin: 15px 0; background:rgba(99, 102, 241, 0.1); padding:10px; border-radius:8px;">
-                        <input type="checkbox" id="cad-tem-serial" style="width:18px; height:18px;">
-                        <label style="margin:0; color:var(--accent);">Exigir Serial (S/N)?</label>
-                    </div>
-                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR ITEM</button>
-                </div>
-                <div class="panel">
-                    <h3>👤 Equipe e Backup</h3>
-                    <button class="btn btn-blue btn-sm" onclick="exportarBackup()">📥 DOWNLOAD BACKUP</button>
-                    <div id="lista-tecnicos-admin" style="margin-top:15px;"></div>
-                </div>
+                <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
+                <div class="panel"><h3>📦 Novo Item</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome"><input type="text" id="cad-item-barcode" placeholder="Barcode"><div style="margin:10px 0"><input type="checkbox" id="cad-tem-serial"> <label style="display:inline">Exigir Serial?</label></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
+                <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
         </main>
-
-        <footer style="background: var(--secondary); padding: 10px; text-align: center; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border);">
-            WV SERVIÇOS E MANUTENCOES LTDA | Versão Evolution 7.0
-        </footer>
     </div>
 
     <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--success);">
-            <h3>✅ Finalizar Serviço</h3>
+        <div class="panel" style="width:100%; max-width:400px;">
+            <h3>✅ Concluir O.S.</h3>
             <div id="baixa-itens-container"></div>
-            <button class="btn btn-blue btn-sm" style="margin-bottom:15px" onclick="adicionarLinhaBaixa()">+ ADICIONAR MATERIAL</button>
-            <label>Observações do Técnico</label>
-            <textarea id="baixa-obs" placeholder="Relatório do que foi feito..."></textarea>
-            <label>Valor Final Fechado</label>
-            <input type="number" id="baixa-valor-final">
-            <button class="btn btn-green" style="margin-top:15px" onclick="confirmarBaixa()">CONCLUIR O.S.</button>
-            <button class="btn btn-red btn-sm" style="width:100%; margin-top:10px" onclick="fecharModalBaixa()">VOLTAR</button>
+            <button class="btn btn-blue btn-sm" onclick="adicionarLinhaBaixa()">+ MATERIAL</button>
+            <textarea id="baixa-obs" placeholder="Obs..." style="margin-top:10px"></textarea>
+            <input type="number" id="baixa-valor-final" placeholder="Valor Final">
+            <button class="btn btn-green" style="margin-top:10px" onclick="confirmarBaixa()">CONCLUIR</button>
+            <button class="btn btn-sm" style="width:100%" onclick="fecharModalBaixa()">VOLTAR</button>
         </div>
     </div>
 
     <div id="modal-ajuste" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10000; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--gold);">
+        <div class="panel" style="width:100%; max-width:400px;">
             <h3 id="ajuste-titulo">Ajuste</h3>
-            <label>Produto</label><select id="ajuste-produto"></select>
-            <label>Qtd</label><input type="number" id="ajuste-qtd">
-            <label>Motivo</label><textarea id="ajuste-motivo"></textarea>
-            <label>Senha Master</label><input type="password" id="ajuste-senha">
-            <button class="btn btn-gold" style="margin-top:15px" onclick="confirmarAjuste()">CONFIRMAR AJUSTE</button>
-            <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="fecharModalAjuste()">CANCELAR</button>
+            <select id="ajuste-produto"></select>
+            <input type="number" id="ajuste-qtd" placeholder="Qtd">
+            <textarea id="ajuste-motivo" placeholder="Motivo"></textarea>
+            <input type="password" id="ajuste-senha" placeholder="Senha">
+            <button class="btn btn-gold" style="margin-top:10px" onclick="confirmarAjuste()">CONFIRMAR</button>
+            <button class="btn btn-sm" style="width:100%" onclick="fecharModalAjuste()">CANCELAR</button>
         </div>
     </div>
 
 <script>
-    // Configurações do Firebase Mantidas
     const firebaseConfig = { apiKey: "AIzaSyBS8t51QON29MIYDkkcZETchdevHFVMzCk", authDomain: "internet-f2434.firebaseapp.com", databaseURL: "https://internet-f2434-default-rtdb.firebaseio.com", projectId: "internet-f2434", storageBucket: "internet-f2434.firebasestorage.app", messagingSenderId: "506788174813", appId: "1:506788174813:web:50e05b1a194d70f412b434" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -256,152 +195,57 @@
 
     let cacheDadosOS = {}, itensCadastrados = {}, listaTecnicos = {}, mapaBarcodes = {}, scanner, modoAjuste = '', osParaBaixar = null;
 
-    // --- FUNÇÕES DE NAVEGAÇÃO E LOGIN ---
-    function fazerLogin() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Acesso Negado!")); }
+    function fazerLogin() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro!")); }
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
     auth.onAuthStateChanged(user => { if(user) { document.getElementById('login-screen').style.display='none'; document.getElementById('app-container').style.display='flex'; carregarTudo(); } });
     
-    function nav(id) { 
+    // --- CORREÇÃO DO BOTÃO DE NAVEGAÇÃO ---
+    window.nav = function(id, btn) { 
         document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active')); 
-        event.currentTarget.classList.add('active'); 
+        if(btn) btn.classList.add('active'); 
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); 
         document.getElementById('view-'+id).classList.add('active'); 
+        if(window.innerWidth <= 768) window.scrollTo(0,0);
         fecharCamera(); 
-    }
+    };
 
-    // --- CARREGAMENTO DE DADOS ---
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
             itensCadastrados = s.val() || {}; mapaBarcodes = {}; 
             const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
-            const opt = ativos.map(k => { 
-                if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; 
-                return `<option value="${k}">${itensCadastrados[k].nome}</option>`; 
-            }).join('');
-            
-            ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.innerHTML = '<option value="">Selecione...</option>' + opt;
-            });
-
-            let h = '<table><tr><th>Item</th><th style="text-align:right">Qtd</th><th>Ação</th></tr>'; 
-            ativos.forEach(k => { 
-                h += `<tr>
-                    <td>${itensCadastrados[k].nome}</td>
-                    <td style="text-align:right"><b>${itensCadastrados[k].estoque_central || 0}</b></td>
-                    <td style="text-align:right">
-                        <button class="btn-sm" style="background:none; color:var(--gold)" onclick="editarItem('${k}')">✏️</button>
-                    </td>
-                </tr>`; 
-            });
+            const opt = ativos.map(k => { if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; return `<option value="${k}">${itensCadastrados[k].nome}</option>`; }).join('');
+            ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + opt; });
+            let h = '<table><tr><th>Item</th><th style="text-align:right">Qtd</th></tr>'; 
+            ativos.forEach(k => h += `<tr><td>${itensCadastrados[k].nome}</td><td style="text-align:right"><b>${itensCadastrados[k].estoque_central || 0}</b></td></tr>`);
             document.getElementById('lista-estoque-central').innerHTML = h + '</table>';
         });
-
         db.ref('tecnicos').on('value', s => {
             listaTecnicos = s.val() || {};
             const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo');
             document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join('');
-            ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => {
-                document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos Técnicos</option>' : '') + 
-                ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join('');
-            });
-            
-            let ha = ''; Object.keys(listaTecnicos).forEach(k => {
-                ha += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid var(--border);">
-                    <span>${listaTecnicos[k].nome}</span>
-                    <button class="btn-sm btn-red" onclick="inativarTecnico('${k}')">DESLIGAR</button>
-                </div>`;
-            });
-            document.getElementById('lista-tecnicos-admin').innerHTML = ha;
+            ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); });
         });
-
-        db.ref('tipos_servico').on('value', s => { 
-            const sv = s.val() || {}; 
-            document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join('');
-        });
-
+        db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); });
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
 
-    // --- INTEGRAÇÃO SCANNER E BARCODE ---
     function abrirCamera(m) {
         document.getElementById('reader').style.display='block';
         if(scanner) scanner.clear();
         scanner = new Html5Qrcode("reader");
         scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (t) => {
             fecharCamera();
-            const disp = document.getElementById('display-'+m);
-            disp.style.display = 'block';
-            disp.innerText = "LIDO: " + t;
+            document.getElementById('display-'+m).innerText = "Lido: " + t;
             if(m==='cad') document.getElementById('cad-item-barcode').value = t;
-            else {
-                const k = mapaBarcodes[t];
-                if(k) document.getElementById(m+'-produto').value = k;
-                else alert("Item não catalogado!");
-            }
+            else { const k = mapaBarcodes[t]; if(k) document.getElementById(m+'-produto').value = k; }
         });
     }
-    function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none'); }
+    function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none').catch(()=>{}); }
 
-    // --- RASTREIO DE SERIAL (S/N) ---
-    function rastrearSerial() {
-        const sn = document.getElementById('busca-serial').value.trim();
-        if(!sn) return alert("Digite o Serial!");
-        const safeSN = sn.replace(/[.#$/\[\]]/g, "_");
-        db.ref('seriais_rastro/' + safeSN).once('value', s => {
-            const data = s.val();
-            if(data) alert(`S/N: ${sn}\nITEM: ${data.produto_nome}\nLOCAL: ${data.status}\nDATA: ${data.data}`);
-            else alert("Serial não rastreado!");
-        });
-    }
-
-    function atualizarRastroSerial(serial, status, produtoNome) {
-        if(!serial) return;
-        const safeSN = serial.replace(/[.#$/\[\]]/g, "_");
-        db.ref('seriais_rastro/' + safeSN).update({
-            status: status, produto_nome: produtoNome, data: new Date().toLocaleString()
-        });
-    }
-
-    // --- FUNÇÕES OPERACIONAIS (ENTRADA / SAÍDA / BAIXA) ---
-    function processarEntrada() { 
-        const id = document.getElementById('in-produto').value;
-        const q = parseFloat(document.getElementById('in-qtd').value); 
-        if(!id || q <= 0) return;
-        const item = itensCadastrados[id];
-        if(item.tem_serial) {
-            const sn = prompt("DIGITE O SERIAL (S/N):");
-            if(!sn) return;
-            atualizarRastroSerial(sn, "ESTOQUE CENTRAL", item.nome);
-        }
-        db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q);
-        alert("Entrada Concluída!");
-    }
-
-    function processarSaida() { 
-        const tecId = document.getElementById('out-tecnico').value;
-        const id = document.getElementById('out-produto').value;
-        const q = parseFloat(document.getElementById('out-qtd').value); 
-        if(!tecId || !id || q <= 0) return;
-        const item = itensCadastrados[id];
-        let sn = "";
-        if(item.tem_serial) {
-            sn = prompt("QUAL O SERIAL PARA ESTE TÉCNICO?");
-            if(!sn) return;
-            atualizarRastroSerial(sn, `MALA: ${listaTecnicos[tecId].nome}`, item.nome);
-        }
-        db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); 
-        db.ref(`estoque_volante/${tecId}/${item.nome}`).transaction(a => (a||0) + q); 
-        alert("Transferência Realizada!"); 
-    }
-
-    function carregarEstoqueVolante(id) { 
-        if(!id) return;
-        db.ref(`estoque_volante/${id}`).on('value', s => { 
-            const it = s.val() || {}; let h = '';
-            Object.keys(it).forEach(n => h += `<div class="panel" style="padding:10px; margin-bottom:5px;">${n}: <b style="color:var(--gold)">${it[n]}</b></div>`); 
-            document.getElementById('lista-estoque-volante').innerHTML = h || "Mala vazia"; 
-        }); 
+    function criarOS() {
+        const id = document.getElementById('os-edit-id').value, sel = document.getElementById('os-tecnico');
+        const d = { os_numero: document.getElementById('os-numero').value, data_manual: document.getElementById('os-data-manual').value, cliente: document.getElementById('os-cliente').value, telefone: document.getElementById('os-telefone').value, cep: document.getElementById('os-cep').value, numero_casa: document.getElementById('os-numero-casa').value, bairro: document.getElementById('os-bairro').value, cidade: document.getElementById('os-cidade').value, endereco: document.getElementById('os-endereco').value, tecnico_id: sel.value, tecnico_nome: sel.options[sel.selectedIndex]?.text || '', servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0, status: 'pendente' };
+        db.ref('os').push(d).then(() => { alert("Salvo!"); document.querySelectorAll('#view-os input').forEach(i=>i.value=''); });
     }
 
     function renderizarListaOS() {
@@ -410,138 +254,19 @@
         Object.keys(cacheDadosOS).reverse().forEach(id => {
             const o = cacheDadosOS[id]; if (f && o.tecnico_id !== f) return;
             lista.innerHTML += `<div class="panel" style="border-left: 5px solid ${o.status === 'pendente' ? 'var(--gold)' : 'var(--success)'}">
-                <div style="display:flex; justify-content:space-between;">
-                    <b>${o.cliente}</b>
-                    <small style="color:var(--muted)">OS: ${o.os_numero}</small>
-                </div>
-                <div style="font-size:11px; margin-top:10px; color:var(--muted)">
-                    End: ${o.endereco}, ${o.numero_casa} | Técnico: ${o.tecnico_nome}
-                </div>
-                <div style="margin-top:10px; font-weight:bold; color:var(--gold)">Valor: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</div>
-                <div style="margin-top:15px;">
-                    ${o.status === 'pendente' ? `<button class="btn btn-green btn-sm" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">DAR BAIXA</button>` : `<span style="color:var(--success)">✅ CONCLUÍDA</span>`}
-                </div>
+                <b>${o.cliente}</b> (OS: ${o.os_numero})<br><small>${o.tecnico_nome} - R$ ${o.valor_pagar}</small><br>
+                ${o.status === 'pendente' ? `<button class="btn btn-green btn-sm" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : '✅'}
             </div>`;
         });
     }
 
-    // --- FUNÇÕES DE BAIXA E FINANCEIRO ---
-    function abrirModalBaixa(id, val) { 
-        osParaBaixar = id; 
-        document.getElementById('baixa-valor-final').value = val; 
-        document.getElementById('modal-baixa').style.display = 'flex'; 
-        document.getElementById('baixa-itens-container').innerHTML = ''; 
-        adicionarLinhaBaixa(); 
-    }
-    function fecharModalBaixa() { document.getElementById('modal-baixa').style.display = 'none'; }
-    
-    function adicionarLinhaBaixa() { 
-        const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; 
-        const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
-        const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); 
-        d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; 
-        c.appendChild(d); 
-    }
-
-    function confirmarBaixa() { 
-        const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; 
-        const obs = document.getElementById('baixa-obs').value;
-        db.ref('os/'+osParaBaixar).once('value', snap => { 
-            const o = snap.val(); let g = ""; 
-            for (let i = 0; i < ns.length; i++) {
-                const q = parseFloat(qs[i].value);
-                if(q > 0) {
-                    const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value);
-                    const item = itensCadastrados[itemKey];
-                    let sn = "";
-                    if(item.tem_serial) {
-                        sn = prompt(`S/N DO ITEM: ${ns[i].value}`);
-                        if(!sn) return alert("Cancelado: S/N obrigatório!");
-                        atualizarRastroSerial(sn, `INSTALADO: ${o.cliente} (OS ${o.os_numero})`, ns[i].value);
-                    }
-                    db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); 
-                    g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; 
-                }
-            }
-            db.ref('os/'+osParaBaixar).update({ 
-                status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs 
-            }).then(()=>fecharModalBaixa()); 
-        }); 
-    }
-
-    function calcularFinanceiroGeral() {
-        let p = 0, pg = 0;
-        Object.keys(cacheDadosOS).forEach(id => {
-            const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); }
-        });
-        document.getElementById('fin-total-pendente').innerText = `R$ ${p.toFixed(2)}`;
-        document.getElementById('fin-total-pago').innerText = `R$ ${pg.toFixed(2)}`;
-    }
-
-    function listarFinanceiroTecnico(tecId) {
-        let hp = '<h4>Pendente de Repasse</h4>', hpg = '<h4>Histórico Pago</h4>';
-        Object.keys(cacheDadosOS).forEach(id => {
-            const o = cacheDadosOS[id];
-            if(o.tecnico_id === tecId && o.status === 'concluido') {
-                const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`;
-                if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR PAGAMENTO</button></div>`;
-                else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`;
-            }
-        });
-        document.getElementById('detalhes-financeiro').innerHTML = hp;
-        document.getElementById('historico-financeiro').innerHTML = hpg;
-    }
-
-    function marcarPago(id) {
-        if(prompt("Senha Administrativa:") === SENHA_PADRAO) {
-            db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') });
-        }
-    }
-
-    // --- FUNÇÕES DE CADASTRO ADM ---
-    function cadastrarItem() { 
-        const temS = document.getElementById('cad-tem-serial').checked;
-        db.ref('itens').push({ 
-            nome: document.getElementById('cad-item-nome').value, 
-            barcode: document.getElementById('cad-item-barcode').value, 
-            estoque_central: 0, tem_serial: temS 
-        }).then(() => { alert("Item Catalogado!"); document.getElementById('cad-item-nome').value=''; });
-    }
-
-    function criarOS() {
-        const id = document.getElementById('os-edit-id').value, sel = document.getElementById('os-tecnico');
-        const d = { 
-            os_numero: document.getElementById('os-numero').value, 
-            data_manual: document.getElementById('os-data-manual').value, 
-            cliente: document.getElementById('os-cliente').value, 
-            telefone: document.getElementById('os-telefone').value, 
-            cep: document.getElementById('os-cep').value, 
-            numero_casa: document.getElementById('os-numero-casa').value, 
-            bairro: document.getElementById('os-bairro').value, 
-            cidade: document.getElementById('os-cidade').value, 
-            endereco: document.getElementById('os-endereco').value, 
-            tecnico_id: sel.value, 
-            tecnico_nome: sel.options[sel.selectedIndex]?.text || '', 
-            servico_tipo: document.getElementById('os-servico-select').value, 
-            valor_pagar: document.getElementById('os-valor-pagar').value || 0 
-        };
-        const ref = id ? db.ref('os/'+id) : db.ref('os').push();
-        if(!id) { d.status = 'pendente'; d.data_registro = Date.now(); }
-        ref.update(d).then(() => alert("O.S. Registrada!"));
-    }
-
-    function buscarCep() { 
-        const c = document.getElementById('os-cep').value.replace(/\D/g, ''); 
-        if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => {
-            if(!d.erro) { 
-                document.getElementById('os-endereco').value = d.logradouro; 
-                document.getElementById('os-bairro').value = d.bairro; 
-                document.getElementById('os-cidade').value = d.localidade; 
-            }
-        }); 
-    }
-
-    function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'wv_backup_total.json'; a.click(); }); }
+    function processarEntrada() { const id = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(id && q) db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); }
+    function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
+    function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
+    function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
+    function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
+    function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
+    function nav(id, btn) { window.nav(id, btn); }
 </script>
 </body>
 </html>
