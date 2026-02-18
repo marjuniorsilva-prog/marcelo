@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.7 Organized</title>
+    <title>WV SERVIÇOS | V7.8 Admin Services</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -43,6 +43,7 @@
 
         .row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .col { flex: 1; min-width: 120px; }
+        .col-small { width: 100px; }
         label { display: block; margin-bottom: 5px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #020617; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
 
@@ -126,7 +127,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">V7.7 - Organized</div>
+            <div class="mini-footer">V7.8 - Admin Services</div>
         </aside>
 
         <main>
@@ -176,6 +177,16 @@
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
+                
+                <div class="panel">
+                    <h3>🛠️ Serviços (O.S.)</h3>
+                    <div class="row">
+                        <div class="col"><input type="text" id="novo-servico-nome" placeholder="Nome do Serviço"></div>
+                        <div class="col-small"><button class="btn btn-green" onclick="cadastrarServico()">ADICIONAR</button></div>
+                    </div>
+                    <div id="lista-servicos-admin" style="margin-top:10px; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+
                 <div class="panel"><h3>📦 Novo Modelo</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px"><input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px"><div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()"><div><span class="big-checkbox-label">EXIGIR SERIAL?</span><span class="big-checkbox-sub">Para Roteadores/ONUs</span></div><i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i><input type="checkbox" id="cad-tem-serial"></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
@@ -211,8 +222,6 @@
     function toggleSerial() { const check = document.getElementById('cad-tem-serial'); const wrap = document.getElementById('wrapper-serial'); const icon = document.getElementById('icon-serial'); check.checked = !check.checked; if(check.checked) { wrap.classList.add('checked'); icon.className = 'fa-solid fa-toggle-on big-checkbox-icon'; } else { wrap.classList.remove('checked'); icon.className = 'fa-solid fa-toggle-off big-checkbox-icon'; } }
     function toggleDetalhes(id) { const el = document.getElementById('detalhe-' + id); if(el.classList.contains('open')) el.classList.remove('open'); else el.classList.add('open'); }
     function toggleOSCard(id) { const body = document.getElementById('os-body-' + id); if(body.classList.contains('show')) body.classList.remove('show'); else body.classList.add('show'); }
-
-    // NOVA FUNÇÃO: Expandir Histórico
     function toggleHistory() {
         const container = document.getElementById('lista-os-concluidas');
         const icon = document.getElementById('icon-history');
@@ -261,15 +270,59 @@
         });
 
         db.ref('tecnicos').on('value', s => { listaTecnicos = s.val() || {}; const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo'); document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); }); });
-        db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); });
+        
+        // --- ATUALIZAÇÃO: TIPOS DE SERVIÇO (Carregar + Admin List) ---
+        db.ref('tipos_servico').on('value', s => { 
+            const sv = s.val() || {}; 
+            
+            // 1. Filtra para o Select (Só Ativos)
+            const ativos = Object.keys(sv).filter(k => sv[k].ativo !== false); // Se undefined, considera true
+            document.getElementById('os-servico-select').innerHTML = ativos.map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); 
+            
+            // 2. Renderiza Lista no Admin (Todos com botão de inativar)
+            renderizarListaServicosAdmin(sv);
+        });
+
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
 
-    // --- NOVA LÓGICA DE SEPARAÇÃO (ABERTO vs FECHADO) ---
+    // --- NOVAS FUNÇÕES DE ADMINISTRAÇÃO DE SERVIÇOS ---
+    function cadastrarServico() {
+        const nome = document.getElementById('novo-servico-nome').value.trim();
+        if(!nome) return alert("Digite o nome do serviço.");
+        db.ref('tipos_servico').push({ nome: nome, ativo: true });
+        document.getElementById('novo-servico-nome').value = '';
+        alert("Serviço adicionado!");
+    }
+
+    function toggleServico(id, statusAtual) {
+        // Inverte o status (se era true vira false, e vice-versa)
+        db.ref('tipos_servico/'+id).update({ ativo: !statusAtual });
+    }
+
+    function renderizarListaServicosAdmin(sv) {
+        const div = document.getElementById('lista-servicos-admin');
+        if(!div) return;
+        
+        div.innerHTML = Object.keys(sv).map(k => {
+            const s = sv[k];
+            const isAtivo = s.ativo !== false; // Padrão é ativo se não existir o campo
+            const color = isAtivo ? 'var(--text)' : 'var(--danger)'; // Vermelho se inativo
+            const statusText = isAtivo ? '' : '(INATIVO)';
+            const btnLabel = isAtivo ? 'INATIVAR' : 'ATIVAR';
+            const btnClass = isAtivo ? 'btn-red' : 'btn-green';
+            
+            return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;">
+                <span style="color:${color}; font-size:13px;">${s.nome} <small>${statusText}</small></span>
+                <button class="btn btn-sm ${btnClass}" style="width:auto; padding:5px 10px;" onclick="toggleServico('${k}', ${isAtivo})">${btnLabel}</button>
+            </div>`;
+        }).join('');
+    }
+    // --------------------------------------------------------
+
     function renderizarListaOS() {
         const f = document.getElementById('filtro-tecnico-os').value; 
-        
-        // Limpa as duas áreas
         const listaPendentes = document.getElementById('lista-os-pendentes');
         const listaConcluidas = document.getElementById('lista-os-concluidas');
         listaPendentes.innerHTML = '';
@@ -284,9 +337,8 @@
             const isPendente = o.status === 'pendente';
             const statusClass = isPendente ? 'pendente' : 'concluido';
             const iconStatus = isPendente ? '<i class="fa-solid fa-clock" style="color:var(--gold)"></i>' : '<i class="fa-solid fa-check-circle" style="color:var(--success)"></i>';
-            const displayBody = isPendente ? 'show' : ''; // Pendente já abre aberto
+            const displayBody = isPendente ? 'show' : ''; 
 
-            // Formatação de endereço
             const endCompleto = `${o.endereco || ''}, ${o.numero_casa || 'S/N'} - ${o.bairro || ''}, ${o.cidade || ''}`;
             const dataOS = o.data_manual ? o.data_manual.split('-').reverse().join('/') : new Date(o.data_registro).toLocaleDateString();
 
@@ -307,7 +359,8 @@
                     <div class="os-info-row"><i class="fa-solid fa-user-gear"></i> <span>Téc: ${o.tecnico_nome}</span></div>
                     
                     <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-                    
+                    <div style="font-size:12px; margin-bottom:10px; color:#aaa;">🛠️ Serviço: <b>${o.servico_tipo || 'Não informado'}</b></div>
+
                     ${isPendente ? 
                         `<div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="color:var(--gold); font-weight:bold;">Valor: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</span>
@@ -322,7 +375,6 @@
                 </div>
             </div>`;
 
-            // JOGA PARA A LISTA CERTA
             if (isPendente) {
                 listaPendentes.innerHTML += htmlCard;
             } else {
@@ -331,9 +383,7 @@
             }
         });
 
-        // Atualiza o contador de histórico
         document.getElementById('count-history').innerText = countConcluidas;
-        
         if (listaPendentes.innerHTML === '') listaPendentes.innerHTML = '<div style="text-align:center; padding:20px; color:#666">Nenhuma O.S. pendente.</div>';
     }
 
@@ -358,57 +408,32 @@
         db.ref('os').push(d).then(() => { alert("Salvo!"); document.querySelectorAll('#view-os input').forEach(i=>i.value=''); });
     }
 
-    // --- FUNÇÃO DE ENTRADA ATUALIZADA (COM CONFIRMAÇÃO DE MASSA) ---
     function processarEntrada() {
         const nomeProduto = document.getElementById('in-produto').value;
         const q = parseFloat(document.getElementById('in-qtd').value);
-        
         if(!nomeProduto || q <= 0) return alert("Selecione um produto.");
-        
         const configProduto = produtosUnicos[nomeProduto];
         if(!configProduto) return alert("Erro no cadastro do produto.");
         
-        // SE FOR SERIAL (1 POR 1)
         if(configProduto.tem_serial) {
             if(q > 1 && !confirm("Atenção: Você vai cadastrar " + q + " seriais um por um. Continuar?")) return;
-            
             for(let i=0; i<q; i++) {
                 const sn = prompt(`Digite o SERIAL ${i+1}/${q} para: ${nomeProduto}`);
-                if(!sn) break; // Se cancelar no meio, para
-                
-                db.ref('itens').push({
-                    nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`,
-                    barcode: configProduto.barcode || '',
-                    estoque_central: 1,
-                    tem_serial: true
-                });
-                
-                db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({
-                    status: 'ESTOQUE CENTRAL',
-                    produto_nome: nomeProduto,
-                    data: new Date().toLocaleString()
-                });
+                if(!sn) break; 
+                db.ref('itens').push({ nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`, barcode: configProduto.barcode || '', estoque_central: 1, tem_serial: true });
+                db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: nomeProduto, data: new Date().toLocaleString() });
             }
             alert("✅ Seriais registrados com sucesso!");
-            
         } else {
-            // SE NÃO TIVER SERIAL (MASSA)
             if(configProduto.keyOriginal) {
-                // AQUI: Confirma a quantidade total de uma vez
                 if(confirm(`Confirma a entrada de ${q} unidades de ${nomeProduto}?`)) {
-                    
-                    db.ref(`itens/${configProduto.keyOriginal}/estoque_central`)
-                      .transaction(atual => (atual||0) + q)
-                      .then(() => {
+                    db.ref(`itens/${configProduto.keyOriginal}/estoque_central`).transaction(atual => (atual||0) + q).then(() => {
                           alert("✅ Estoque atualizado!");
-                          // Limpa para o próximo
                           document.getElementById('in-qtd').value = 1; 
                           document.getElementById('in-produto').value = ""; 
                       });
                 }
-            } else {
-                alert("Erro: Item original não encontrado.");
-            }
+            } else { alert("Erro: Item original não encontrado."); }
         }
     }
 
