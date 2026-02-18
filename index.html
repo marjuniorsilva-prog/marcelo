@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.9 Google Auth</title>
+    <title>WV SERVIÇOS | V7.9 Google Auth (Corrigida)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -66,7 +66,6 @@
         .os-info-row { display: flex; gap: 10px; margin-bottom: 8px; font-size: 13px; color: #ccc; align-items: center; }
         .os-info-row i { color: var(--accent); width: 20px; text-align: center; }
 
-        /* SEPARADOR DE HISTÓRICO */
         .history-divider {
             margin-top: 30px; margin-bottom: 15px;
             background: #0f172a; border: 1px solid var(--border);
@@ -79,7 +78,6 @@
         .history-container { display: none; }
         .history-container.open { display: block; animation: fadeIn 0.5s; }
 
-        /* OUTROS ESTILOS MANTIDOS */
         .big-checkbox-wrapper { display: flex; align-items: center; justify-content: space-between; background: #0f172a; border: 2px solid var(--border); padding: 20px; border-radius: 12px; cursor: pointer; margin: 20px 0; transition: 0.3s; }
         .big-checkbox-wrapper.checked { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
         .big-checkbox-wrapper input { display: none; }
@@ -208,7 +206,6 @@
     const auth = firebase.auth();
     const SENHA_PADRAO = "1503";
     
-    // --- LISTA DE E-MAILS AUTORIZADOS ---
     const EMAILS_PERMITIDOS = [
         "mar.junior.silva@gmail.com",
         "washington7642@gmail.com"
@@ -217,27 +214,20 @@
     let cacheDadosOS = {}, itensCadastrados = {}, listaTecnicos = {}, mapaBarcodes = {}, scanner, modoAjuste = '', osParaBaixar = null;
     let produtosUnicos = {};
 
-    // --- NOVA FUNÇÃO DE LOGIN COM GOOGLE ---
     function fazerLoginGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-            .catch((error) => {
-                alert("Erro ao fazer login: " + error.message);
-            });
+        auth.signInWithPopup(provider).catch((error) => { alert("Erro ao fazer login: " + error.message); });
     }
 
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
     
-    // --- MONITORAMENTO DE AUTH COM SEGURANÇA ---
     auth.onAuthStateChanged(user => { 
         if(user) { 
-            // VERIFICA SE O E-MAIL ESTÁ NA LISTA
             if(EMAILS_PERMITIDOS.includes(user.email)) {
                 document.getElementById('login-screen').style.display='none'; 
                 document.getElementById('app-container').style.display='flex'; 
                 carregarTudo(); 
             } else {
-                // SE NÃO ESTIVER, FAZ LOGOUT E MOSTRA ERRO
                 alert("ACESSO NEGADO: O e-mail " + user.email + " não tem permissão.");
                 const msg = document.getElementById('msg-erro-login');
                 msg.innerText = "Acesso negado para: " + user.email;
@@ -262,43 +252,73 @@
     function toggleHistory() {
         const container = document.getElementById('lista-os-concluidas');
         const icon = document.getElementById('icon-history');
-        if(container.classList.contains('open')) {
-            container.classList.remove('open');
-            icon.classList.remove('fa-chevron-up');
-            icon.classList.add('fa-chevron-down');
-        } else {
-            container.classList.add('open');
-            icon.classList.remove('fa-chevron-down');
-            icon.classList.add('fa-chevron-up');
-        }
+        if(container.classList.contains('open')) { container.classList.remove('open'); icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        } else { container.classList.add('open'); icon.classList.replace('fa-chevron-down', 'fa-chevron-up'); }
     }
 
+    // --- FUNÇÃO CORRIGIDA ---
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
-            itensCadastrados = s.val() || {}; mapaBarcodes = {}; 
-            const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
-            let grupos = {}; produtosUnicos = {};
+            itensCadastrados = s.val() || {}; 
+            mapaBarcodes = {}; 
+            
+            // Filtro robusto para evitar chaves nulas
+            const ativos = Object.keys(itensCadastrados).filter(k => 
+                itensCadastrados[k] && itensCadastrados[k].status !== 'inativo'
+            );
+            
+            let grupos = {}; 
+            produtosUnicos = {};
 
             ativos.forEach(k => {
                 const item = itensCadastrados[k];
+                
+                // TRAVA 1: Se o item sumiu ou não tem nome, pula ele
+                if (!item || !item.nome) return;
+
                 if(item.barcode) mapaBarcodes[item.barcode] = k;
+                
+                // TRAVA 2: split seguro
                 let nomeLimpo = item.nome.split('(PATRIMONIO)')[0].split('ID ')[0].trim();
                 if(nomeLimpo.length < 3) nomeLimpo = item.nome;
-                if(!produtosUnicos[nomeLimpo]) produtosUnicos[nomeLimpo] = { tem_serial: item.tem_serial, barcode: item.barcode, keyOriginal: k };
+
+                if(!produtosUnicos[nomeLimpo]) {
+                    produtosUnicos[nomeLimpo] = { 
+                        tem_serial: item.tem_serial || false, 
+                        barcode: item.barcode || '', 
+                        keyOriginal: k 
+                    };
+                }
+
                 if(!grupos[nomeLimpo]) grupos[nomeLimpo] = { total: 0, itens: [] };
+                
                 grupos[nomeLimpo].total += (item.estoque_central || 0);
-                grupos[nomeLimpo].itens.push({ nomeOriginal: item.nome, qtd: item.estoque_central || 0 });
+                grupos[nomeLimpo].itens.push({ 
+                    nomeOriginal: item.nome, 
+                    qtd: item.estoque_central || 0 
+                });
             });
 
             const nomesOrdenados = Object.keys(produtosUnicos).sort();
             const optLimpo = nomesOrdenados.map(nome => `<option value="${nome}">${nome}</option>`).join('');
-            const elIn = document.getElementById('in-produto'); if(elIn) elIn.innerHTML = '<option value="">Selecione...</option>' + optLimpo;
-            const optTodos = ativos.map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
-            ['out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + optTodos; });
+            const elIn = document.getElementById('in-produto'); 
+            if(elIn) elIn.innerHTML = '<option value="">Selecione...</option>' + optLimpo;
+            
+            const optTodos = ativos.map(k => {
+                const it = itensCadastrados[k];
+                return it && it.nome ? `<option value="${k}">${it.nome}</option>` : '';
+            }).join('');
 
-            let h = ''; let contadorGrupo = 0;
+            ['out-produto', 'ajuste-produto'].forEach(id => { 
+                const el = document.getElementById(id); 
+                if(el) el.innerHTML = '<option value="">Selecione...</option>' + optTodos; 
+            });
+
+            let h = ''; 
+            let contadorGrupo = 0;
             for (let nomeGrupo in grupos) {
-                contadorGrupo++; const g = grupos[nomeGrupo];
+                contadorGrupo++; 
+                const g = grupos[nomeGrupo];
                 let subItensHTML = '';
                 g.itens.forEach(i => subItensHTML += `<div class="sub-item"><span>${i.nomeOriginal}</span> <span style="color:white">Qtd: ${i.qtd}</span></div>`);
                 h += `<div class="item-group"><div class="item-header" onclick="toggleDetalhes('${contadorGrupo}')"><div style="font-weight:bold; color:var(--text)">${nomeGrupo}</div><div style="display:flex; align-items:center; gap:10px;"><span class="badge-count">${g.total} un</span><i class="fa-solid fa-chevron-down" style="font-size:12px; color:var(--gold)"></i></div></div><div class="item-details" id="detalhe-${contadorGrupo}">${subItensHTML}</div></div>`;
@@ -306,46 +326,48 @@
             document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
         });
 
-        db.ref('tecnicos').on('value', s => { listaTecnicos = s.val() || {}; const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo'); document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); }); });
+        // Restante dos ouvintes mantidos
+        db.ref('tecnicos').on('value', s => { 
+            listaTecnicos = s.val() || {}; 
+            const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k] && listaTecnicos[k].status !== 'inativo'); 
+            const selectTecnico = document.getElementById('os-tecnico');
+            if(selectTecnico) selectTecnico.innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
+            ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { 
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
+            }); 
+        });
         
         db.ref('tipos_servico').on('value', s => { 
             const sv = s.val() || {}; 
-            const ativos = Object.keys(sv).filter(k => sv[k].ativo !== false); 
-            document.getElementById('os-servico-select').innerHTML = ativos.map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); 
+            const ativos = Object.keys(sv).filter(k => sv[k] && sv[k].ativo !== false); 
+            const elServico = document.getElementById('os-servico-select');
+            if(elServico) elServico.innerHTML = ativos.map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); 
             renderizarListaServicosAdmin(sv);
         });
 
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
 
+    // --- FUNÇÕES DE APOIO ---
     function cadastrarServico() {
         const nome = document.getElementById('novo-servico-nome').value.trim();
         if(!nome) return alert("Digite o nome do serviço.");
         db.ref('tipos_servico').push({ nome: nome, ativo: true });
         document.getElementById('novo-servico-nome').value = '';
-        alert("Serviço adicionado!");
     }
 
-    function toggleServico(id, statusAtual) {
-        db.ref('tipos_servico/'+id).update({ ativo: !statusAtual });
-    }
+    function toggleServico(id, statusAtual) { db.ref('tipos_servico/'+id).update({ ativo: !statusAtual }); }
 
     function renderizarListaServicosAdmin(sv) {
         const div = document.getElementById('lista-servicos-admin');
         if(!div) return;
-        
         div.innerHTML = Object.keys(sv).map(k => {
-            const s = sv[k];
+            const s = sv[k]; if(!s) return '';
             const isAtivo = s.ativo !== false;
-            const color = isAtivo ? 'var(--text)' : 'var(--danger)';
-            const statusText = isAtivo ? '' : '(INATIVO)';
-            const btnLabel = isAtivo ? 'INATIVAR' : 'ATIVAR';
-            const btnClass = isAtivo ? 'btn-red' : 'btn-green';
-            
-            return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;">
-                <span style="color:${color}; font-size:13px;">${s.nome} <small>${statusText}</small></span>
-                <button class="btn btn-sm ${btnClass}" style="width:auto; padding:5px 10px;" onclick="toggleServico('${k}', ${isAtivo})">${btnLabel}</button>
+            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;">
+                <span style="color:${isAtivo?'var(--text)':'var(--danger)'}; font-size:13px;">${s.nome} <small>${isAtivo?'':'(INATIVO)'}</small></span>
+                <button class="btn btn-sm ${isAtivo?'btn-red':'btn-green'}" style="width:auto; padding:5px 10px;" onclick="toggleServico('${k}', ${isAtivo})">${isAtivo?'INATIVAR':'ATIVAR'}</button>
             </div>`;
         }).join('');
     }
@@ -354,70 +376,43 @@
         const f = document.getElementById('filtro-tecnico-os').value; 
         const listaPendentes = document.getElementById('lista-os-pendentes');
         const listaConcluidas = document.getElementById('lista-os-concluidas');
-        listaPendentes.innerHTML = '';
-        listaConcluidas.innerHTML = '';
-        
+        listaPendentes.innerHTML = ''; listaConcluidas.innerHTML = '';
         let countConcluidas = 0;
 
         Object.keys(cacheDadosOS).reverse().forEach(id => {
-            const o = cacheDadosOS[id]; 
+            const o = cacheDadosOS[id]; if(!o) return;
             if (f && o.tecnico_id !== f) return;
-            
             const isPendente = o.status === 'pendente';
-            const statusClass = isPendente ? 'pendente' : 'concluido';
-            const iconStatus = isPendente ? '<i class="fa-solid fa-clock" style="color:var(--gold)"></i>' : '<i class="fa-solid fa-check-circle" style="color:var(--success)"></i>';
-            const displayBody = isPendente ? 'show' : ''; 
-
             const endCompleto = `${o.endereco || ''}, ${o.numero_casa || 'S/N'} - ${o.bairro || ''}, ${o.cidade || ''}`;
             const dataOS = o.data_manual ? o.data_manual.split('-').reverse().join('/') : new Date(o.data_registro).toLocaleDateString();
 
-            const htmlCard = `
-            <div class="os-card ${statusClass}">
+            const htmlCard = `<div class="os-card ${isPendente?'pendente':'concluido'}">
                 <div class="os-header" onclick="toggleOSCard('${id}')">
-                    <div>
-                        <div style="font-weight:bold; font-size:14px;">${o.cliente}</div>
-                        <div style="font-size:11px; color:var(--muted)">OS: ${o.os_numero} | ${iconStatus} ${isPendente ? 'Aberta' : 'Finalizada'}</div>
-                    </div>
+                    <div><div style="font-weight:bold; font-size:14px;">${o.cliente}</div>
+                    <div style="font-size:11px; color:var(--muted)">OS: ${o.os_numero} | ${isPendente?'Aberta':'Finalizada'}</div></div>
                     <div><i class="fa-solid fa-chevron-down" style="color:var(--muted)"></i></div>
                 </div>
-                
-                <div class="os-body ${displayBody}" id="os-body-${id}">
+                <div class="os-body ${isPendente?'show':''}" id="os-body-${id}">
                     <div class="os-info-row"><i class="fa-solid fa-location-dot"></i> <span>${endCompleto}</span></div>
                     <div class="os-info-row"><i class="fa-solid fa-phone"></i> <span>${o.telefone}</span></div>
                     <div class="os-info-row"><i class="fa-solid fa-calendar"></i> <span>Data: ${dataOS}</span></div>
                     <div class="os-info-row"><i class="fa-solid fa-user-gear"></i> <span>Téc: ${o.tecnico_nome}</span></div>
-                    
                     <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
                     <div style="font-size:12px; margin-bottom:10px; color:#aaa;">🛠️ Serviço: <b>${o.servico_tipo || 'Não informado'}</b></div>
+                    ${isPendente ? `<div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--gold); font-weight:bold;">Valor: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</span>
+                        <button class="btn btn-green btn-sm" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR O.S.</button>
+                    </div>` : `<div style="font-size:11px; color:var(--success)">✅ Baixada em: ${o.data_baixa}<br>💰 Valor Final: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</div>`}
+                </div></div>`;
 
-                    ${isPendente ? 
-                        `<div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:var(--gold); font-weight:bold;">Valor: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</span>
-                            <button class="btn btn-green btn-sm" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR O.S.</button>
-                        </div>` 
-                        : 
-                        `<div style="font-size:11px; color:var(--success)">
-                            ✅ Baixada em: ${o.data_baixa}<br>
-                            💰 Valor Final: R$ ${parseFloat(o.valor_pagar).toFixed(2)}
-                        </div>`
-                    }
-                </div>
-            </div>`;
-
-            if (isPendente) {
-                listaPendentes.innerHTML += htmlCard;
-            } else {
-                listaConcluidas.innerHTML += htmlCard;
-                countConcluidas++;
-            }
+            if (isPendente) listaPendentes.innerHTML += htmlCard;
+            else { listaConcluidas.innerHTML += htmlCard; countConcluidas++; }
         });
-
         document.getElementById('count-history').innerText = countConcluidas;
-        if (listaPendentes.innerHTML === '') listaPendentes.innerHTML = '<div style="text-align:center; padding:20px; color:#666">Nenhuma O.S. pendente.</div>';
     }
 
     function criarOS() {
-        const id = document.getElementById('os-edit-id').value, sel = document.getElementById('os-tecnico');
+        const sel = document.getElementById('os-tecnico');
         const d = { 
             os_numero: document.getElementById('os-numero').value, 
             data_manual: document.getElementById('os-data-manual').value, 
@@ -432,7 +427,8 @@
             tecnico_nome: sel.options[sel.selectedIndex]?.text || '', 
             servico_tipo: document.getElementById('os-servico-select').value, 
             valor_pagar: document.getElementById('os-valor-pagar').value || 0, 
-            status: 'pendente' 
+            status: 'pendente',
+            data_registro: firebase.database.ServerValue.TIMESTAMP
         };
         db.ref('os').push(d).then(() => { alert("Salvo!"); document.querySelectorAll('#view-os input').forEach(i=>i.value=''); });
     }
@@ -442,28 +438,18 @@
         const q = parseFloat(document.getElementById('in-qtd').value);
         if(!nomeProduto || q <= 0) return alert("Selecione um produto.");
         const configProduto = produtosUnicos[nomeProduto];
-        if(!configProduto) return alert("Erro no cadastro do produto.");
         
         if(configProduto.tem_serial) {
-            if(q > 1 && !confirm("Atenção: Você vai cadastrar " + q + " seriais um por um. Continuar?")) return;
             for(let i=0; i<q; i++) {
                 const sn = prompt(`Digite o SERIAL ${i+1}/${q} para: ${nomeProduto}`);
                 if(!sn) break; 
                 db.ref('itens').push({ nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`, barcode: configProduto.barcode || '', estoque_central: 1, tem_serial: true });
                 db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: nomeProduto, data: new Date().toLocaleString() });
             }
-            alert("✅ Seriais registrados com sucesso!");
-        } else {
-            if(configProduto.keyOriginal) {
-                if(confirm(`Confirma a entrada de ${q} unidades de ${nomeProduto}?`)) {
-                    db.ref(`itens/${configProduto.keyOriginal}/estoque_central`).transaction(atual => (atual||0) + q).then(() => {
-                          alert("✅ Estoque atualizado!");
-                          document.getElementById('in-qtd').value = 1; 
-                          document.getElementById('in-produto').value = ""; 
-                      });
-                }
-            } else { alert("Erro: Item original não encontrado."); }
+        } else if(configProduto.keyOriginal) {
+            db.ref(`itens/${configProduto.keyOriginal}/estoque_central`).transaction(atual => (atual||0) + q);
         }
+        alert("Processado!");
     }
 
     function abrirCamera(m) {
@@ -474,7 +460,7 @@
             fecharCamera();
             document.getElementById('display-'+m).innerText = "Lido: " + t;
             if(m==='cad') document.getElementById('cad-item-barcode').value = t;
-            else if (m==='in') { const k = mapaBarcodes[t]; if(k) { const item = itensCadastrados[k]; const nomeLimpo = item.nome.split('(PATRIMONIO)')[0].split('ID ')[0].trim(); document.getElementById('in-produto').value = nomeLimpo; } }
+            else if (m==='in') { const k = mapaBarcodes[t]; if(k) document.getElementById('in-produto').value = itensCadastrados[k].nome.split('(PATRIMONIO)')[0].trim(); }
             else { const k = mapaBarcodes[t]; if(k) document.getElementById(m+'-produto').value = k; }
         });
     }
@@ -482,16 +468,16 @@
     
     function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { const item = itensCadastrados[id]; if(item.tem_serial) { const sn = prompt("QUAL SERIAL ESTÁ SAINDO?"); if(!sn) return; db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
     function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
-    function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
+    function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o && o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
-    function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo'); const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; c.appendChild(d); }
-    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; const obs = document.getElementById('baixa-obs').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; for (let i = 0; i < ns.length; i++) { const q = parseFloat(qs[i].value); if(q > 0) { const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value); const item = itensCadastrados[itemKey]; let sn = ""; if(item.tem_serial) { sn = prompt(`S/N DO ITEM: ${ns[i].value}`); if(!sn) return alert("Cancelado: S/N obrigatório!"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; } } db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs }).then(()=>fecharModalBaixa()); }); }
-    function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
+    function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k] && itensCadastrados[k].status !== 'inativo'); const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; c.appendChild(d); }
+    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; const obs = document.getElementById('baixa-obs').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; for (let i = 0; i < ns.length; i++) { const q = parseFloat(qs[i].value); if(q > 0) { const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value); const item = itensCadastrados[itemKey]; let sn = ""; if(item && item.tem_serial) { sn = prompt(`S/N DO ITEM: ${ns[i].value}`); if(!sn) return alert("Cancelado: S/N obrigatório!"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; } } db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs }).then(()=>fecharModalBaixa()); }); }
+    function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o && o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
     function marcarPago(id) { if(prompt("Senha:") === SENHA_PADRAO) db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') }); }
     function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
     function rastrearSerial() { const sn = document.getElementById('busca-serial').value.trim(); if(!sn) return alert("Digite S/N"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).once('value', s => { const d = s.val(); if(d) alert(`S/N: ${sn}\nITEM: ${d.produto_nome}\nSTATUS: ${d.status}\nDATA: ${d.data}`); else alert("Não encontrado"); }); }
     function cadastrarItem() { const temS = document.getElementById('cad-tem-serial').checked; db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0, tem_serial: temS }).then(() => { alert("OK"); document.getElementById('cad-item-nome').value=''; }); }
-    function confirmarAjuste() { const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value; if(s !== SENHA_PADRAO || !m) return alert("Erro"); if(modoAjuste === 'descarte') { db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q); alert("OK"); } else { const t = document.getElementById('filtro-tecnico-estoque').value; if(!t) return alert("Selecione técnico"); db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q); db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q); alert("OK"); } fecharModalAjuste(); }
+    function confirmarAjuste() { const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value; if(s !== SENHA_PADRAO || !m) return alert("Erro"); if(modoAjuste === 'descarte') { db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q); } else { const t = document.getElementById('filtro-tecnico-estoque').value; db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q); db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q); } fecharModalAjuste(); }
     function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; document.getElementById('ajuste-titulo').innerText = m === 'descarte' ? 'Descarte' : 'Devolução'; }
     function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display='none'; }
     function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
