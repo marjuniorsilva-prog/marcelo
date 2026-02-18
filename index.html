@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.6 O.S. PRO</title>
+    <title>WV SERVIÇOS | V7.7 Organized</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -53,37 +53,42 @@
         .btn-red { background: var(--danger); color: white; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
-        /* ESTILO NOVO DOS CARDS DE O.S. */
+        /* CARDS DE O.S. */
         .os-card { border-radius: 12px; margin-bottom: 15px; overflow: hidden; border: 1px solid var(--border); background: var(--secondary); transition: 0.3s; }
-        
-        /* Cabeçalho do Card (Sempre visível) */
         .os-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
-        .os-header:hover { background: rgba(255,255,255,0.03); }
-        
-        /* Status Colorido na Borda Esquerda */
         .os-card.pendente { border-left: 5px solid var(--gold); }
-        .os-card.concluido { border-left: 5px solid var(--success); }
+        .os-card.concluido { border-left: 5px solid var(--success); opacity: 0.8; }
         
-        /* Corpo do Card (Detalhes) */
         .os-body { padding: 15px; border-top: 1px solid var(--border); display: none; background: #0f172a; }
         .os-body.show { display: block; animation: slideDown 0.3s; }
-        
         .os-info-row { display: flex; gap: 10px; margin-bottom: 8px; font-size: 13px; color: #ccc; align-items: center; }
         .os-info-row i { color: var(--accent); width: 20px; text-align: center; }
-        .os-label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; }
 
-        /* Checkbox Gigante (Cadastro) */
+        /* SEPARADOR DE HISTÓRICO */
+        .history-divider {
+            margin-top: 30px; margin-bottom: 15px;
+            background: #0f172a; border: 1px solid var(--border);
+            padding: 15px; border-radius: 8px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--muted); font-size: 12px; font-weight: bold; letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .history-divider:hover { border-color: var(--success); color: var(--text); }
+        .history-container { display: none; }
+        .history-container.open { display: block; animation: fadeIn 0.5s; }
+
+        /* OUTROS ESTILOS MANTIDOS */
         .big-checkbox-wrapper { display: flex; align-items: center; justify-content: space-between; background: #0f172a; border: 2px solid var(--border); padding: 20px; border-radius: 12px; cursor: pointer; margin: 20px 0; transition: 0.3s; }
         .big-checkbox-wrapper.checked { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
         .big-checkbox-wrapper input { display: none; }
         .big-checkbox-icon { font-size: 24px; color: var(--muted); }
         .big-checkbox-wrapper.checked .big-checkbox-icon { color: var(--success); }
-
-        /* Tabela Expansível (Estoque) */
+        
         .item-group { border-bottom: 1px solid var(--border); }
         .item-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; cursor: pointer; background: var(--secondary); }
         .item-details { display: none; background: #0f172a; padding: 10px; border-top: 1px solid var(--border); }
         .item-details.open { display: block; }
+        .sub-item { padding: 8px; border-bottom: 1px solid #333; font-size: 12px; color: #aaa; display: flex; justify-content: space-between; }
         .badge-count { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
 
         @media (max-width: 768px) {
@@ -121,7 +126,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">V7.6 - PRO</div>
+            <div class="mini-footer">V7.7 - Organized</div>
         </aside>
 
         <main>
@@ -140,43 +145,28 @@
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
                     <button class="btn btn-gold" style="margin-top:10px" onclick="criarOS()">FINALIZAR REGISTRO</button>
                 </div>
+                
                 <div class="panel"><label>Filtrar por Técnico</label><select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select></div>
-                <div id="lista-os"></div>
+                
+                <h4 style="margin: 20px 0 10px 0; color:var(--gold); border-bottom:1px solid var(--border); padding-bottom:5px;">EM ABERTO</h4>
+                <div id="lista-os-pendentes"></div>
+
+                <div class="history-divider" onclick="toggleHistory()">
+                    <span><i class="fa-solid fa-folder-open"></i> HISTÓRICO DE FINALIZADAS (<span id="count-history">0</span>)</span>
+                    <i class="fa-solid fa-chevron-down" id="icon-history"></i>
+                </div>
+
+                <div id="lista-os-concluidas" class="history-container"></div>
             </div>
 
             <div id="view-estoque" class="view-section">
-                <div class="panel">
-                    <h3>🏢 Central (Agrupado)</h3>
-                    <p style="font-size:11px; color:#aaa; margin-bottom:15px;">Itens agrupados. Clique em ▼ para ver os seriais.</p>
-                    <div id="lista-estoque-central"></div>
-                    <button class="btn btn-red btn-sm" style="margin-top:20px" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button>
-                </div>
-                <div class="panel">
-                    <h3>🚚 Mala Técnico</h3>
-                    <select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select>
-                    <div id="lista-estoque-volante" style="margin-top:10px;"></div>
-                    <button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('devolucao')">DEVOLVER PARA CENTRAL</button>
-                </div>
+                <div class="panel"><h3>🏢 Central (Agrupado)</h3><p style="font-size:11px; color:#aaa; margin-bottom:15px;">Clique em ▼ para ver os seriais.</p><div id="lista-estoque-central"></div><button class="btn btn-red btn-sm" style="margin-top:20px" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button></div>
+                <div class="panel"><h3>🚚 Mala Técnico</h3><select id="filtro-tecnico-estoque" onchange="carregarEstoqueVolante(this.value)"></select><div id="lista-estoque-volante" style="margin-top:10px;"></div><button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('devolucao')">DEVOLVER PARA CENTRAL</button></div>
             </div>
 
             <div id="view-movimentacao" class="view-section">
-                <div class="panel">
-                    <h3>📥 Entrada (Adicionar Novo)</h3>
-                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN BARCODE</button>
-                    <div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div>
-                    <label>Selecione o Produto</label><select id="in-produto"></select>
-                    <label>Quantidade</label><input type="number" id="in-qtd" value="1">
-                    <button class="btn btn-green" style="margin-top:10px" onclick="processarEntrada()">CONFIRMAR ENTRADA</button>
-                </div>
-                <div class="panel">
-                    <h3>📤 Saída Técnico</h3>
-                    <label>Técnico</label><select id="out-tecnico"></select>
-                    <button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirCamera('out')">📷 SCAN</button>
-                    <div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div>
-                    <label>Item</label><select id="out-produto"></select>
-                    <label>Qtd</label><input type="number" id="out-qtd" value="1">
-                    <button class="btn btn-blue" style="margin-top:10px" onclick="processarSaida()">TRANSFERIR</button>
-                </div>
+                <div class="panel"><h3>📥 Entrada</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN BARCODE</button><div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Produto</label><select id="in-produto"></select><label>Qtd</label><input type="number" id="in-qtd" value="1"><button class="btn btn-green" style="margin-top:10px" onclick="processarEntrada()">CONFIRMAR ENTRADA</button></div>
+                <div class="panel"><h3>📤 Saída Técnico</h3><label>Técnico</label><select id="out-tecnico"></select><button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirCamera('out')">📷 SCAN</button><div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="out-produto"></select><label>Qtd</label><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" style="margin-top:10px" onclick="processarSaida()">TRANSFERIR</button></div>
             </div>
 
             <div id="view-financeiro" class="view-section">
@@ -186,14 +176,7 @@
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
-                <div class="panel">
-                    <h3>📦 Novo Modelo de Item</h3>
-                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button>
-                    <input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px">
-                    <input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px">
-                    <div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()"><div><span class="big-checkbox-label">EXIGIR SERIAL / PATRIMÔNIO?</span><span class="big-checkbox-sub">Marque para Roteadores/ONUs</span></div><i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i><input type="checkbox" id="cad-tem-serial"></div>
-                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR MODELO</button>
-                </div>
+                <div class="panel"><h3>📦 Novo Modelo</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px"><input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px"><div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()"><div><span class="big-checkbox-label">EXIGIR SERIAL?</span><span class="big-checkbox-sub">Para Roteadores/ONUs</span></div><i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i><input type="checkbox" id="cad-tem-serial"></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
         </main>
@@ -227,14 +210,20 @@
 
     function toggleSerial() { const check = document.getElementById('cad-tem-serial'); const wrap = document.getElementById('wrapper-serial'); const icon = document.getElementById('icon-serial'); check.checked = !check.checked; if(check.checked) { wrap.classList.add('checked'); icon.className = 'fa-solid fa-toggle-on big-checkbox-icon'; } else { wrap.classList.remove('checked'); icon.className = 'fa-solid fa-toggle-off big-checkbox-icon'; } }
     function toggleDetalhes(id) { const el = document.getElementById('detalhe-' + id); if(el.classList.contains('open')) el.classList.remove('open'); else el.classList.add('open'); }
-    
-    // NOVA FUNÇÃO: Expandir Card de OS
-    function toggleOSCard(id) {
-        const body = document.getElementById('os-body-' + id);
-        if(body.classList.contains('show')) {
-            body.classList.remove('show');
+    function toggleOSCard(id) { const body = document.getElementById('os-body-' + id); if(body.classList.contains('show')) body.classList.remove('show'); else body.classList.add('show'); }
+
+    // NOVA FUNÇÃO: Expandir Histórico
+    function toggleHistory() {
+        const container = document.getElementById('lista-os-concluidas');
+        const icon = document.getElementById('icon-history');
+        if(container.classList.contains('open')) {
+            container.classList.remove('open');
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
         } else {
-            body.classList.add('show');
+            container.classList.add('open');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
         }
     }
 
@@ -276,11 +265,18 @@
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
 
-    // --- NOVA RENDERIZAÇÃO DE O.S. ---
+    // --- NOVA LÓGICA DE SEPARAÇÃO (ABERTO vs FECHADO) ---
     function renderizarListaOS() {
         const f = document.getElementById('filtro-tecnico-os').value; 
-        const lista = document.getElementById('lista-os'); lista.innerHTML = '';
         
+        // Limpa as duas áreas
+        const listaPendentes = document.getElementById('lista-os-pendentes');
+        const listaConcluidas = document.getElementById('lista-os-concluidas');
+        listaPendentes.innerHTML = '';
+        listaConcluidas.innerHTML = '';
+        
+        let countConcluidas = 0;
+
         Object.keys(cacheDadosOS).reverse().forEach(id => {
             const o = cacheDadosOS[id]; 
             if (f && o.tecnico_id !== f) return;
@@ -294,7 +290,7 @@
             const endCompleto = `${o.endereco || ''}, ${o.numero_casa || 'S/N'} - ${o.bairro || ''}, ${o.cidade || ''}`;
             const dataOS = o.data_manual ? o.data_manual.split('-').reverse().join('/') : new Date(o.data_registro).toLocaleDateString();
 
-            lista.innerHTML += `
+            const htmlCard = `
             <div class="os-card ${statusClass}">
                 <div class="os-header" onclick="toggleOSCard('${id}')">
                     <div>
@@ -325,7 +321,20 @@
                     }
                 </div>
             </div>`;
+
+            // JOGA PARA A LISTA CERTA
+            if (isPendente) {
+                listaPendentes.innerHTML += htmlCard;
+            } else {
+                listaConcluidas.innerHTML += htmlCard;
+                countConcluidas++;
+            }
         });
+
+        // Atualiza o contador de histórico
+        document.getElementById('count-history').innerText = countConcluidas;
+        
+        if (listaPendentes.innerHTML === '') listaPendentes.innerHTML = '<div style="text-align:center; padding:20px; color:#666">Nenhuma O.S. pendente.</div>';
     }
 
     function criarOS() {
@@ -350,7 +359,6 @@
     }
 
     function processarEntrada() { const nomeProduto = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(!nomeProduto || q <= 0) return alert("Selecione um produto."); const configProduto = produtosUnicos[nomeProduto]; if(!configProduto) return alert("Erro."); if(configProduto.tem_serial) { if(q > 1 && !confirm("Adicionar " + q + " itens com serial?")) return; for(let i=0; i<q; i++) { const sn = prompt(`Digite o SERIAL ${i+1}/${q} (${nomeProduto}):`); if(!sn) break; db.ref('itens').push({ nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`, barcode: configProduto.barcode || '', estoque_central: 1, tem_serial: true }); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: nomeProduto, data: new Date().toLocaleString() }); } alert("OK"); } else { if(configProduto.keyOriginal) { db.ref(`itens/${configProduto.keyOriginal}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); } else alert("Erro item original."); } }
-
     function abrirCamera(m) {
         document.getElementById('reader').style.display='block';
         if(scanner) scanner.clear();
@@ -365,7 +373,6 @@
     }
     function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none').catch(()=>{}); }
     
-    // Funções Padrão
     function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { const item = itensCadastrados[id]; if(item.tem_serial) { const sn = prompt("QUAL SERIAL ESTÁ SAINDO?"); if(!sn) return; db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
     function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
     function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
