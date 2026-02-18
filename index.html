@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.8 Admin Services</title>
+    <title>WV SERVIÇOS | V7.9 Google Auth</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -52,6 +52,7 @@
         .btn-gold { background: var(--gold); color: black; width: 100%; }
         .btn-green { background: var(--success); color: white; width: 100%; }
         .btn-red { background: var(--danger); color: white; width: 100%; }
+        .btn-white { background: white; color: #333; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
         /* CARDS DE O.S. */
@@ -109,10 +110,14 @@
 
     <div id="login-screen" style="position:fixed; inset:0; background:var(--primary); z-index:9999; display:flex; align-items:center; justify-content:center;">
         <div class="panel" style="width:90%; max-width:350px; text-align:center;">
-            <h2 style="color:var(--gold); margin-bottom:20px;">WV SERVIÇOS</h2>
-            <input type="email" id="email" placeholder="E-mail">
-            <input type="password" id="senha" placeholder="Senha">
-            <button class="btn btn-gold" style="margin-top:15px;" onclick="fazerLogin()">ENTRAR</button>
+            <h2 style="color:var(--gold); margin-bottom:10px;">WV SERVIÇOS</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:30px;">Acesso Restrito</p>
+            
+            <button class="btn btn-white" onclick="fazerLoginGoogle()" style="display:flex; align-items:center; justify-content:center; gap:10px;">
+                <i class="fa-brands fa-google" style="color:#DB4437;"></i> ENTRAR COM GOOGLE
+            </button>
+
+            <div id="msg-erro-login" style="margin-top:15px; color:var(--danger); font-size:12px; display:none;"></div>
         </div>
     </div>
 
@@ -127,7 +132,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">V7.8 - Admin Services</div>
+            <div class="mini-footer">V7.9 - Google Auth</div>
         </aside>
 
         <main>
@@ -202,13 +207,45 @@
     const db = firebase.database();
     const auth = firebase.auth();
     const SENHA_PADRAO = "1503";
+    
+    // --- LISTA DE E-MAILS AUTORIZADOS ---
+    const EMAILS_PERMITIDOS = [
+        "mar.junior.silva@gmail.com",
+        "washington7642@gmail.com"
+    ];
 
     let cacheDadosOS = {}, itensCadastrados = {}, listaTecnicos = {}, mapaBarcodes = {}, scanner, modoAjuste = '', osParaBaixar = null;
     let produtosUnicos = {};
 
-    function fazerLogin() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro!")); }
+    // --- NOVA FUNÇÃO DE LOGIN COM GOOGLE ---
+    function fazerLoginGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .catch((error) => {
+                alert("Erro ao fazer login: " + error.message);
+            });
+    }
+
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
-    auth.onAuthStateChanged(user => { if(user) { document.getElementById('login-screen').style.display='none'; document.getElementById('app-container').style.display='flex'; carregarTudo(); } });
+    
+    // --- MONITORAMENTO DE AUTH COM SEGURANÇA ---
+    auth.onAuthStateChanged(user => { 
+        if(user) { 
+            // VERIFICA SE O E-MAIL ESTÁ NA LISTA
+            if(EMAILS_PERMITIDOS.includes(user.email)) {
+                document.getElementById('login-screen').style.display='none'; 
+                document.getElementById('app-container').style.display='flex'; 
+                carregarTudo(); 
+            } else {
+                // SE NÃO ESTIVER, FAZ LOGOUT E MOSTRA ERRO
+                alert("ACESSO NEGADO: O e-mail " + user.email + " não tem permissão.");
+                const msg = document.getElementById('msg-erro-login');
+                msg.innerText = "Acesso negado para: " + user.email;
+                msg.style.display = 'block';
+                auth.signOut();
+            }
+        } 
+    });
     
     window.nav = function(id, btn) { 
         document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active')); 
@@ -271,22 +308,16 @@
 
         db.ref('tecnicos').on('value', s => { listaTecnicos = s.val() || {}; const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo'); document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); }); });
         
-        // --- ATUALIZAÇÃO: TIPOS DE SERVIÇO (Carregar + Admin List) ---
         db.ref('tipos_servico').on('value', s => { 
             const sv = s.val() || {}; 
-            
-            // 1. Filtra para o Select (Só Ativos)
-            const ativos = Object.keys(sv).filter(k => sv[k].ativo !== false); // Se undefined, considera true
+            const ativos = Object.keys(sv).filter(k => sv[k].ativo !== false); 
             document.getElementById('os-servico-select').innerHTML = ativos.map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); 
-            
-            // 2. Renderiza Lista no Admin (Todos com botão de inativar)
             renderizarListaServicosAdmin(sv);
         });
 
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
 
-    // --- NOVAS FUNÇÕES DE ADMINISTRAÇÃO DE SERVIÇOS ---
     function cadastrarServico() {
         const nome = document.getElementById('novo-servico-nome').value.trim();
         if(!nome) return alert("Digite o nome do serviço.");
@@ -296,7 +327,6 @@
     }
 
     function toggleServico(id, statusAtual) {
-        // Inverte o status (se era true vira false, e vice-versa)
         db.ref('tipos_servico/'+id).update({ ativo: !statusAtual });
     }
 
@@ -306,8 +336,8 @@
         
         div.innerHTML = Object.keys(sv).map(k => {
             const s = sv[k];
-            const isAtivo = s.ativo !== false; // Padrão é ativo se não existir o campo
-            const color = isAtivo ? 'var(--text)' : 'var(--danger)'; // Vermelho se inativo
+            const isAtivo = s.ativo !== false;
+            const color = isAtivo ? 'var(--text)' : 'var(--danger)';
             const statusText = isAtivo ? '' : '(INATIVO)';
             const btnLabel = isAtivo ? 'INATIVAR' : 'ATIVAR';
             const btnClass = isAtivo ? 'btn-red' : 'btn-green';
@@ -319,7 +349,6 @@
             </div>`;
         }).join('');
     }
-    // --------------------------------------------------------
 
     function renderizarListaOS() {
         const f = document.getElementById('filtro-tecnico-os').value; 
