@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.3 Clean</title>
+    <title>WV SERVIÇOS | V7.4 Smart</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,7 +23,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
         body { background: var(--primary); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR & NAV */
+        /* SIDEBAR */
         aside { width: 260px; background: var(--secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
         .brand { padding: 25px; text-align: center; color: var(--gold); font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid var(--border); }
         .menu-container { flex: 1; overflow-y: auto; }
@@ -32,7 +32,7 @@
         .menu-item.active i { color: var(--gold); }
         .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); text-align: center; }
 
-        /* MAIN CONTENT */
+        /* MAIN */
         main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
         .view-section { display: none; animation: fadeIn 0.3s; } 
         .view-section.active { display: block; }
@@ -46,7 +46,6 @@
         label { display: block; margin-bottom: 5px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #020617; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
 
-        /* BOTÕES */
         .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 12px; text-transform: uppercase; }
         .btn-blue { background: var(--accent); color: white; width: 100%; }
         .btn-gold { background: var(--gold); color: black; width: 100%; }
@@ -54,36 +53,41 @@
         .btn-red { background: var(--danger); color: white; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
-        /* CHECKBOX GIGANTE (NOVO) */
+        /* CHECKBOX GIGANTE DE SERIAL */
         .big-checkbox-wrapper {
             display: flex; align-items: center; justify-content: space-between;
-            background: #0f172a; border: 1px solid var(--border);
-            padding: 15px; border-radius: 8px; cursor: pointer; margin: 15px 0;
+            background: #0f172a; border: 2px solid var(--border);
+            padding: 20px; border-radius: 12px; cursor: pointer; margin: 20px 0;
             transition: 0.3s;
         }
-        .big-checkbox-wrapper:hover { border-color: var(--accent); }
-        .big-checkbox-wrapper.checked { background: rgba(16, 185, 129, 0.1); border-color: var(--success); }
-        .big-checkbox-wrapper input { display: none; } /* Esconde o original */
-        .big-checkbox-icon { font-size: 20px; color: var(--muted); }
+        .big-checkbox-wrapper:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+        .big-checkbox-wrapper.checked { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
+        .big-checkbox-wrapper input { display: none; }
+        .big-checkbox-icon { font-size: 24px; color: var(--muted); }
         .big-checkbox-wrapper.checked .big-checkbox-icon { color: var(--success); }
-        .big-checkbox-label { font-size: 14px; font-weight: bold; color: var(--text); }
+        .big-checkbox-label { font-size: 16px; font-weight: bold; color: var(--text); }
+        .big-checkbox-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 5px; }
 
-        /* TABELAS */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-        th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+        /* ESTILO DO ACCORDION (EXPANDIR) */
+        .item-group { border-bottom: 1px solid var(--border); }
+        .item-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; cursor: pointer; background: var(--secondary); transition: 0.2s; }
+        .item-header:hover { background: rgba(255,255,255,0.02); }
+        .item-details { display: none; background: #0f172a; padding: 10px; border-top: 1px solid var(--border); }
+        .item-details.open { display: block; animation: slideDown 0.3s; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .sub-item { padding: 8px; border-bottom: 1px solid #333; font-size: 12px; color: #aaa; display: flex; justify-content: space-between; }
+        .badge-count { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; height: auto; }
-            aside { width: 100%; height: auto; flex-direction: row; overflow-x: auto; position: sticky; top: 0; border-bottom: 1px solid var(--border); border-right: none; background: var(--secondary); }
+            aside { width: 100%; height: auto; flex-direction: row; overflow-x: auto; position: sticky; top: 0; background: var(--secondary); border-bottom: 1px solid var(--border); }
             .brand { display: none; }
-            .menu-container { display: flex; flex-direction: row; overflow-x: auto; }
-            .menu-item { padding: 12px; flex-direction: column; font-size: 9px; min-width: 75px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
-            .menu-item.active { border-bottom-color: var(--accent); background: none; }
+            .menu-container { display: flex; flex-direction: row; }
+            .menu-item { padding: 12px; flex-direction: column; min-width: 75px; text-align: center; border: none; font-size: 9px; }
+            .menu-item.active { color: var(--accent); border-bottom: 3px solid var(--accent); background: none; }
             .mini-footer { display: none; }
             main { padding: 15px; overflow: visible; }
-            table { min-width: 600px; }
-            .panel { overflow-x: auto; }
         }
 
         #reader { width: 100%; max-width: 400px; margin: 0 auto 20px; border-radius: 12px; overflow: hidden; display: none; border: 2px solid var(--accent); }
@@ -111,7 +115,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">V7.3 - Clean</div>
+            <div class="mini-footer">V7.4 - Smart</div>
         </aside>
 
         <main>
@@ -136,7 +140,9 @@
             <div id="view-estoque" class="view-section">
                 <div class="panel">
                     <h3>🏢 Central (Agrupado)</h3>
-                    <div id="lista-estoque-central"></div> <button class="btn btn-red btn-sm" style="margin-top:10px" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button>
+                    <p style="font-size:11px; color:#aaa; margin-bottom:15px;">Itens agrupados por nome. Clique na seta ▼ para ver os seriais.</p>
+                    <div id="lista-estoque-central"></div>
+                    <button class="btn btn-red btn-sm" style="margin-top:20px" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button>
                 </div>
                 <div class="panel">
                     <h3>🚚 Mala Técnico</h3>
@@ -165,30 +171,24 @@
                 <div class="panel">
                     <h3>📦 Novo Item</h3>
                     <button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button>
-                    <input type="text" id="cad-item-nome" placeholder="Nome Comercial" style="margin-top:10px">
+                    <input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px">
                     <input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px">
                     
                     <div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()">
-                        <span class="big-checkbox-label">EXIGIR SERIAL NESTE PRODUTO?</span>
+                        <div>
+                            <span class="big-checkbox-label">EXIGIR SERIAL / PATRIMÔNIO?</span>
+                            <span class="big-checkbox-sub">Marque para itens como Roteadores e ONUs</span>
+                        </div>
                         <i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i>
                         <input type="checkbox" id="cad-tem-serial">
                     </div>
 
-                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR ITEM NO SISTEMA</button>
+                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR ITEM</button>
                 </div>
 
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
         </main>
-    </div>
-
-    <div id="modal-seriais" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10002; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px; max-height: 80vh; overflow-y: auto;">
-            <h3 id="titulo-modal-seriais">Seriais Disponíveis</h3>
-            <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">Lista de S/N únicos para este produto:</p>
-            <div id="lista-seriais-conteudo"></div>
-            <button class="btn btn-sm" style="width:100%; margin-top:15px; background: #333;" onclick="document.getElementById('modal-seriais').style.display='none'">FECHAR</button>
-        </div>
     </div>
 
     <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;">
@@ -237,38 +237,85 @@
         fecharCamera(); 
     };
 
-    // FUNÇÃO PARA O BOTÃO GRANDE DE SERIAL
     function toggleSerial() {
         const check = document.getElementById('cad-tem-serial');
         const wrap = document.getElementById('wrapper-serial');
         const icon = document.getElementById('icon-serial');
         check.checked = !check.checked;
-        if(check.checked) {
-            wrap.classList.add('checked');
-            icon.className = 'fa-solid fa-toggle-on big-checkbox-icon';
-        } else {
-            wrap.classList.remove('checked');
-            icon.className = 'fa-solid fa-toggle-off big-checkbox-icon';
-        }
+        if(check.checked) { wrap.classList.add('checked'); icon.className = 'fa-solid fa-toggle-on big-checkbox-icon'; }
+        else { wrap.classList.remove('checked'); icon.className = 'fa-solid fa-toggle-off big-checkbox-icon'; }
     }
 
+    function toggleDetalhes(id) {
+        const el = document.getElementById('detalhe-' + id);
+        if(el.classList.contains('open')) el.classList.remove('open');
+        else el.classList.add('open');
+    }
+
+    // --- CARREGAMENTO INTELIGENTE (AGRUPAR) ---
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
             itensCadastrados = s.val() || {}; mapaBarcodes = {}; 
             const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
-            const opt = ativos.map(k => { if(itensCadastrados[k].barcode) mapaBarcodes[itensCadastrados[k].barcode] = k; return `<option value="${k}">${itensCadastrados[k].nome}</option>`; }).join('');
-            ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + opt; });
             
-            // TABELA LIMPA: NOME | QTD | BOTÃO VER SERIAIS
-            let h = '<table><tr><th>Item</th><th style="text-align:right">Qtd</th><th style="text-align:center">S/N</th></tr>'; 
+            // LÓGICA DE AGRUPAMENTO
+            let grupos = {};
+
             ativos.forEach(k => {
                 const item = itensCadastrados[k];
-                const btnSerial = item.tem_serial ? `<button class="btn-sm btn-blue" onclick="verSeriais('${item.nome}')"><i class="fa-solid fa-eye"></i></button>` : '-';
-                h += `<tr><td>${item.nome}</td><td style="text-align:right"><b>${item.estoque_central || 0}</b></td><td style="text-align:center">${btnSerial}</td></tr>`;
+                if(item.barcode) mapaBarcodes[item.barcode] = k;
+
+                // Tenta limpar o nome tirando "ID XXXXX" ou "(PATRIMONIO)..."
+                // Vamos pegar tudo antes de "ID" ou "(PATRIMONIO)"
+                let nomeLimpo = item.nome.split('(PATRIMONIO)')[0].split('ID ')[0].trim();
+                
+                // Se o nome ficou vazio (caso de erro), usa o original
+                if(nomeLimpo.length < 3) nomeLimpo = item.nome;
+
+                if(!grupos[nomeLimpo]) grupos[nomeLimpo] = { total: 0, itens: [] };
+                
+                grupos[nomeLimpo].total += (item.estoque_central || 0);
+                grupos[nomeLimpo].itens.push({
+                    nomeOriginal: item.nome,
+                    qtd: item.estoque_central || 0,
+                    key: k
+                });
             });
-            document.getElementById('lista-estoque-central').innerHTML = h + '</table>';
+
+            // GERA HTML DOS SELECTS
+            const opt = ativos.map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
+            ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + opt; });
+
+            // GERA HTML DA TABELA AGRUPADA
+            let h = '';
+            let contadorGrupo = 0;
+            for (let nomeGrupo in grupos) {
+                contadorGrupo++;
+                const g = grupos[nomeGrupo];
+                let subItensHTML = '';
+                g.itens.forEach(i => {
+                    subItensHTML += `<div class="sub-item"><span>${i.nomeOriginal}</span> <span style="color:white">Qtd: ${i.qtd}</span></div>`;
+                });
+
+                h += `
+                <div class="item-group">
+                    <div class="item-header" onclick="toggleDetalhes('${contadorGrupo}')">
+                        <div style="font-weight:bold; color:var(--text)">${nomeGrupo}</div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="badge-count">${g.total} un</span>
+                            <i class="fa-solid fa-chevron-down" style="font-size:12px; color:var(--gold)"></i>
+                        </div>
+                    </div>
+                    <div class="item-details" id="detalhe-${contadorGrupo}">
+                        ${subItensHTML}
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
         });
 
+        // RESTO DOS CARREGAMENTOS
         db.ref('tecnicos').on('value', s => {
             listaTecnicos = s.val() || {};
             const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo');
@@ -277,38 +324,6 @@
         });
         db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); });
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
-    }
-
-    // NOVA FUNÇÃO: VER SERIAIS NO MODAL
-    function verSeriais(nomeItem) {
-        document.getElementById('titulo-modal-seriais').innerText = nomeItem;
-        document.getElementById('lista-seriais-conteudo').innerHTML = '<p>Carregando...</p>';
-        document.getElementById('modal-seriais').style.display = 'flex';
-
-        db.ref('seriais_rastro').once('value', s => {
-            const todos = s.val() || {};
-            let html = '<ul style="list-style:none; padding:0;">';
-            let count = 0;
-            
-            Object.keys(todos).forEach(snKey => {
-                const dado = todos[snKey];
-                // Filtra pelo nome do produto e se está no estoque central
-                if(dado.produto_nome === nomeItem && dado.status === 'ESTOQUE CENTRAL') {
-                    // Recupera o S/N original trocando _ por caractere especial se precisar, mas aqui só exibimos
-                    const displaySN = snKey.replace(/_/g, '.'); // Exemplo simples, melhor usar o dado real se tivesse salvo
-                    html += `<li style="padding:5px; border-bottom:1px solid #333; font-size:12px; display:flex; justify-content:space-between;">
-                        <span>${displaySN}</span>
-                        <span style="color:var(--success)">Disp.</span>
-                    </li>`;
-                    count++;
-                }
-            });
-            html += '</ul>';
-            
-            if(count === 0) html = '<p style="text-align:center; padding:20px;">Nenhum serial disponível na Central.</p>';
-            
-            document.getElementById('lista-seriais-conteudo').innerHTML = html;
-        });
     }
 
     function abrirCamera(m) {
@@ -347,7 +362,7 @@
         if(item.tem_serial) {
              const sn = prompt("DIGITE O SERIAL (S/N):");
              if(!sn) return;
-             // Lógica: Serial entra na central
+             // Se o item JÁ TEM serial no nome, não faz nada. Se for novo item limpo, registra rastro.
              db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: item.nome, data: new Date().toLocaleString() });
         }
         db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); 
@@ -358,7 +373,6 @@
         if(item.tem_serial) {
             const sn = prompt("QUAL SERIAL ESTÁ SAINDO?");
             if(!sn) return;
-             // Lógica: Serial vai para mala
             db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() });
         }
         db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); 
@@ -390,7 +404,6 @@
                     if(item.tem_serial) {
                         sn = prompt(`S/N DO ITEM: ${ns[i].value}`);
                         if(!sn) return alert("Cancelado: S/N obrigatório!");
-                         // Lógica: Serial instalado
                         db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() });
                     }
                     db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); 
@@ -403,6 +416,7 @@
         }); 
     }
     
+    // Funções Auxiliares
     function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
     function marcarPago(id) { if(prompt("Senha:") === SENHA_PADRAO) db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') }); }
     function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
