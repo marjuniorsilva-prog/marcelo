@@ -358,7 +358,60 @@
         db.ref('os').push(d).then(() => { alert("Salvo!"); document.querySelectorAll('#view-os input').forEach(i=>i.value=''); });
     }
 
-    function processarEntrada() { const nomeProduto = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(!nomeProduto || q <= 0) return alert("Selecione um produto."); const configProduto = produtosUnicos[nomeProduto]; if(!configProduto) return alert("Erro."); if(configProduto.tem_serial) { if(q > 1 && !confirm("Adicionar " + q + " itens com serial?")) return; for(let i=0; i<q; i++) { const sn = prompt(`Digite o SERIAL ${i+1}/${q} (${nomeProduto}):`); if(!sn) break; db.ref('itens').push({ nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`, barcode: configProduto.barcode || '', estoque_central: 1, tem_serial: true }); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: nomeProduto, data: new Date().toLocaleString() }); } alert("OK"); } else { if(configProduto.keyOriginal) { db.ref(`itens/${configProduto.keyOriginal}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); } else alert("Erro item original."); } }
+    // --- FUNÇÃO DE ENTRADA ATUALIZADA (COM CONFIRMAÇÃO DE MASSA) ---
+    function processarEntrada() {
+        const nomeProduto = document.getElementById('in-produto').value;
+        const q = parseFloat(document.getElementById('in-qtd').value);
+        
+        if(!nomeProduto || q <= 0) return alert("Selecione um produto.");
+        
+        const configProduto = produtosUnicos[nomeProduto];
+        if(!configProduto) return alert("Erro no cadastro do produto.");
+        
+        // SE FOR SERIAL (1 POR 1)
+        if(configProduto.tem_serial) {
+            if(q > 1 && !confirm("Atenção: Você vai cadastrar " + q + " seriais um por um. Continuar?")) return;
+            
+            for(let i=0; i<q; i++) {
+                const sn = prompt(`Digite o SERIAL ${i+1}/${q} para: ${nomeProduto}`);
+                if(!sn) break; // Se cancelar no meio, para
+                
+                db.ref('itens').push({
+                    nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`,
+                    barcode: configProduto.barcode || '',
+                    estoque_central: 1,
+                    tem_serial: true
+                });
+                
+                db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({
+                    status: 'ESTOQUE CENTRAL',
+                    produto_nome: nomeProduto,
+                    data: new Date().toLocaleString()
+                });
+            }
+            alert("✅ Seriais registrados com sucesso!");
+            
+        } else {
+            // SE NÃO TIVER SERIAL (MASSA)
+            if(configProduto.keyOriginal) {
+                // AQUI: Confirma a quantidade total de uma vez
+                if(confirm(`Confirma a entrada de ${q} unidades de ${nomeProduto}?`)) {
+                    
+                    db.ref(`itens/${configProduto.keyOriginal}/estoque_central`)
+                      .transaction(atual => (atual||0) + q)
+                      .then(() => {
+                          alert("✅ Estoque atualizado!");
+                          // Limpa para o próximo
+                          document.getElementById('in-qtd').value = 1; 
+                          document.getElementById('in-produto').value = ""; 
+                      });
+                }
+            } else {
+                alert("Erro: Item original não encontrado.");
+            }
+        }
+    }
+
     function abrirCamera(m) {
         document.getElementById('reader').style.display='block';
         if(scanner) scanner.clear();
