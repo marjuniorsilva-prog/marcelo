@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.4 Smart</title>
+    <title>WV SERVIÇOS | V7.6 O.S. PRO</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -53,30 +53,37 @@
         .btn-red { background: var(--danger); color: white; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
-        /* CHECKBOX GIGANTE DE SERIAL */
-        .big-checkbox-wrapper {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #0f172a; border: 2px solid var(--border);
-            padding: 20px; border-radius: 12px; cursor: pointer; margin: 20px 0;
-            transition: 0.3s;
-        }
-        .big-checkbox-wrapper:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+        /* ESTILO NOVO DOS CARDS DE O.S. */
+        .os-card { border-radius: 12px; margin-bottom: 15px; overflow: hidden; border: 1px solid var(--border); background: var(--secondary); transition: 0.3s; }
+        
+        /* Cabeçalho do Card (Sempre visível) */
+        .os-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
+        .os-header:hover { background: rgba(255,255,255,0.03); }
+        
+        /* Status Colorido na Borda Esquerda */
+        .os-card.pendente { border-left: 5px solid var(--gold); }
+        .os-card.concluido { border-left: 5px solid var(--success); }
+        
+        /* Corpo do Card (Detalhes) */
+        .os-body { padding: 15px; border-top: 1px solid var(--border); display: none; background: #0f172a; }
+        .os-body.show { display: block; animation: slideDown 0.3s; }
+        
+        .os-info-row { display: flex; gap: 10px; margin-bottom: 8px; font-size: 13px; color: #ccc; align-items: center; }
+        .os-info-row i { color: var(--accent); width: 20px; text-align: center; }
+        .os-label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: bold; display: block; }
+
+        /* Checkbox Gigante (Cadastro) */
+        .big-checkbox-wrapper { display: flex; align-items: center; justify-content: space-between; background: #0f172a; border: 2px solid var(--border); padding: 20px; border-radius: 12px; cursor: pointer; margin: 20px 0; transition: 0.3s; }
         .big-checkbox-wrapper.checked { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
         .big-checkbox-wrapper input { display: none; }
         .big-checkbox-icon { font-size: 24px; color: var(--muted); }
         .big-checkbox-wrapper.checked .big-checkbox-icon { color: var(--success); }
-        .big-checkbox-label { font-size: 16px; font-weight: bold; color: var(--text); }
-        .big-checkbox-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 5px; }
 
-        /* ESTILO DO ACCORDION (EXPANDIR) */
+        /* Tabela Expansível (Estoque) */
         .item-group { border-bottom: 1px solid var(--border); }
-        .item-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; cursor: pointer; background: var(--secondary); transition: 0.2s; }
-        .item-header:hover { background: rgba(255,255,255,0.02); }
+        .item-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; cursor: pointer; background: var(--secondary); }
         .item-details { display: none; background: #0f172a; padding: 10px; border-top: 1px solid var(--border); }
-        .item-details.open { display: block; animation: slideDown 0.3s; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .sub-item { padding: 8px; border-bottom: 1px solid #333; font-size: 12px; color: #aaa; display: flex; justify-content: space-between; }
+        .item-details.open { display: block; }
         .badge-count { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
 
         @media (max-width: 768px) {
@@ -89,7 +96,6 @@
             .mini-footer { display: none; }
             main { padding: 15px; overflow: visible; }
         }
-
         #reader { width: 100%; max-width: 400px; margin: 0 auto 20px; border-radius: 12px; overflow: hidden; display: none; border: 2px solid var(--accent); }
     </style>
 </head>
@@ -115,7 +121,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">V7.4 - Smart</div>
+            <div class="mini-footer">V7.6 - PRO</div>
         </aside>
 
         <main>
@@ -129,6 +135,7 @@
                     <div class="row"><div class="col"><label>Cliente</label><input type="text" id="os-cliente"></div><div class="col"><label>Telefone</label><input type="tel" id="os-telefone"></div></div>
                     <div class="row"><div class="col"><label>CEP</label><input type="text" id="os-cep" onblur="buscarCep()"></div><div class="col"><label>Nº Casa</label><input type="text" id="os-numero-casa"></div></div>
                     <div class="row"><div class="col"><label>Endereço</label><input type="text" id="os-endereco"></div></div>
+                    <div class="row"><div class="col"><label>Bairro</label><input type="text" id="os-bairro"></div><div class="col"><label>Cidade</label><input type="text" id="os-cidade"></div></div>
                     <div class="row"><div class="col"><label>Técnico</label><select id="os-tecnico"></select></div><div class="col"><label>Serviço</label><select id="os-servico-select"></select></div></div>
                     <label>Valor Mão de Obra</label><input type="number" id="os-valor-pagar">
                     <button class="btn btn-gold" style="margin-top:10px" onclick="criarOS()">FINALIZAR REGISTRO</button>
@@ -140,7 +147,7 @@
             <div id="view-estoque" class="view-section">
                 <div class="panel">
                     <h3>🏢 Central (Agrupado)</h3>
-                    <p style="font-size:11px; color:#aaa; margin-bottom:15px;">Itens agrupados por nome. Clique na seta ▼ para ver os seriais.</p>
+                    <p style="font-size:11px; color:#aaa; margin-bottom:15px;">Itens agrupados. Clique em ▼ para ver os seriais.</p>
                     <div id="lista-estoque-central"></div>
                     <button class="btn btn-red btn-sm" style="margin-top:20px" onclick="abrirModalAjuste('descarte')">DESCARTAR MATERIAL</button>
                 </div>
@@ -153,67 +160,47 @@
             </div>
 
             <div id="view-movimentacao" class="view-section">
-                <div class="panel"><h3>📥 Entrada</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN</button><div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="in-produto"></select><label>Qtd</label><input type="number" id="in-qtd" value="1"><button class="btn btn-green" style="margin-top:10px" onclick="processarEntrada()">CONFIRMAR</button></div>
-                <div class="panel"><h3>📤 Saída Técnico</h3><label>Técnico</label><select id="out-tecnico"></select><button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirCamera('out')">📷 SCAN</button><div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div><label>Item</label><select id="out-produto"></select><label>Qtd</label><input type="number" id="out-qtd" value="1"><button class="btn btn-blue" style="margin-top:10px" onclick="processarSaida()">TRANSFERIR</button></div>
+                <div class="panel">
+                    <h3>📥 Entrada (Adicionar Novo)</h3>
+                    <button class="btn btn-gold btn-sm" onclick="abrirCamera('in')">📷 SCAN BARCODE</button>
+                    <div id="display-in" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div>
+                    <label>Selecione o Produto</label><select id="in-produto"></select>
+                    <label>Quantidade</label><input type="number" id="in-qtd" value="1">
+                    <button class="btn btn-green" style="margin-top:10px" onclick="processarEntrada()">CONFIRMAR ENTRADA</button>
+                </div>
+                <div class="panel">
+                    <h3>📤 Saída Técnico</h3>
+                    <label>Técnico</label><select id="out-tecnico"></select>
+                    <button class="btn btn-gold btn-sm" style="margin-top:10px" onclick="abrirCamera('out')">📷 SCAN</button>
+                    <div id="display-out" style="margin:10px 0; color:var(--accent); font-weight:bold;"></div>
+                    <label>Item</label><select id="out-produto"></select>
+                    <label>Qtd</label><input type="number" id="out-qtd" value="1">
+                    <button class="btn btn-blue" style="margin-top:10px" onclick="processarSaida()">TRANSFERIR</button>
+                </div>
             </div>
 
             <div id="view-financeiro" class="view-section">
-                <div class="row">
-                    <div class="col panel" style="text-align:center">Aberto<br><b id="fin-total-pendente" style="color:var(--danger)">0</b></div>
-                    <div class="col panel" style="text-align:center">Pago<br><b id="fin-total-pago" style="color:var(--success)">0</b></div>
-                </div>
+                <div class="row"><div class="col panel" style="text-align:center">Aberto<br><b id="fin-total-pendente" style="color:var(--danger)">0</b></div><div class="col panel" style="text-align:center">Pago<br><b id="fin-total-pago" style="color:var(--success)">0</b></div></div>
                 <div class="panel"><h3>💰 Repasses</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr style="margin:20px 0; border-color:var(--border)"><div id="historico-financeiro"></div></div>
             </div>
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
-                
                 <div class="panel">
-                    <h3>📦 Novo Item</h3>
+                    <h3>📦 Novo Modelo de Item</h3>
                     <button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button>
                     <input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px">
                     <input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px">
-                    
-                    <div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()">
-                        <div>
-                            <span class="big-checkbox-label">EXIGIR SERIAL / PATRIMÔNIO?</span>
-                            <span class="big-checkbox-sub">Marque para itens como Roteadores e ONUs</span>
-                        </div>
-                        <i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i>
-                        <input type="checkbox" id="cad-tem-serial">
-                    </div>
-
-                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR ITEM</button>
+                    <div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()"><div><span class="big-checkbox-label">EXIGIR SERIAL / PATRIMÔNIO?</span><span class="big-checkbox-sub">Marque para Roteadores/ONUs</span></div><i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i><input type="checkbox" id="cad-tem-serial"></div>
+                    <button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR MODELO</button>
                 </div>
-
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
         </main>
     </div>
 
-    <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px;">
-            <h3>✅ Concluir O.S.</h3>
-            <div id="baixa-itens-container"></div>
-            <button class="btn btn-blue btn-sm" onclick="adicionarLinhaBaixa()">+ MATERIAL</button>
-            <textarea id="baixa-obs" placeholder="Obs..." style="margin-top:10px"></textarea>
-            <input type="number" id="baixa-valor-final" placeholder="Valor Final">
-            <button class="btn btn-green" style="margin-top:10px" onclick="confirmarBaixa()">CONCLUIR</button>
-            <button class="btn btn-sm" style="width:100%; background: #333;" onclick="fecharModalBaixa()">VOLTAR</button>
-        </div>
-    </div>
-
-    <div id="modal-ajuste" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10000; align-items:center; justify-content:center; padding:20px;">
-        <div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--gold);">
-            <h3 id="ajuste-titulo">Ajuste</h3>
-            <select id="ajuste-produto"></select>
-            <input type="number" id="ajuste-qtd" placeholder="Qtd">
-            <textarea id="ajuste-motivo" placeholder="Motivo"></textarea>
-            <input type="password" id="ajuste-senha" placeholder="Senha">
-            <button class="btn btn-gold" style="margin-top:10px" onclick="confirmarAjuste()">CONFIRMAR</button>
-            <button class="btn btn-sm" style="width:100%; background: #333;" onclick="fecharModalAjuste()">CANCELAR</button>
-        </div>
-    </div>
+    <div id="modal-baixa" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10001; align-items:center; justify-content:center; padding:20px;"><div class="panel" style="width:100%; max-width:400px;"><h3>✅ Concluir O.S.</h3><div id="baixa-itens-container"></div><button class="btn btn-blue btn-sm" onclick="adicionarLinhaBaixa()">+ MATERIAL</button><textarea id="baixa-obs" placeholder="Obs..." style="margin-top:10px"></textarea><input type="number" id="baixa-valor-final" placeholder="Valor Final"><button class="btn btn-green" style="margin-top:10px" onclick="confirmarBaixa()">CONCLUIR</button><button class="btn btn-sm" style="width:100%; background: #333;" onclick="fecharModalBaixa()">VOLTAR</button></div></div>
+    <div id="modal-ajuste" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; z-index:10000; align-items:center; justify-content:center; padding:20px;"><div class="panel" style="width:100%; max-width:400px; border: 1px solid var(--gold);"><h3 id="ajuste-titulo">Ajuste</h3><select id="ajuste-produto"></select><input type="number" id="ajuste-qtd" placeholder="Qtd"><textarea id="ajuste-motivo" placeholder="Motivo"></textarea><input type="password" id="ajuste-senha" placeholder="Senha"><button class="btn btn-gold" style="margin-top:10px" onclick="confirmarAjuste()">CONFIRMAR</button><button class="btn btn-sm" style="width:100%; background: #333;" onclick="fecharModalAjuste()">CANCELAR</button></div></div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyBS8t51QON29MIYDkkcZETchdevHFVMzCk", authDomain: "internet-f2434.firebaseapp.com", databaseURL: "https://internet-f2434-default-rtdb.firebaseio.com", projectId: "internet-f2434", storageBucket: "internet-f2434.firebasestorage.app", messagingSenderId: "506788174813", appId: "1:506788174813:web:50e05b1a194d70f412b434" };
@@ -223,6 +210,7 @@
     const SENHA_PADRAO = "1503";
 
     let cacheDadosOS = {}, itensCadastrados = {}, listaTecnicos = {}, mapaBarcodes = {}, scanner, modoAjuste = '', osParaBaixar = null;
+    let produtosUnicos = {};
 
     function fazerLogin() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Erro!")); }
     function fazerLogout() { auth.signOut().then(() => location.reload()); }
@@ -237,94 +225,131 @@
         fecharCamera(); 
     };
 
-    function toggleSerial() {
-        const check = document.getElementById('cad-tem-serial');
-        const wrap = document.getElementById('wrapper-serial');
-        const icon = document.getElementById('icon-serial');
-        check.checked = !check.checked;
-        if(check.checked) { wrap.classList.add('checked'); icon.className = 'fa-solid fa-toggle-on big-checkbox-icon'; }
-        else { wrap.classList.remove('checked'); icon.className = 'fa-solid fa-toggle-off big-checkbox-icon'; }
+    function toggleSerial() { const check = document.getElementById('cad-tem-serial'); const wrap = document.getElementById('wrapper-serial'); const icon = document.getElementById('icon-serial'); check.checked = !check.checked; if(check.checked) { wrap.classList.add('checked'); icon.className = 'fa-solid fa-toggle-on big-checkbox-icon'; } else { wrap.classList.remove('checked'); icon.className = 'fa-solid fa-toggle-off big-checkbox-icon'; } }
+    function toggleDetalhes(id) { const el = document.getElementById('detalhe-' + id); if(el.classList.contains('open')) el.classList.remove('open'); else el.classList.add('open'); }
+    
+    // NOVA FUNÇÃO: Expandir Card de OS
+    function toggleOSCard(id) {
+        const body = document.getElementById('os-body-' + id);
+        if(body.classList.contains('show')) {
+            body.classList.remove('show');
+        } else {
+            body.classList.add('show');
+        }
     }
 
-    function toggleDetalhes(id) {
-        const el = document.getElementById('detalhe-' + id);
-        if(el.classList.contains('open')) el.classList.remove('open');
-        else el.classList.add('open');
-    }
-
-    // --- CARREGAMENTO INTELIGENTE (AGRUPAR) ---
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
             itensCadastrados = s.val() || {}; mapaBarcodes = {}; 
             const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
-            
-            // LÓGICA DE AGRUPAMENTO
-            let grupos = {};
+            let grupos = {}; produtosUnicos = {};
 
             ativos.forEach(k => {
                 const item = itensCadastrados[k];
                 if(item.barcode) mapaBarcodes[item.barcode] = k;
-
-                // Tenta limpar o nome tirando "ID XXXXX" ou "(PATRIMONIO)..."
-                // Vamos pegar tudo antes de "ID" ou "(PATRIMONIO)"
                 let nomeLimpo = item.nome.split('(PATRIMONIO)')[0].split('ID ')[0].trim();
-                
-                // Se o nome ficou vazio (caso de erro), usa o original
                 if(nomeLimpo.length < 3) nomeLimpo = item.nome;
-
+                if(!produtosUnicos[nomeLimpo]) produtosUnicos[nomeLimpo] = { tem_serial: item.tem_serial, barcode: item.barcode, keyOriginal: k };
                 if(!grupos[nomeLimpo]) grupos[nomeLimpo] = { total: 0, itens: [] };
-                
                 grupos[nomeLimpo].total += (item.estoque_central || 0);
-                grupos[nomeLimpo].itens.push({
-                    nomeOriginal: item.nome,
-                    qtd: item.estoque_central || 0,
-                    key: k
-                });
+                grupos[nomeLimpo].itens.push({ nomeOriginal: item.nome, qtd: item.estoque_central || 0 });
             });
 
-            // GERA HTML DOS SELECTS
-            const opt = ativos.map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
-            ['in-produto', 'out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + opt; });
+            const nomesOrdenados = Object.keys(produtosUnicos).sort();
+            const optLimpo = nomesOrdenados.map(nome => `<option value="${nome}">${nome}</option>`).join('');
+            const elIn = document.getElementById('in-produto'); if(elIn) elIn.innerHTML = '<option value="">Selecione...</option>' + optLimpo;
+            const optTodos = ativos.map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
+            ['out-produto', 'ajuste-produto'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">Selecione...</option>' + optTodos; });
 
-            // GERA HTML DA TABELA AGRUPADA
-            let h = '';
-            let contadorGrupo = 0;
+            let h = ''; let contadorGrupo = 0;
             for (let nomeGrupo in grupos) {
-                contadorGrupo++;
-                const g = grupos[nomeGrupo];
+                contadorGrupo++; const g = grupos[nomeGrupo];
                 let subItensHTML = '';
-                g.itens.forEach(i => {
-                    subItensHTML += `<div class="sub-item"><span>${i.nomeOriginal}</span> <span style="color:white">Qtd: ${i.qtd}</span></div>`;
-                });
-
-                h += `
-                <div class="item-group">
-                    <div class="item-header" onclick="toggleDetalhes('${contadorGrupo}')">
-                        <div style="font-weight:bold; color:var(--text)">${nomeGrupo}</div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span class="badge-count">${g.total} un</span>
-                            <i class="fa-solid fa-chevron-down" style="font-size:12px; color:var(--gold)"></i>
-                        </div>
-                    </div>
-                    <div class="item-details" id="detalhe-${contadorGrupo}">
-                        ${subItensHTML}
-                    </div>
-                </div>`;
+                g.itens.forEach(i => subItensHTML += `<div class="sub-item"><span>${i.nomeOriginal}</span> <span style="color:white">Qtd: ${i.qtd}</span></div>`);
+                h += `<div class="item-group"><div class="item-header" onclick="toggleDetalhes('${contadorGrupo}')"><div style="font-weight:bold; color:var(--text)">${nomeGrupo}</div><div style="display:flex; align-items:center; gap:10px;"><span class="badge-count">${g.total} un</span><i class="fa-solid fa-chevron-down" style="font-size:12px; color:var(--gold)"></i></div></div><div class="item-details" id="detalhe-${contadorGrupo}">${subItensHTML}</div></div>`;
             }
-
             document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
         });
 
-        // RESTO DOS CARREGAMENTOS
-        db.ref('tecnicos').on('value', s => {
-            listaTecnicos = s.val() || {};
-            const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo');
-            document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join('');
-            ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); });
-        });
+        db.ref('tecnicos').on('value', s => { listaTecnicos = s.val() || {}; const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k].status !== 'inativo'); document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); }); });
         db.ref('tipos_servico').on('value', s => { const sv = s.val() || {}; document.getElementById('os-servico-select').innerHTML = Object.keys(sv).map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); });
         db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
     }
+
+    // --- NOVA RENDERIZAÇÃO DE O.S. ---
+    function renderizarListaOS() {
+        const f = document.getElementById('filtro-tecnico-os').value; 
+        const lista = document.getElementById('lista-os'); lista.innerHTML = '';
+        
+        Object.keys(cacheDadosOS).reverse().forEach(id => {
+            const o = cacheDadosOS[id]; 
+            if (f && o.tecnico_id !== f) return;
+            
+            const isPendente = o.status === 'pendente';
+            const statusClass = isPendente ? 'pendente' : 'concluido';
+            const iconStatus = isPendente ? '<i class="fa-solid fa-clock" style="color:var(--gold)"></i>' : '<i class="fa-solid fa-check-circle" style="color:var(--success)"></i>';
+            const displayBody = isPendente ? 'show' : ''; // Pendente já abre aberto
+
+            // Formatação de endereço
+            const endCompleto = `${o.endereco || ''}, ${o.numero_casa || 'S/N'} - ${o.bairro || ''}, ${o.cidade || ''}`;
+            const dataOS = o.data_manual ? o.data_manual.split('-').reverse().join('/') : new Date(o.data_registro).toLocaleDateString();
+
+            lista.innerHTML += `
+            <div class="os-card ${statusClass}">
+                <div class="os-header" onclick="toggleOSCard('${id}')">
+                    <div>
+                        <div style="font-weight:bold; font-size:14px;">${o.cliente}</div>
+                        <div style="font-size:11px; color:var(--muted)">OS: ${o.os_numero} | ${iconStatus} ${isPendente ? 'Aberta' : 'Finalizada'}</div>
+                    </div>
+                    <div><i class="fa-solid fa-chevron-down" style="color:var(--muted)"></i></div>
+                </div>
+                
+                <div class="os-body ${displayBody}" id="os-body-${id}">
+                    <div class="os-info-row"><i class="fa-solid fa-location-dot"></i> <span>${endCompleto}</span></div>
+                    <div class="os-info-row"><i class="fa-solid fa-phone"></i> <span>${o.telefone}</span></div>
+                    <div class="os-info-row"><i class="fa-solid fa-calendar"></i> <span>Data: ${dataOS}</span></div>
+                    <div class="os-info-row"><i class="fa-solid fa-user-gear"></i> <span>Téc: ${o.tecnico_nome}</span></div>
+                    
+                    <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+                    
+                    ${isPendente ? 
+                        `<div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:var(--gold); font-weight:bold;">Valor: R$ ${parseFloat(o.valor_pagar).toFixed(2)}</span>
+                            <button class="btn btn-green btn-sm" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR O.S.</button>
+                        </div>` 
+                        : 
+                        `<div style="font-size:11px; color:var(--success)">
+                            ✅ Baixada em: ${o.data_baixa}<br>
+                            💰 Valor Final: R$ ${parseFloat(o.valor_pagar).toFixed(2)}
+                        </div>`
+                    }
+                </div>
+            </div>`;
+        });
+    }
+
+    function criarOS() {
+        const id = document.getElementById('os-edit-id').value, sel = document.getElementById('os-tecnico');
+        const d = { 
+            os_numero: document.getElementById('os-numero').value, 
+            data_manual: document.getElementById('os-data-manual').value, 
+            cliente: document.getElementById('os-cliente').value, 
+            telefone: document.getElementById('os-telefone').value, 
+            cep: document.getElementById('os-cep').value, 
+            numero_casa: document.getElementById('os-numero-casa').value, 
+            bairro: document.getElementById('os-bairro').value, 
+            cidade: document.getElementById('os-cidade').value, 
+            endereco: document.getElementById('os-endereco').value, 
+            tecnico_id: sel.value, 
+            tecnico_nome: sel.options[sel.selectedIndex]?.text || '', 
+            servico_tipo: document.getElementById('os-servico-select').value, 
+            valor_pagar: document.getElementById('os-valor-pagar').value || 0, 
+            status: 'pendente' 
+        };
+        db.ref('os').push(d).then(() => { alert("Salvo!"); document.querySelectorAll('#view-os input').forEach(i=>i.value=''); });
+    }
+
+    function processarEntrada() { const nomeProduto = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(!nomeProduto || q <= 0) return alert("Selecione um produto."); const configProduto = produtosUnicos[nomeProduto]; if(!configProduto) return alert("Erro."); if(configProduto.tem_serial) { if(q > 1 && !confirm("Adicionar " + q + " itens com serial?")) return; for(let i=0; i<q; i++) { const sn = prompt(`Digite o SERIAL ${i+1}/${q} (${nomeProduto}):`); if(!sn) break; db.ref('itens').push({ nome: `${nomeProduto} (PATRIMONIO) ID ${sn}`, barcode: configProduto.barcode || '', estoque_central: 1, tem_serial: true }); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: nomeProduto, data: new Date().toLocaleString() }); } alert("OK"); } else { if(configProduto.keyOriginal) { db.ref(`itens/${configProduto.keyOriginal}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); } else alert("Erro item original."); } }
 
     function abrirCamera(m) {
         document.getElementById('reader').style.display='block';
@@ -334,89 +359,19 @@
             fecharCamera();
             document.getElementById('display-'+m).innerText = "Lido: " + t;
             if(m==='cad') document.getElementById('cad-item-barcode').value = t;
+            else if (m==='in') { const k = mapaBarcodes[t]; if(k) { const item = itensCadastrados[k]; const nomeLimpo = item.nome.split('(PATRIMONIO)')[0].split('ID ')[0].trim(); document.getElementById('in-produto').value = nomeLimpo; } }
             else { const k = mapaBarcodes[t]; if(k) document.getElementById(m+'-produto').value = k; }
         });
     }
     function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none').catch(()=>{}); }
-
-    function criarOS() {
-        const id = document.getElementById('os-edit-id').value, sel = document.getElementById('os-tecnico');
-        const d = { os_numero: document.getElementById('os-numero').value, data_manual: document.getElementById('os-data-manual').value, cliente: document.getElementById('os-cliente').value, telefone: document.getElementById('os-telefone').value, cep: document.getElementById('os-cep').value, numero_casa: document.getElementById('os-numero-casa').value, bairro: document.getElementById('os-bairro').value, cidade: document.getElementById('os-cidade').value, endereco: document.getElementById('os-endereco').value, tecnico_id: sel.value, tecnico_nome: sel.options[sel.selectedIndex]?.text || '', servico_tipo: document.getElementById('os-servico-select').value, valor_pagar: document.getElementById('os-valor-pagar').value || 0, status: 'pendente' };
-        db.ref('os').push(d).then(() => { alert("Salvo!"); document.querySelectorAll('#view-os input').forEach(i=>i.value=''); });
-    }
-
-    function renderizarListaOS() {
-        const f = document.getElementById('filtro-tecnico-os').value; 
-        const lista = document.getElementById('lista-os'); lista.innerHTML = '';
-        Object.keys(cacheDadosOS).reverse().forEach(id => {
-            const o = cacheDadosOS[id]; if (f && o.tecnico_id !== f) return;
-            lista.innerHTML += `<div class="panel" style="border-left: 5px solid ${o.status === 'pendente' ? 'var(--gold)' : 'var(--success)'}">
-                <b>${o.cliente}</b> (OS: ${o.os_numero})<br><small>${o.tecnico_nome} - R$ ${o.valor_pagar}</small><br>
-                ${o.status === 'pendente' ? `<button class="btn btn-green btn-sm" onclick="abrirModalBaixa('${id}',${o.valor_pagar})">BAIXAR</button>` : '✅'}
-            </div>`;
-        });
-    }
-
-    function processarEntrada() { const id = document.getElementById('in-produto').value, q = parseFloat(document.getElementById('in-qtd').value); if(id && q) {
-        const item = itensCadastrados[id];
-        if(item.tem_serial) {
-             const sn = prompt("DIGITE O SERIAL (S/N):");
-             if(!sn) return;
-             // Se o item JÁ TEM serial no nome, não faz nada. Se for novo item limpo, registra rastro.
-             db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'ESTOQUE CENTRAL', produto_nome: item.nome, data: new Date().toLocaleString() });
-        }
-        db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) + q).then(()=>alert("OK")); 
-    }}
-
-    function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { 
-        const item = itensCadastrados[id];
-        if(item.tem_serial) {
-            const sn = prompt("QUAL SERIAL ESTÁ SAINDO?");
-            if(!sn) return;
-            db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() });
-        }
-        db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); 
-    }}
-
+    
+    // Funções Padrão
+    function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { const item = itensCadastrados[id]; if(item.tem_serial) { const sn = prompt("QUAL SERIAL ESTÁ SAINDO?"); if(!sn) return; db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
     function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
     function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
-    
-    function adicionarLinhaBaixa() { 
-        const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; 
-        const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo');
-        const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); 
-        d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; 
-        c.appendChild(d); 
-    }
-    
-    function confirmarBaixa() { 
-        const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; 
-        const obs = document.getElementById('baixa-obs').value;
-        db.ref('os/'+osParaBaixar).once('value', snap => { 
-            const o = snap.val(); let g = ""; 
-            for (let i = 0; i < ns.length; i++) {
-                const q = parseFloat(qs[i].value);
-                if(q > 0) {
-                    const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value);
-                    const item = itensCadastrados[itemKey];
-                    let sn = "";
-                    if(item.tem_serial) {
-                        sn = prompt(`S/N DO ITEM: ${ns[i].value}`);
-                        if(!sn) return alert("Cancelado: S/N obrigatório!");
-                        db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() });
-                    }
-                    db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); 
-                    g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; 
-                }
-            }
-            db.ref('os/'+osParaBaixar).update({ 
-                status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs 
-            }).then(()=>fecharModalBaixa()); 
-        }); 
-    }
-    
-    // Funções Auxiliares
+    function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k].status !== 'inativo'); const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; c.appendChild(d); }
+    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; const obs = document.getElementById('baixa-obs').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; for (let i = 0; i < ns.length; i++) { const q = parseFloat(qs[i].value); if(q > 0) { const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value); const item = itensCadastrados[itemKey]; let sn = ""; if(item.tem_serial) { sn = prompt(`S/N DO ITEM: ${ns[i].value}`); if(!sn) return alert("Cancelado: S/N obrigatório!"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; } } db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs }).then(()=>fecharModalBaixa()); }); }
     function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
     function marcarPago(id) { if(prompt("Senha:") === SENHA_PADRAO) db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') }); }
     function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
@@ -425,6 +380,8 @@
     function confirmarAjuste() { const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value; if(s !== SENHA_PADRAO || !m) return alert("Erro"); if(modoAjuste === 'descarte') { db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q); alert("OK"); } else { const t = document.getElementById('filtro-tecnico-estoque').value; if(!t) return alert("Selecione técnico"); db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q); db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q); alert("OK"); } fecharModalAjuste(); }
     function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; document.getElementById('ajuste-titulo').innerText = m === 'descarte' ? 'Descarte' : 'Devolução'; }
     function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display='none'; }
+    function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
+    function fecharModalBaixa() { document.getElementById('modal-baixa').style.display = 'none'; }
 </script>
 </body>
 </html>
