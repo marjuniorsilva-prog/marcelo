@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WV SERVIÇOS | V7.9 Google Auth (Corrigida)</title>
+    <title>WV SERVIÇOS | V8.0 Filtro Mensal</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,7 +23,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
         body { background: var(--primary); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR */
         aside { width: 260px; background: var(--secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
         .brand { padding: 25px; text-align: center; color: var(--gold); font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid var(--border); }
         .menu-container { flex: 1; overflow-y: auto; }
@@ -32,7 +31,6 @@
         .menu-item.active i { color: var(--gold); }
         .mini-footer { padding: 15px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); text-align: center; }
 
-        /* MAIN */
         main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
         .view-section { display: none; animation: fadeIn 0.3s; } 
         .view-section.active { display: block; }
@@ -55,7 +53,6 @@
         .btn-white { background: white; color: #333; width: 100%; }
         .btn-sm { padding: 6px 10px; font-size: 10px; width: auto; }
 
-        /* CARDS DE O.S. */
         .os-card { border-radius: 12px; margin-bottom: 15px; overflow: hidden; border: 1px solid var(--border); background: var(--secondary); transition: 0.3s; }
         .os-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
         .os-card.pendente { border-left: 5px solid var(--gold); }
@@ -110,11 +107,9 @@
         <div class="panel" style="width:90%; max-width:350px; text-align:center;">
             <h2 style="color:var(--gold); margin-bottom:10px;">WV SERVIÇOS</h2>
             <p style="color:#aaa; font-size:12px; margin-bottom:30px;">Acesso Restrito</p>
-            
             <button class="btn btn-white" onclick="fazerLoginGoogle()" style="display:flex; align-items:center; justify-content:center; gap:10px;">
                 <i class="fa-brands fa-google" style="color:#DB4437;"></i> ENTRAR COM GOOGLE
             </button>
-
             <div id="msg-erro-login" style="margin-top:15px; color:var(--danger); font-size:12px; display:none;"></div>
         </div>
     </div>
@@ -130,7 +125,7 @@
                 <div class="menu-item" onclick="nav('admin', this)"><i class="fa-solid fa-gears"></i> ADM</div>
                 <div class="menu-item" onclick="fazerLogout()" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Sair</div>
             </div>
-            <div class="mini-footer">V7.9 - Google Auth</div>
+            <div class="mini-footer">V8.0 - Filtro Mensal</div>
         </aside>
 
         <main>
@@ -150,7 +145,18 @@
                     <button class="btn btn-gold" style="margin-top:10px" onclick="criarOS()">FINALIZAR REGISTRO</button>
                 </div>
                 
-                <div class="panel"><label>Filtrar por Técnico</label><select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select></div>
+                <div class="panel">
+                    <div class="row">
+                        <div class="col">
+                            <label>Filtrar Técnico</label>
+                            <select id="filtro-tecnico-os" onchange="renderizarListaOS()"></select>
+                        </div>
+                        <div class="col">
+                            <label>Mês de Consulta</label>
+                            <input type="month" id="filtro-data-os" onchange="renderizarListaOS()">
+                        </div>
+                    </div>
+                </div>
                 
                 <h4 style="margin: 20px 0 10px 0; color:var(--gold); border-bottom:1px solid var(--border); padding-bottom:5px;">EM ABERTO</h4>
                 <div id="lista-os-pendentes"></div>
@@ -159,7 +165,6 @@
                     <span><i class="fa-solid fa-folder-open"></i> HISTÓRICO DE FINALIZADAS (<span id="count-history">0</span>)</span>
                     <i class="fa-solid fa-chevron-down" id="icon-history"></i>
                 </div>
-
                 <div id="lista-os-concluidas" class="history-container"></div>
             </div>
 
@@ -174,13 +179,25 @@
             </div>
 
             <div id="view-financeiro" class="view-section">
-                <div class="row"><div class="col panel" style="text-align:center">Aberto<br><b id="fin-total-pendente" style="color:var(--danger)">0</b></div><div class="col panel" style="text-align:center">Pago<br><b id="fin-total-pago" style="color:var(--success)">0</b></div></div>
-                <div class="panel"><h3>💰 Repasses</h3><select id="fin-filtro-tecnico" onchange="listarFinanceiroTecnico(this.value)"></select><div id="detalhes-financeiro"></div><hr style="margin:20px 0; border-color:var(--border)"><div id="historico-financeiro"></div></div>
+                <div class="panel">
+                    <label>Mês de Referência (Financeiro)</label>
+                    <input type="month" id="fin-filtro-data" onchange="atualizarFinanceiroPorMes()">
+                </div>
+                <div class="row">
+                    <div class="col panel" style="text-align:center">Aberto no Mês<br><b id="fin-total-pendente" style="color:var(--danger)">0</b></div>
+                    <div class="col panel" style="text-align:center">Pago no Mês<br><b id="fin-total-pago" style="color:var(--success)">0</b></div>
+                </div>
+                <div class="panel">
+                    <h3>💰 Repasses</h3>
+                    <select id="fin-filtro-tecnico" onchange="atualizarFinanceiroPorMes()"></select>
+                    <div id="detalhes-financeiro"></div>
+                    <hr style="margin:20px 0; border-color:var(--border)">
+                    <div id="historico-financeiro"></div>
+                </div>
             </div>
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
-                
                 <div class="panel">
                     <h3>🛠️ Serviços (O.S.)</h3>
                     <div class="row">
@@ -189,7 +206,6 @@
                     </div>
                     <div id="lista-servicos-admin" style="margin-top:10px; max-height: 200px; overflow-y: auto;"></div>
                 </div>
-
                 <div class="panel"><h3>📦 Novo Modelo</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px"><input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px"><div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()"><div><span class="big-checkbox-label">EXIGIR SERIAL?</span><span class="big-checkbox-sub">Para Roteadores/ONUs</span></div><i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i><input type="checkbox" id="cad-tem-serial"></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
@@ -226,16 +242,21 @@
             if(EMAILS_PERMITIDOS.includes(user.email)) {
                 document.getElementById('login-screen').style.display='none'; 
                 document.getElementById('app-container').style.display='flex'; 
+                definirMesAtualNosFiltros();
                 carregarTudo(); 
             } else {
-                alert("ACESSO NEGADO: O e-mail " + user.email + " não tem permissão.");
-                const msg = document.getElementById('msg-erro-login');
-                msg.innerText = "Acesso negado para: " + user.email;
-                msg.style.display = 'block';
+                alert("ACESSO NEGADO.");
                 auth.signOut();
             }
         } 
     });
+
+    function definirMesAtualNosFiltros() {
+        const agora = new Date();
+        const anoMes = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('filtro-data-os').value = anoMes;
+        document.getElementById('fin-filtro-data').value = anoMes;
+    }
     
     window.nav = function(id, btn) { 
         document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active')); 
@@ -256,63 +277,30 @@
         } else { container.classList.add('open'); icon.classList.replace('fa-chevron-down', 'fa-chevron-up'); }
     }
 
-    // --- FUNÇÃO CORRIGIDA ---
     function carregarTudo() {
         db.ref('itens').on('value', s => { 
             itensCadastrados = s.val() || {}; 
             mapaBarcodes = {}; 
-            
-            // Filtro robusto para evitar chaves nulas
-            const ativos = Object.keys(itensCadastrados).filter(k => 
-                itensCadastrados[k] && itensCadastrados[k].status !== 'inativo'
-            );
-            
+            const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k] && itensCadastrados[k].status !== 'inativo');
             let grupos = {}; 
             produtosUnicos = {};
 
             ativos.forEach(k => {
                 const item = itensCadastrados[k];
-                
-                // TRAVA 1: Se o item sumiu ou não tem nome, pula ele
                 if (!item || !item.nome) return;
-
                 if(item.barcode) mapaBarcodes[item.barcode] = k;
-                
-                // TRAVA 2: split seguro
                 let nomeLimpo = item.nome.split('(PATRIMONIO)')[0].split('ID ')[0].trim();
-                if(nomeLimpo.length < 3) nomeLimpo = item.nome;
-
-                if(!produtosUnicos[nomeLimpo]) {
-                    produtosUnicos[nomeLimpo] = { 
-                        tem_serial: item.tem_serial || false, 
-                        barcode: item.barcode || '', 
-                        keyOriginal: k 
-                    };
-                }
-
+                if(!produtosUnicos[nomeLimpo]) produtosUnicos[nomeLimpo] = { tem_serial: item.tem_serial || false, barcode: item.barcode || '', keyOriginal: k };
                 if(!grupos[nomeLimpo]) grupos[nomeLimpo] = { total: 0, itens: [] };
-                
                 grupos[nomeLimpo].total += (item.estoque_central || 0);
-                grupos[nomeLimpo].itens.push({ 
-                    nomeOriginal: item.nome, 
-                    qtd: item.estoque_central || 0 
-                });
+                grupos[nomeLimpo].itens.push({ nomeOriginal: item.nome, qtd: item.estoque_central || 0 });
             });
 
             const nomesOrdenados = Object.keys(produtosUnicos).sort();
             const optLimpo = nomesOrdenados.map(nome => `<option value="${nome}">${nome}</option>`).join('');
-            const elIn = document.getElementById('in-produto'); 
-            if(elIn) elIn.innerHTML = '<option value="">Selecione...</option>' + optLimpo;
-            
-            const optTodos = ativos.map(k => {
-                const it = itensCadastrados[k];
-                return it && it.nome ? `<option value="${k}">${it.nome}</option>` : '';
-            }).join('');
-
-            ['out-produto', 'ajuste-produto'].forEach(id => { 
-                const el = document.getElementById(id); 
-                if(el) el.innerHTML = '<option value="">Selecione...</option>' + optTodos; 
-            });
+            document.getElementById('in-produto').innerHTML = '<option value="">Selecione...</option>' + optLimpo;
+            const optTodos = ativos.map(k => `<option value="${k}">${itensCadastrados[k].nome}</option>`).join('');
+            ['out-produto', 'ajuste-produto'].forEach(id => { document.getElementById(id).innerHTML = '<option value="">Selecione...</option>' + optTodos; });
 
             let h = ''; 
             let contadorGrupo = 0;
@@ -326,54 +314,32 @@
             document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
         });
 
-        // Restante dos ouvintes mantidos
         db.ref('tecnicos').on('value', s => { 
             listaTecnicos = s.val() || {}; 
             const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k] && listaTecnicos[k].status !== 'inativo'); 
-            const selectTecnico = document.getElementById('os-tecnico');
-            if(selectTecnico) selectTecnico.innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
+            document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
             ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { 
-                const el = document.getElementById(id);
-                if(el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
+                document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
             }); 
         });
         
         db.ref('tipos_servico').on('value', s => { 
             const sv = s.val() || {}; 
             const ativos = Object.keys(sv).filter(k => sv[k] && sv[k].ativo !== false); 
-            const elServico = document.getElementById('os-servico-select');
-            if(elServico) elServico.innerHTML = ativos.map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); 
+            document.getElementById('os-servico-select').innerHTML = ativos.map(k => `<option value="${sv[k].nome}">${sv[k].nome}</option>`).join(''); 
             renderizarListaServicosAdmin(sv);
         });
 
-        db.ref('os').on('value', s => { cacheDadosOS = s.val() || {}; renderizarListaOS(); calcularFinanceiroGeral(); });
-    }
-
-    // --- FUNÇÕES DE APOIO ---
-    function cadastrarServico() {
-        const nome = document.getElementById('novo-servico-nome').value.trim();
-        if(!nome) return alert("Digite o nome do serviço.");
-        db.ref('tipos_servico').push({ nome: nome, ativo: true });
-        document.getElementById('novo-servico-nome').value = '';
-    }
-
-    function toggleServico(id, statusAtual) { db.ref('tipos_servico/'+id).update({ ativo: !statusAtual }); }
-
-    function renderizarListaServicosAdmin(sv) {
-        const div = document.getElementById('lista-servicos-admin');
-        if(!div) return;
-        div.innerHTML = Object.keys(sv).map(k => {
-            const s = sv[k]; if(!s) return '';
-            const isAtivo = s.ativo !== false;
-            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;">
-                <span style="color:${isAtivo?'var(--text)':'var(--danger)'}; font-size:13px;">${s.nome} <small>${isAtivo?'':'(INATIVO)'}</small></span>
-                <button class="btn btn-sm ${isAtivo?'btn-red':'btn-green'}" style="width:auto; padding:5px 10px;" onclick="toggleServico('${k}', ${isAtivo})">${isAtivo?'INATIVAR':'ATIVAR'}</button>
-            </div>`;
-        }).join('');
+        db.ref('os').on('value', s => { 
+            cacheDadosOS = s.val() || {}; 
+            renderizarListaOS(); 
+            atualizarFinanceiroPorMes(); 
+        });
     }
 
     function renderizarListaOS() {
-        const f = document.getElementById('filtro-tecnico-os').value; 
+        const fTec = document.getElementById('filtro-tecnico-os').value;
+        const fData = document.getElementById('filtro-data-os').value;
         const listaPendentes = document.getElementById('lista-os-pendentes');
         const listaConcluidas = document.getElementById('lista-os-concluidas');
         listaPendentes.innerHTML = ''; listaConcluidas.innerHTML = '';
@@ -381,10 +347,14 @@
 
         Object.keys(cacheDadosOS).reverse().forEach(id => {
             const o = cacheDadosOS[id]; if(!o) return;
-            if (f && o.tecnico_id !== f) return;
+            const dataOS = o.data_manual ? o.data_manual.substring(0, 7) : new Date(o.data_registro).toISOString().substring(0, 7);
+            
+            if (fData && dataOS !== fData) return;
+            if (fTec && o.tecnico_id !== fTec) return;
+
             const isPendente = o.status === 'pendente';
             const endCompleto = `${o.endereco || ''}, ${o.numero_casa || 'S/N'} - ${o.bairro || ''}, ${o.cidade || ''}`;
-            const dataOS = o.data_manual ? o.data_manual.split('-').reverse().join('/') : new Date(o.data_registro).toLocaleDateString();
+            const dataExibicao = o.data_manual ? o.data_manual.split('-').reverse().join('/') : new Date(o.data_registro).toLocaleDateString();
 
             const htmlCard = `<div class="os-card ${isPendente?'pendente':'concluido'}">
                 <div class="os-header" onclick="toggleOSCard('${id}')">
@@ -395,7 +365,7 @@
                 <div class="os-body ${isPendente?'show':''}" id="os-body-${id}">
                     <div class="os-info-row"><i class="fa-solid fa-location-dot"></i> <span>${endCompleto}</span></div>
                     <div class="os-info-row"><i class="fa-solid fa-phone"></i> <span>${o.telefone}</span></div>
-                    <div class="os-info-row"><i class="fa-solid fa-calendar"></i> <span>Data: ${dataOS}</span></div>
+                    <div class="os-info-row"><i class="fa-solid fa-calendar"></i> <span>Data: ${dataExibicao}</span></div>
                     <div class="os-info-row"><i class="fa-solid fa-user-gear"></i> <span>Téc: ${o.tecnico_nome}</span></div>
                     <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
                     <div style="font-size:12px; margin-bottom:10px; color:#aaa;">🛠️ Serviço: <b>${o.servico_tipo || 'Não informado'}</b></div>
@@ -411,6 +381,35 @@
         document.getElementById('count-history').innerText = countConcluidas;
     }
 
+    function atualizarFinanceiroPorMes() {
+        const tecId = document.getElementById('fin-filtro-tecnico').value;
+        const fData = document.getElementById('fin-filtro-data').value;
+        let p = 0, pg = 0;
+        let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>';
+
+        Object.keys(cacheDadosOS).forEach(id => {
+            const o = cacheDadosOS[id];
+            if(!o || o.status !== 'concluido') return;
+            const dataOS = o.data_manual ? o.data_manual.substring(0, 7) : new Date(o.data_registro).toISOString().substring(0, 7);
+            if (fData && dataOS !== fData) return;
+
+            if (!tecId || o.tecnico_id === tecId) {
+                const valor = parseFloat(o.valor_pagar) || 0;
+                if(o.pago) pg += valor; else p += valor;
+                if (tecId) {
+                    const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${valor.toFixed(2)}<br><small>${o.data_baixa}</small>`;
+                    if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`;
+                    else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`;
+                }
+            }
+        });
+        document.getElementById('fin-total-pendente').innerText = p.toFixed(2);
+        document.getElementById('fin-total-pago').innerText = pg.toFixed(2);
+        document.getElementById('detalhes-financeiro').innerHTML = tecId ? hp : '<p style="text-align:center; color:var(--muted)">Selecione um técnico</p>';
+        document.getElementById('historico-financeiro').innerHTML = tecId ? hpg : '';
+    }
+
+    // --- MANTIDAS FUNÇÕES DE LOGICA ---
     function criarOS() {
         const sel = document.getElementById('os-tecnico');
         const d = { 
@@ -438,7 +437,6 @@
         const q = parseFloat(document.getElementById('in-qtd').value);
         if(!nomeProduto || q <= 0) return alert("Selecione um produto.");
         const configProduto = produtosUnicos[nomeProduto];
-        
         if(configProduto.tem_serial) {
             for(let i=0; i<q; i++) {
                 const sn = prompt(`Digite o SERIAL ${i+1}/${q} para: ${nomeProduto}`);
@@ -465,23 +463,23 @@
         });
     }
     function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none').catch(()=>{}); }
-    
     function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { const item = itensCadastrados[id]; if(item.tem_serial) { const sn = prompt("QUAL SERIAL ESTÁ SAINDO?"); if(!sn) return; db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
     function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
-    function calcularFinanceiroGeral() { let p = 0, pg = 0; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o && o.status === 'concluido') { if(o.pago) pg += parseFloat(o.valor_pagar); else p += parseFloat(o.valor_pagar); } }); document.getElementById('fin-total-pendente').innerText = p.toFixed(2); document.getElementById('fin-total-pago').innerText = pg.toFixed(2); }
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
     function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k] && itensCadastrados[k].status !== 'inativo'); const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; c.appendChild(d); }
-    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value; const obs = document.getElementById('baixa-obs').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; for (let i = 0; i < ns.length; i++) { const q = parseFloat(qs[i].value); if(q > 0) { const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value); const item = itensCadastrados[itemKey]; let sn = ""; if(item && item.tem_serial) { sn = prompt(`S/N DO ITEM: ${ns[i].value}`); if(!sn) return alert("Cancelado: S/N obrigatório!"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; } } db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs }).then(()=>fecharModalBaixa()); }); }
-    function listarFinanceiroTecnico(tecId) { let hp = '<h4>Pendente</h4>', hpg = '<h4>Pago</h4>'; Object.keys(cacheDadosOS).forEach(id => { const o = cacheDadosOS[id]; if(o && o.tecnico_id === tecId && o.status === 'concluido') { const card = `<div class="panel" style="padding:10px; margin-bottom:5px;"><b>${o.cliente}</b>: R$ ${parseFloat(o.valor_pagar).toFixed(2)}<br><small>${o.data_baixa}</small>`; if(!o.pago) hp += card + `<button class="btn btn-green btn-sm" style="margin-top:5px" onclick="marcarPago('${id}')">BAIXAR</button></div>`; else hpg += card + `<br><small style="color:var(--success)">Pago em: ${o.data_pagamento}</small></div>`; } }); document.getElementById('detalhes-financeiro').innerHTML = hp; document.getElementById('historico-financeiro').innerHTML = hpg; }
+    function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value, obs = document.getElementById('baixa-obs').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; for (let i = 0; i < ns.length; i++) { const q = parseFloat(qs[i].value); if(q > 0) { const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value); const item = itensCadastrados[itemKey]; let sn = ""; if(item && item.tem_serial) { sn = prompt(`S/N DO ITEM: ${ns[i].value}`); if(!sn) return alert("Cancelado: S/N obrigatório!"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; } } db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs }).then(()=>fecharModalBaixa()); }); }
     function marcarPago(id) { if(prompt("Senha:") === SENHA_PADRAO) db.ref('os/'+id).update({ pago: true, data_pagamento: new Date().toLocaleDateString('pt-BR') }); }
     function exportarBackup() { db.ref().once('value', s => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(s.val(), null, 2)], {type:'application/json'})); a.download = 'backup_wv.json'; a.click(); }); }
     function rastrearSerial() { const sn = document.getElementById('busca-serial').value.trim(); if(!sn) return alert("Digite S/N"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).once('value', s => { const d = s.val(); if(d) alert(`S/N: ${sn}\nITEM: ${d.produto_nome}\nSTATUS: ${d.status}\nDATA: ${d.data}`); else alert("Não encontrado"); }); }
-    function cadastrarItem() { const temS = document.getElementById('cad-tem-serial').checked; db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0, tem_serial: temS }).then(() => { alert("OK"); document.getElementById('cad-item-nome').value=''; }); }
+    function cadastrarItem() { db.ref('itens').push({ nome: document.getElementById('cad-item-nome').value, barcode: document.getElementById('cad-item-barcode').value, estoque_central: 0, tem_serial: document.getElementById('cad-tem-serial').checked }).then(() => { alert("OK"); document.getElementById('cad-item-nome').value=''; }); }
     function confirmarAjuste() { const p = document.getElementById('ajuste-produto').value, q = parseFloat(document.getElementById('ajuste-qtd').value), s = document.getElementById('ajuste-senha').value, m = document.getElementById('ajuste-motivo').value; if(s !== SENHA_PADRAO || !m) return alert("Erro"); if(modoAjuste === 'descarte') { db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) - q); } else { const t = document.getElementById('filtro-tecnico-estoque').value; db.ref(`estoque_volante/${t}/${itensCadastrados[p].nome}`).transaction(a => (a||0) - q); db.ref(`itens/${p}/estoque_central`).transaction(a => (a||0) + q); } fecharModalAjuste(); }
     function abrirModalAjuste(m) { modoAjuste = m; document.getElementById('modal-ajuste').style.display='flex'; document.getElementById('ajuste-titulo').innerText = m === 'descarte' ? 'Descarte' : 'Devolução'; }
     function fecharModalAjuste() { document.getElementById('modal-ajuste').style.display='none'; }
     function abrirModalBaixa(id, val) { osParaBaixar = id; document.getElementById('baixa-valor-final').value = val; document.getElementById('modal-baixa').style.display = 'flex'; document.getElementById('baixa-itens-container').innerHTML = ''; adicionarLinhaBaixa(); }
     function fecharModalBaixa() { document.getElementById('modal-baixa').style.display = 'none'; }
+    function renderizarListaServicosAdmin(sv) { const div = document.getElementById('lista-servicos-admin'); if(!div) return; div.innerHTML = Object.keys(sv).map(k => { const s = sv[k]; if(!s) return ''; const isAtivo = s.ativo !== false; return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;"><span style="color:${isAtivo?'var(--text)':'var(--danger)'}; font-size:13px;">${s.nome} <small>${isAtivo?'':'(INATIVO)'}</small></span><button class="btn btn-sm ${isAtivo?'btn-red':'btn-green'}" style="width:auto; padding:5px 10px;" onclick="toggleServico('${k}', ${isAtivo})">${isAtivo?'INATIVAR':'ATIVAR'}</button></div>`; }).join(''); }
+    function cadastrarServico() { const nome = document.getElementById('novo-servico-nome').value.trim(); if(!nome) return alert("Digite o nome."); db.ref('tipos_servico').push({ nome: nome, ativo: true }); document.getElementById('novo-servico-nome').value = ''; }
+    function toggleServico(id, statusAtual) { db.ref('tipos_servico/'+id).update({ ativo: !statusAtual }); }
 </script>
 </body>
 </html>
