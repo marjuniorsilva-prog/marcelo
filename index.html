@@ -257,6 +257,11 @@
                     </div>
                     <div id="lista-servicos-admin" style="margin-top:10px; max-height: 200px; overflow-y: auto;"></div>
                 </div>
+                
+                <div class="panel">
+                    <h3>📦 Gerenciar Materiais (Ativar/Inativar)</h3>
+                    <div id="lista-produtos-admin" style="margin-top:10px; max-height: 250px; overflow-y: auto;"></div>
+                </div>
                 <div class="panel"><h3>📦 Novo Modelo</h3><button class="btn btn-gold btn-sm" onclick="abrirCamera('cad')">📷 SCAN</button><input type="text" id="cad-item-nome" placeholder="Nome Comercial (SEM SERIAL)" style="margin-top:10px"><input type="text" id="cad-item-barcode" placeholder="Barcode / EAN" style="margin-top:5px"><div class="big-checkbox-wrapper" id="wrapper-serial" onclick="toggleSerial()"><div><span class="big-checkbox-label">EXIGIR SERIAL?</span><span class="big-checkbox-sub">Para Roteadores/ONUs</span></div><i class="fa-solid fa-toggle-off big-checkbox-icon" id="icon-serial"></i><input type="checkbox" id="cad-tem-serial"></div><button class="btn btn-green" onclick="cadastrarItem()">CADASTRAR</button></div>
                 <div class="panel"><h3>💾 Backup</h3><button class="btn btn-blue" onclick="exportarBackup()">DOWNLOAD JSON</button><div id="lista-tecnicos-admin" style="margin-top:15px"></div></div>
             </div>
@@ -363,6 +368,9 @@
                 h += `<div class="item-group"><div class="item-header" onclick="toggleDetalhes('${contadorGrupo}')"><div style="font-weight:bold; color:var(--text)">${nomeGrupo}</div><div style="display:flex; align-items:center; gap:10px;"><span class="badge-count">${g.total} un</span><i class="fa-solid fa-chevron-down" style="font-size:12px; color:var(--gold)"></i></div></div><div class="item-details" id="detalhe-${contadorGrupo}">${subItensHTML}</div></div>`;
             }
             document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
+            
+            // CHAMADA DA NOVA FUNÇÃO
+            renderizarListaProdutosAdmin(itensCadastrados);
         });
 
         db.ref('tecnicos').on('value', s => { 
@@ -611,6 +619,22 @@
     function renderizarListaServicosAdmin(sv) { const div = document.getElementById('lista-servicos-admin'); if(!div) return; div.innerHTML = Object.keys(sv).map(k => { const s = sv[k]; if(!s) return ''; const isAtivo = s.ativo !== false; return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;"><span style="color:${isAtivo?'var(--text)':'var(--danger)'}; font-size:13px;">${s.nome} <small>${isAtivo?'':'(INATIVO)'}</small></span><button class="btn btn-sm ${isAtivo?'btn-red':'btn-green'}" style="width:auto; padding:5px 10px;" onclick="toggleServico('${k}', ${isAtivo})">${isAtivo?'INATIVAR':'ATIVAR'}</button></div>`; }).join(''); }
     function cadastrarServico() { const nome = document.getElementById('novo-servico-nome').value.trim(); if(!nome) return alert("Digite o nome."); db.ref('tipos_servico').push({ nome: nome, ativo: true }); document.getElementById('novo-servico-nome').value = ''; }
     function toggleServico(id, statusAtual) { db.ref('tipos_servico/'+id).update({ ativo: !statusAtual }); }
+    
+    // NOVAS FUNÇÕES ADICIONADAS
+    function renderizarListaProdutosAdmin(itens) { 
+        const div = document.getElementById('lista-produtos-admin'); 
+        if(!div) return; 
+        div.innerHTML = Object.keys(itens).map(k => { 
+            const item = itens[k]; 
+            if(!item) return ''; 
+            const isAtivo = item.status !== 'inativo'; 
+            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;"><span style="color:${isAtivo?'var(--text)':'var(--danger)'}; font-size:13px;">${item.nome} <small>${isAtivo?'':'(INATIVO)'}</small></span><button class="btn btn-sm ${isAtivo?'btn-red':'btn-green'}" style="width:auto; padding:5px 10px;" onclick="toggleProduto('${k}', ${isAtivo})">${isAtivo?'INATIVAR':'ATIVAR'}</button></div>`; 
+        }).join(''); 
+    }
+
+    function toggleProduto(id, statusAtual) { 
+        db.ref('itens/'+id).update({ status: statusAtual ? 'inativo' : 'ativo' }); 
+    }
 </script>
 </body>
 </html>
