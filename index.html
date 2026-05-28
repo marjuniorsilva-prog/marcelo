@@ -349,7 +349,7 @@
                 if(!produtosUnicos[nomeLimpo]) produtosUnicos[nomeLimpo] = { tem_serial: item.tem_serial || false, barcode: item.barcode || '', keyOriginal: k };
                 if(!grupos[nomeLimpo]) grupos[nomeLimpo] = { total: 0, itens: [] };
                 grupos[nomeLimpo].total += (item.estoque_central || 0);
-                grupos[nomeLimpo].itens.push({ nomeOriginal: item.nome, qtd: item.estoque_central || 0 });
+                grupos[nomeLimpo].itens.push({ id: k, nomeOriginal: item.nome, qtd: item.estoque_central || 0 });
             });
 
             const nomesOrdenados = Object.keys(produtosUnicos).sort();
@@ -364,7 +364,7 @@
                 contadorGrupo++; 
                 const g = grupos[nomeGrupo];
                 let subItensHTML = '';
-                g.itens.forEach(i => subItensHTML += `<div class="sub-item"><span>${i.nomeOriginal}</span> <span style="color:white">Qtd: ${i.qtd}</span></div>`);
+                g.itens.forEach(i => subItensHTML += `<div class="sub-item" style="align-items:center;"><span>${i.nomeOriginal}</span> <div style="display:flex; gap:10px; align-items:center;"><span style="color:white">Qtd: ${i.qtd}</span> <button class="btn btn-blue btn-sm" onclick="editarQuantidadeCentral('${i.id}')" style="padding:2px 8px;" title="Editar Quantidade"><i class="fa-solid fa-pen"></i></button></div></div>`);
                 h += `<div class="item-group"><div class="item-header" onclick="toggleDetalhes('${contadorGrupo}')"><div style="font-weight:bold; color:var(--text)">${nomeGrupo}</div><div style="display:flex; align-items:center; gap:10px;"><span class="badge-count">${g.total} un</span><i class="fa-solid fa-chevron-down" style="font-size:12px; color:var(--gold)"></i></div></div><div class="item-details" id="detalhe-${contadorGrupo}">${subItensHTML}</div></div>`;
             }
             document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
@@ -603,7 +603,19 @@
     }
     function fecharCamera() { if(scanner) scanner.stop().then(()=>document.getElementById('reader').style.display='none').catch(()=>{}); }
     function processarSaida() { const tecId = document.getElementById('out-tecnico').value, id = document.getElementById('out-produto').value, q = parseFloat(document.getElementById('out-qtd').value); if(tecId && id && q) { const item = itensCadastrados[id]; if(item.tem_serial) { const sn = prompt("QUAL SERIAL ESTÁ SAINDO?"); if(!sn) return; db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'MALA: ' + listaTecnicos[tecId].nome, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`itens/${id}/estoque_central`).transaction(a => (a||0) - q); db.ref(`estoque_volante/${tecId}/${itensCadastrados[id].nome}`).transaction(a => (a||0) + q); alert("Enviado!"); } }
-    function carregarEstoqueVolante(id) { db.ref(`estoque_volante/${id}`).on('value', s => { const it = s.val() || {}; let h = ''; Object.keys(it).forEach(n => h += `<div>${n}: ${it[n]}</div>`); document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; }); }
+    
+    function carregarEstoqueVolante(id) { 
+        db.ref(`estoque_volante/${id}`).on('value', s => { 
+            const it = s.val() || {}; 
+            let h = ''; 
+            Object.keys(it).forEach(n => { 
+                const nSeguro = n.replace(/'/g, "\\'"); 
+                h += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #333; font-size:12px; color:#aaa;"><span>${n}</span> <div style="display:flex; gap:10px; align-items:center;"><span style="color:white">Qtd: ${it[n]}</span> <button class="btn btn-blue btn-sm" onclick="editarQuantidadeVolante('${id}', '${nSeguro}')" style="padding:2px 8px;" title="Editar Quantidade"><i class="fa-solid fa-pen"></i></button></div></div>`;
+            }); 
+            document.getElementById('lista-estoque-volante').innerHTML = h || "Vazio"; 
+        }); 
+    }
+
     function buscarCep() { const c = document.getElementById('os-cep').value.replace(/\D/g, ''); if(c.length === 8) fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => { if(!d.erro) { document.getElementById('os-endereco').value = d.logradouro; document.getElementById('os-bairro').value = d.bairro; document.getElementById('os-cidade').value = d.localidade; } }); }
     function adicionarLinhaBaixa() { const c = document.getElementById('baixa-itens-container'); const d = document.createElement('div'); d.className = "row"; const ativos = Object.keys(itensCadastrados).filter(k => itensCadastrados[k] && itensCadastrados[k].status !== 'inativo'); const o = ativos.map(k => `<option value="${itensCadastrados[k].nome}">${itensCadastrados[k].nome}</option>`).join(''); d.innerHTML = `<div class="col" style="flex:2"><select class="b-item">${o}</select></div><div class="col"><input type="number" class="b-qtd" placeholder="Qtd"></div>`; c.appendChild(d); }
     function confirmarBaixa() { const ns = document.querySelectorAll('.b-item'), qs = document.querySelectorAll('.b-qtd'), vf = document.getElementById('baixa-valor-final').value, obs = document.getElementById('baixa-obs').value; db.ref('os/'+osParaBaixar).once('value', snap => { const o = snap.val(); let g = ""; for (let i = 0; i < ns.length; i++) { const q = parseFloat(qs[i].value); if(q > 0) { const itemKey = Object.keys(itensCadastrados).find(k => itensCadastrados[k].nome === ns[i].value); const item = itensCadastrados[itemKey]; let sn = ""; if(item && item.tem_serial) { sn = prompt(`S/N DO ITEM: ${ns[i].value}`); if(!sn) return alert("Cancelado: S/N obrigatório!"); db.ref('seriais_rastro/' + sn.replace(/[.#$/\[\]]/g, "_")).update({ status: 'INSTALADO CLIENTE ' + o.cliente, produto_nome: item.nome, data: new Date().toLocaleString() }); } db.ref(`estoque_volante/${o.tecnico_id}/${ns[i].value}`).transaction(a => (a || 0) - q); g += `${q}x ${ns[i].value} ${sn ? '(SN:'+sn+')' : ''}, `; } } db.ref('os/'+osParaBaixar).update({ status: 'concluido', gasto: g, valor_pagar: vf, data_baixa: new Date().toLocaleDateString('pt-BR'), obs_baixa: obs }).then(()=>fecharModalBaixa()); }); }
@@ -634,6 +646,41 @@
 
     function toggleProduto(id, statusAtual) { 
         db.ref('itens/'+id).update({ status: statusAtual ? 'inativo' : 'ativo' }); 
+    }
+
+    // NOVAS FUNÇÕES PARA EDIÇÃO DIRETA DE ESTOQUE
+    function editarQuantidadeCentral(id) {
+        const item = itensCadastrados[id];
+        if(!item) return;
+        const qtdAtual = item.estoque_central || 0;
+        const novaQtd = prompt(`Editar quantidade de:\n${item.nome}\n\nQuantidade Atual: ${qtdAtual}\n\nDigite a NOVA quantidade total no estoque:` , qtdAtual);
+        
+        if (novaQtd === null || novaQtd.trim() === "") return;
+        const qtdNum = parseFloat(novaQtd);
+        if (isNaN(qtdNum) || qtdNum < 0) return alert("Quantidade inválida.");
+        
+        if (prompt("Digite a senha de administrador (1503) para confirmar a alteração:") === SENHA_PADRAO) {
+            db.ref(`itens/${id}/estoque_central`).set(qtdNum).then(() => alert("Quantidade atualizada com sucesso!"));
+        } else {
+            alert("Senha incorreta. Alteração cancelada.");
+        }
+    }
+
+    function editarQuantidadeVolante(tecId, nomeProduto) {
+        db.ref(`estoque_volante/${tecId}/${nomeProduto}`).once('value', s => {
+            const qtdAtual = s.val() || 0;
+            const novaQtd = prompt(`Editar quantidade (Mala) de:\n${nomeProduto}\n\nQuantidade Atual: ${qtdAtual}\n\nDigite a NOVA quantidade total:`, qtdAtual);
+            
+            if (novaQtd === null || novaQtd.trim() === "") return;
+            const qtdNum = parseFloat(novaQtd);
+            if (isNaN(qtdNum) || qtdNum < 0) return alert("Quantidade inválida.");
+            
+            if (prompt("Digite a senha de administrador (1503) para confirmar a alteração:") === SENHA_PADRAO) {
+                db.ref(`estoque_volante/${tecId}/${nomeProduto}`).set(qtdNum).then(() => alert("Quantidade atualizada com sucesso!"));
+            } else {
+                alert("Senha incorreta. Alteração cancelada.");
+            }
+        });
     }
 </script>
 </body>
