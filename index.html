@@ -266,6 +266,16 @@
 
             <div id="view-admin" class="view-section">
                 <div class="panel"><h3>🔍 Rastrear Serial</h3><div class="row"><div class="col"><input type="text" id="busca-serial" placeholder="S/N"></div><div class="col-small"><button class="btn btn-blue" onclick="rastrearSerial()">BUSCAR</button></div></div></div>
+                
+                <div class="panel">
+                    <h3>👥 Gerenciar Técnicos (Cadastrar / Ativar / Inativar)</h3>
+                    <div class="row">
+                        <div class="col"><input type="text" id="novo-tecnico-nome" placeholder="Nome do Técnico"></div>
+                        <div class="col-small"><button class="btn btn-green" onclick="cadastrarTecnico()">ADICIONAR</button></div>
+                    </div>
+                    <div id="lista-tecnicos-admin-gerenciamento" style="margin-top:10px; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+
                 <div class="panel">
                     <h3>🛠️ Serviços (O.S.)</h3>
                     <div class="row">
@@ -386,7 +396,6 @@
             }
             document.getElementById('lista-estoque-central').innerHTML = h || '<p style="text-align:center; padding:20px; color:#666">Estoque vazio.</p>';
             
-            // CHAMADA DA NOVA FUNÇÃO
             renderizarListaProdutosAdmin(itensCadastrados);
         });
 
@@ -395,8 +404,11 @@
             const ativos = Object.keys(listaTecnicos).filter(k => listaTecnicos[k] && listaTecnicos[k].status !== 'inativo'); 
             document.getElementById('os-tecnico').innerHTML = ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
             ['out-tecnico', 'filtro-tecnico-estoque', 'fin-filtro-tecnico', 'filtro-tecnico-os'].forEach(id => { 
-                document.getElementById(id).innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = (id.includes('filtro') ? '<option value="">Todos</option>' : '') + ativos.map(k => `<option value="${k}">${listaTecnicos[k].nome}</option>`).join(''); 
             }); 
+            
+            renderizarListaTecnicosAdmin(listaTecnicos);
         });
         
         db.ref('tipos_servico').on('value', s => { 
@@ -649,7 +661,6 @@
     function cadastrarServico() { const nome = document.getElementById('novo-servico-nome').value.trim(); if(!nome) return alert("Digite o nome."); db.ref('tipos_servico').push({ nome: nome, ativo: true }); document.getElementById('novo-servico-nome').value = ''; }
     function toggleServico(id, statusAtual) { db.ref('tipos_servico/'+id).update({ ativo: !statusAtual }); }
     
-    // NOVAS FUNÇÕES ADICIONADAS
     function renderizarListaProdutosAdmin(itens) { 
         const div = document.getElementById('lista-produtos-admin'); 
         if(!div) return; 
@@ -665,7 +676,31 @@
         db.ref('itens/'+id).update({ status: statusAtual ? 'inativo' : 'ativo' }); 
     }
 
-    // NOVAS FUNÇÕES PARA EDIÇÃO DIRETA DE ESTOQUE
+    // NOVO MÓDULO: GERENCIAMENTO DE TÉCNICOS NA ADM
+    function renderizarListaTecnicosAdmin(tecnicos) {
+        const div = document.getElementById('lista-tecnicos-admin-gerenciamento');
+        if(!div) return;
+        div.innerHTML = Object.keys(tecnicos).map(k => {
+            const t = tecnicos[k];
+            if(!t) return '';
+            const isAtivo = t.status !== 'inativo';
+            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;"><span style="color:${isAtivo?'var(--text)':'var(--danger)'}; font-size:13px;">${t.nome} <small>${isAtivo?'':'(INATIVO)'}</small></span><button class="btn btn-sm ${isAtivo?'btn-red':'btn-green'}" style="width:auto; padding:5px 10px;" onclick="toggleTecnico('${k}', ${isAtivo})">${isAtivo?'INATIVAR':'ATIVAR'}</button></div>`;
+        }).join('');
+    }
+
+    function cadastrarTecnico() {
+        const nome = document.getElementById('novo-tecnico-nome').value.trim();
+        if(!nome) return alert("Digite o nome do técnico.");
+        db.ref('tecnicos').push({ nome: nome, status: 'ativo' }).then(() => {
+            alert("Técnico adicionado com sucesso!");
+            document.getElementById('novo-tecnico-nome').value = '';
+        });
+    }
+
+    function toggleTecnico(id, statusAtual) {
+        db.ref('tecnicos/'+id).update({ status: statusAtual ? 'inativo' : 'ativo' });
+    }
+
     function editarQuantidadeCentral(id) {
         const item = itensCadastrados[id];
         if(!item) return;
@@ -700,12 +735,10 @@
         });
     }
 
-    // FUNÇÃO PARA O LEITOR DE CÓDIGO DE BARRAS FÍSICO (USB/BLUETOOTH)
     function processarLeitorFisico(event, modo) {
-        // O leitor físico sempre envia um "Enter" no final da leitura
         if (event.key === 'Enter') {
             const codigo = event.target.value.trim();
-            event.target.value = ''; // Limpa o campo para o próximo bipe
+            event.target.value = ''; 
             
             const keyItem = mapaBarcodes[codigo];
             
